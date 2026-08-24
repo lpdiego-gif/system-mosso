@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-react';
+import { BookOpen, Package, FolderGit2, LayoutGrid } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -15,11 +15,13 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
+import { route } from 'ziggy-js';
+
 
 const mainNavItems: NavItem[] = [
     {
         title: 'Panel de Control',
-        href: dashboard(),
+        href: route('dashboard'),
         icon: LayoutGrid,
     },{
         title: 'Clientes',
@@ -32,10 +34,16 @@ const mainNavItems: NavItem[] = [
         icon: FolderGit2,
     },
     {
+        title: 'Productos',
+        href: route('admin.productos.index'),
+        icon: Package,
+    },
+    {
         title: 'Memo',
         href: '/memo',
         icon: FolderGit2,
     }
+    
 ];
 
 const footerNavItems: NavItem[] = [

@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="google" content="notranslate" />
-        
+        <meta name="csrf-token" content="{{ csrf_token() }}">
         {{-- Inline script to detect system dark mode preference and apply it immediately --}}
         <script>
             (function() {
@@ -36,7 +36,7 @@
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
         @fonts
-
+        @routes
         @viteReactRefresh
         @vite(['resources/css/app.css', 'resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
         <x-inertia::head>

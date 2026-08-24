@@ -1,9 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
-import AppLogoIcon from '@/components/app-logo-icon';
-import { Skeleton } from '@/components/ui/skeleton';
-import { home } from '@/routes';
-import type { AuthLayoutProps } from '@/types';
 import { useState } from 'react';
+import AppLogoIcon from '@/components/app-logo-icon';
 import {
     Card,
     CardContent,
@@ -11,6 +8,9 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { home } from '@/routes';
+import type { AuthLayoutProps } from '@/types';
 
 const DecorativeIcons = ({ isLoaded }: { isLoaded: boolean }) => {
     if (!isLoaded) {

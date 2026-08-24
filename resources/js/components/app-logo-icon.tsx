@@ -1,5 +1,5 @@
-import { cn } from '@/lib/utils';
 import type { ImgHTMLAttributes, SVGAttributes } from 'react';
+import { cn } from '@/lib/utils';
 
 export default function AppLogoIcon({ 
     className, 
