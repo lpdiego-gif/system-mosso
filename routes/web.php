@@ -80,5 +80,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 });
 
+
+use App\Http\Controllers\TrabajadorController;
+Route::middleware(['auth'])->prefix('trabajador')->name('trabajador.')->group(function () {
+    Route::get('/', [TrabajadorController::class, 'index'])->name('index');
+    Route::get('/data', [TrabajadorController::class, 'data'])->name('data');
+    Route::post('/buscar-documento', [TrabajadorController::class, 'buscarDocumento'])->name('buscar-documento');
+    Route::get('/provincias/{departamento}', [TrabajadorController::class, 'provincias'])->whereNumber('departamento')->name('provincias');
+    Route::get('/distritos/{provincia}', [TrabajadorController::class, 'distritos'])->whereNumber('provincia')->name('distritos');
+    Route::post('/', [TrabajadorController::class, 'store'])->name('store');
+    Route::get('/{trabajador}/edit', [TrabajadorController::class, 'edit'])->whereNumber('trabajador')->name('edit');
+    Route::put('/{trabajador}', [TrabajadorController::class, 'update'])->whereNumber('trabajador')->name('update');
+    Route::patch('/{trabajador}/estado', [TrabajadorController::class, 'toggleEstado'])->whereNumber('trabajador')->name('estado');
+    Route::delete('/{trabajador}', [TrabajadorController::class, 'destroy'])->whereNumber('trabajador')->name('destroy');
+});
 //
 require __DIR__.'/settings.php';

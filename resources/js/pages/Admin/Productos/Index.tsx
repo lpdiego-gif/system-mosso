@@ -270,7 +270,7 @@ export default function Index({
                                                         <span
                                                             className={
                                                                 producto.stock >
-                                                                0
+                                                                    0
                                                                     ? 'font-semibold'
                                                                     : 'font-semibold text-destructive'
                                                             }
