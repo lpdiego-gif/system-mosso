@@ -18,6 +18,10 @@ createInertiaApp({
             case name === 'mi-cuenta':
             case name === 'mi-cuenta-direcciones':
             case name === 'mi-cuenta-detalles':
+            case name.startsWith('catalogo/'):
+            case name.startsWith('carrito/'):
+            case name === 'buscar':
+            case name === 'favoritos':
                 return null;
             case name.startsWith('auth/'):
                 return AuthLayout;

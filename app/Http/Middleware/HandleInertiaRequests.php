@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\CarritoService;
 use App\Services\MenuService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -46,6 +47,11 @@ class HandleInertiaRequests extends Middleware
 
             // Menú del header/mega menu, disponible en todas las páginas
             'menu' => fn () => app(MenuService::class)->build(),
+
+            // Cantidad de ítems en carrito (badge del header)
+            'carrito' => fn () => [
+                'cantidad' => app(CarritoService::class)->contarItems($request),
+            ],
         ];
     }
 }

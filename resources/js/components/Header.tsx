@@ -1,4 +1,5 @@
-import { Link, router } from '@inertiajs/react';
+import { useFavoritos } from '@/hooks/use-favoritos';
+import { Link, router, usePage } from '@inertiajs/react';
 import { useState, type FormEvent } from 'react';
 import MegaMenu from './MegaMenu';
 import MobileMenu from './MobileMenu';
@@ -12,7 +13,7 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <header className="w-full bg-white">
+    <header className="w-full bg-white sticky top-0 z-50 shadow-sm">
       <TopBar onOpenMobileMenu={() => setMobileOpen(true)} />
       <MegaMenu />
       <MobileMenu open={mobileOpen} onClose={() => setMobileOpen(false)} />
@@ -41,9 +42,7 @@ function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu: () => void }) {
         <Link href="/cuenta" aria-label="Mi cuenta" className="text-gray-700 hover:text-orange-500">
           <UserIcon />
         </Link>
-        <Link href="/favoritos" aria-label="Favoritos" className="text-gray-700 hover:text-orange-500">
-          <HeartIcon />
-        </Link>
+        <FavoritosButton />
         <CartButton />
       </div>
       <div className="md:hidden shrink-0">
@@ -105,14 +104,38 @@ function HelpDropdown() {
   );
 }
 
+function FavoritosButton() {
+  const { total } = useFavoritos();
+  return (
+    <Link href="/favoritos" aria-label="Favoritos" className="relative text-gray-700 hover:text-orange-500">
+      <span className="relative inline-flex">
+        <HeartIcon />
+        {total > 0 && (
+          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold min-w-[16px] h-4 px-0.5 rounded-full flex items-center justify-center leading-none pointer-events-none select-none">
+            {total > 99 ? '99+' : total}
+          </span>
+        )}
+      </span>
+    </Link>
+  );
+}
+
 function CartButton({ compact = false }: { compact?: boolean }) {
-  // Total real vendrá de tu store/contexto de carrito (Zustand, Context, etc.)
-  const total = '0.00';
+  const props = usePage().props as Record<string, unknown>;
+  const carritoProps = props.carrito as { cantidad?: number } | undefined;
+  const cantidad = carritoProps?.cantidad ?? 0;
 
   return (
-    <Link href="/carrito" className="flex items-center gap-2 text-gray-900 hover:text-orange-500">
-      <CartIcon />
-      {!compact && <span className="text-sm font-semibold">S/{total}</span>}
+    <Link href="/carrito" className="relative flex items-center gap-2 text-gray-900 hover:text-orange-500">
+      <span className="relative inline-flex">
+        <CartIcon />
+        <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-[10px] font-bold min-w-[16px] h-4 px-0.5 rounded-full flex items-center justify-center leading-none pointer-events-none select-none">
+          {cantidad > 99 ? '99+' : cantidad}
+        </span>
+      </span>
+      {!compact && (
+        <span className="text-sm font-semibold hidden sm:inline">Carrito</span>
+      )}
     </Link>
   );
 }

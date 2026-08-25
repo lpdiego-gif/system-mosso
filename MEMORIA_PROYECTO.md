@@ -146,10 +146,19 @@ Jerarquía: `animales` → `categorias` (`fk_id_animal`) → `sub_categorias` (`
 ### 4.5 Menú / navegación
 `menus` (`tipo_enlace` enum: `animal`/`tipo_animal`/`marca`/`tipo_servicio`/`url`, `fk_animal`, `fk_tipo_animal`, `orden`, `destacado`, `activo`) — filas 100% data-driven que arman el mega menú del header público. Editable solo por BD directa hoy (no hay UI admin para `menus`).
 
-### 4.6 Carrito y pedidos **[sin código de negocio — solo esquema, más lectura agregada para el dashboard]**
+### 4.6 Carrito y pedidos **[carrito implementado; checkout/pedidos solo esquema]**
 `carritos` (`fk_cliente` o `token_invitado` para invitados) → `carrito_detalle` (`fk_producto`, `cantidad`, `precio_unitario`).
 `pedidos` (`fk_cliente`, `fk_direccion_envio`, `fk_tipo_entrega`, `fk_forma_pago`, `fk_estado_pedido`, subtotal/descuento/igv/total) → `pedido_detalle`. `pedido_recojo_terceros` (datos de quien recoge un pedido si no es el cliente). Catálogos de apoyo: `estados_pedido`, `forma_pagos`, `tipo_entregas`.
 Sigue sin existir checkout/creación de pedidos, pero `DashboardController` ya hace `SELECT` de solo lectura sobre `pedidos`/`pedido_detalle` (ventas por día, pedidos recientes, productos más vendidos) — cualquier futura implementación de checkout debe mantener el significado de estas columnas (`total`, `fecha_pedido`, etc.) para no romper esas estadísticas.
+
+**Carrito implementado (primera etapa — 2026-08-25):**
+- `App\Models\Carrito` (`$primaryKey = 'id_carrito'`, `$fillable = ['fk_cliente','token_invitado']`, `detalles()` HasMany, `cliente()` BelongsTo).
+- `App\Models\CarritoDetalle` (`$primaryKey = 'id_carrito_detalle'`, `const UPDATED_AT = null` — tabla sin columna updated_at, `$fillable = ['fk_carrito','fk_producto','cantidad','precio_unitario']`).
+- `App\Services\CarritoService`: token invitado guardado en **sesión Laravel** (`$request->session()->put/get('cart_token')`), NO en cookie (cookies cifradas de XAMPP causaban problemas). `resolverCarrito()` y `encontrarCarrito()` siguen la misma lógica: usuario auth con registro `clientes` → usa `fk_cliente`; cualquier otro caso (invitado o auth sin clientes) → token de sesión. `contarItems()` es seguro para middleware (nunca crea carrito). `agregarProducto()` suma cantidad si el producto ya existe. `obtenerItems()` eager-load `producto.marca`.
+- `App\Http\Controllers\CarritoController`: `index` (GET /carrito), `store` (POST /carrito/items), `update` (PATCH /carrito/items/{detalle}), `destroy` (DELETE /carrito/items/{detalle}). Protege con `abort_if($detalle->fk_carrito !== $carrito->id_carrito, 403)`.
+- `HandleInertiaRequests::share()` agrega prop compartido `carrito.cantidad` (lazy closure, usa `CarritoService::contarItems()`).
+- `resources/js/pages/carrito/index.tsx`: página pública (StorefrontLayout) con lista de ítems, controles +/−, botón eliminar y resumen de pedido. Usa `router.patch` y `router.delete`.
+- `resources/js/types/global.d.ts`: `carrito: { cantidad: number }` agregado a `sharedPageProps`.
 
 ### 4.7 Facturación **[sin código]**
 `comprobantes` (boleta/factura, `fk_pedido`, `fk_tipo_comprobante`, `fk_empresa`, serie/número) — `tipo_comprobante`, `empresa` (datos de la empresa emisora, RUC, dirección), `empresa_redes` + `redes_sociales` (redes sociales de la empresa).
@@ -179,13 +188,17 @@ Sigue sin existir checkout/creación de pedidos, pero `DashboardController` ya h
 ## 5. Estado actual del desarrollo
 
 ### ✅ Completo y funcional
+- **Catálogo público por subcategoría/categoría/animal** (`/catalogo/subcategoria/{id}`, `/catalogo/categoria/{id}`, `/catalogo/animal/{id}`): `CatalogoController` con 3 métodos + método privado `formato()` usando `Storage::url()`. Página `resources/js/pages/catalogo/index.tsx` con `StorefrontLayout`, breadcrumbs dinámicos, grid de productos, favoritos y "Agregar al carrito". Las URLs las genera `MenuService` y coinciden con las rutas definidas. Agregado al `case null` en `app.tsx` (prefijo `catalogo/`).
+- **Buscador** (`GET /buscar?q=`, `BusquedaController`): ruta pública, `resources/js/pages/buscar.tsx` con `StorefrontLayout`. Grid de productos con favoritos y "Agregar al carrito". Header usa `router.get('/buscar', { q: query.trim() })` al hacer submit. Sin formulario de búsqueda secundario en la página (se eliminó — solo el del Header).
+- **Favoritos** (`/favoritos`, `FavoritosController`): almacenamiento en `localStorage` via hook `resources/js/hooks/use-favoritos.ts`. Sincronización entre componentes vía evento DOM custom `mosso:favoritos-updated`. Página `resources/js/pages/favoritos.tsx` con lista de favoritos guardados, botón "Quitar" y "Agregar al carrito". Badge rojo en Header con `total` del hook. Sin tabla de BD — decisión tomada porque no hay tabla `favoritos` y los clientes no siempre están autenticados.
+- **Carrito de compras — primera etapa** (modelos, servicio, controlador, página): ver detalle en sección 4.6.
 - **Autenticación completa** (Fortify): login, registro, verificación de email, reset de password, **2FA** y **passkeys/WebAuthn**. Incluye bloqueo de login para trabajadores inactivos (`CheckTrabajadorActivo`, auto-registrado por descubrimiento de eventos de Laravel).
 - **Gestión de trabajadores** (`/trabajador`): listado con búsqueda/filtros/orden/paginación server-side vía endpoint JSON (`TrabajadorController::data`), alta y edición completas (reutiliza `personas` si el documento ya existe), activar/desactivar, eliminar (con protección para no auto-eliminarse/desactivarse). Incluye lookup de documento (`buscarDocumento`) con hook de debounce en frontend.
 - **Gestión de distritos** (`/distrito`): CRUD completo con validación de nombre único por provincia (con `lockForUpdate` para evitar condiciones de carrera) y bloqueo de borrado si el distrito está en uso por `direcciones`.
 - **Alta de productos** (`/admin/productos/create` → `store`): flujo con generación automática de SKU, distinción especial perro/gato (elige subcategoría) vs. exóticos (auto-crea categoría/subcategoría "General"), y "reabastecer" (si el SKU generado ya existe, suma stock en vez de duplicar producto).
 - **Listado de productos** (`/admin/productos`): tabla de solo lectura con joins a marca/categoría/animal/unidad/estado.
-- **Home público** (`/`): hero banner, barra de beneficios, carruseles de productos destacados/en oferta y marcas — datos armados por `HomeService`.
-- **Mega menú dinámico** (header público): 100% data-driven desde la tabla `menus`, con submenús por animal, por tipo de animal (exóticos), marcas y tipos de servicio.
+- **Home público** (`/`): hero banner, barra de beneficios, carruseles de productos destacados/en oferta y marcas — datos armados por `HomeService`. Carrusel auto-scroll cada 3 s con pause-on-hover (`useEffect` + `setInterval` en `ProductoCarrusel`, `HomeSections.tsx`). Tarjetas con favoritos via `useFavoritos` y "Agregar al carrito" via `router.post`.
+- **Mega menú dinámico** (header público): 100% data-driven desde la tabla `menus`, con submenús por animal, por tipo de animal (exóticos), marcas y tipos de servicio. Header es `sticky top-0 z-50` (fijo al hacer scroll). Incluye badge naranja de carrito (lee `usePage().props.carrito.cantidad`) y badge rojo de favoritos (lee `useFavoritos().total`). Buscador funcional: submit redirige a `GET /buscar?q=...`.
 - **Panel de Control (`/dashboard`)**: reemplazado el placeholder del starter kit por un dashboard real, servido por `DashboardController` (100% `DB::table`, sin Eloquent, siguiendo el patrón de `TrabajadorController`/`DistritoController`). Muestra KPIs (ventas del mes/hoy, pedidos totales, clientes, equipo activo, productos activos, valor de inventario), gráfico de ventas de los últimos 14 días, catálogo por tipo de mascota, productos más vendidos, alerta de stock bajo, pedidos recientes, equipo por rol y descuentos activos — todo con estados vacíos explícitos (no hay seed de `pedidos`/`clientes`/`trabajadores` en la BD actual, así que la mayoría de tarjetas parten en 0 hasta que se cargue data real). Responsivo, con tema claro/oscuro/sistema y fondo degradado propio en modo oscuro (no negro puro). Componentes en `resources/js/components/dashboard/`, tipos en `types/dashboard.ts`.
 - **Submenús en el sidebar admin**: `NavItem` (`types/navigation.ts`) soporta `items?: NavItem[]`; `nav-main.tsx` los renderiza como un `Collapsible` tipo acordeón (solo un submenú abierto a la vez, se cierra al navegar a un ítem plano, resalta el ítem/submenú activo). Ya usado por "Trabajadores" y "Departamento" en `app-sidebar.tsx`.
 - **Footer del storefront** (`resources/js/components/Footer.tsx`, montado en `StorefrontLayout`): branding, columnas Tienda/Ayuda/Contacto/Medios de pago y barra inferior. Estático (igual que el resto del home), sin datos de BD. Varios de sus enlaces (Alimentos, Accesorios, Higiene, Delivery, Métodos de pago, Cambios y devoluciones, Preguntas frecuentes, Términos y condiciones, Política de privacidad) son placeholders `#` porque las páginas de catálogo/ayuda todavía no existen; los que sí tienen destino real son Perros/Gatos (`/catalogo/animal/1` y `/2`, mismo patrón ya usado por `MegaMenu`), Ofertas (`/ofertas`, mismo valor que ya trae `menus.url`) y Libro de reclamaciones.
@@ -199,7 +212,6 @@ Sigue sin existir checkout/creación de pedidos, pero `DashboardController` ya h
 
 ### 🟡 Parcial / con huecos conocidos
 - **Productos**: no hay edición ni borrado (ni rutas backend ni UI) — solo alta y listado. No hay UI para gestionar descuentos ni galería de imágenes (`producto_imagenes`) aunque el esquema ya las soporta.
-- **Buscador** (`/admin/buscar`, `BusquedaController`): el controlador existe y consulta productos, pero **la página Inertia `resources/js/pages/buscar.tsx` no existe** — la ruta actualmente rompe en tiempo de ejecución (Inertia no puede resolver el componente).
 - **Lookup RENIEC**: `TrabajadorController::buscarDocumento` importa `App\Services\ReniecService`, pero **ese archivo no existe**; la llamada real está comentada, así que hoy `buscarDocumento` siempre cae al flujo "nuevo" cuando no encuentra la persona en la BD local. El hook de frontend (`use-dni-lookup.ts`) ya está listo para consumir esta integración en cuanto se implemente.
 - **Menú "Clientes"** en el sidebar admin (`app-sidebar.tsx`) apunta a `/client`, ruta que no existe en `routes/web.php` — enlace roto/placeholder.
 - **Modelo `App\Models\Menu`**: el método de relación `tipoAnimal()` apunta a `App\Models\TipoAnimal`, que no existe como clase (la tabla real es `tipo_animales`, no usada por ningún modelo). Hoy no truena porque `MenuService` no usa esa relación (consulta `Animal::where('id_tipo_animal', ...)` directo), pero es una landmine si alguien la invoca o hace eager-load.
@@ -207,7 +219,6 @@ Sigue sin existir checkout/creación de pedidos, pero `DashboardController` ya h
 - **Tests de negocio**: `tests/Feature/DashboardTest.php` ya valida el `DashboardController` real (con fixtures `Schema::create()` ad-hoc para las tablas de negocio y para `menus`, ver sección 7), pero sigue sin haber ningún test para productos, trabajadores, distrito ni home — el resto de la suite es del starter kit (auth/perfil/seguridad).
 
 ### 🔴 No implementado (solo existe el esquema de BD)
-- **Carrito de compras** (tablas `carritos`, `carrito_detalle`) — cero código.
 - **Checkout / pedidos** (`pedidos`, `pedido_detalle`, `pedido_recojo_terceros`, `estados_pedido`, `forma_pagos`, `tipo_entregas`) — cero código.
 - **Comprobantes/facturación** (`comprobantes`, `tipo_comprobante`, `empresa`, `empresa_redes`, `redes_sociales`) — cero código.
 - ~~Clientes del storefront~~ — implementado (registro con verificación por código, "Mi cuenta", Direcciones, Detalles de la cuenta; ver 4.10 y el bloque "Mi cuenta" más abajo). Sigue faltando el checkout que consuma esas direcciones.
@@ -221,7 +232,8 @@ Sigue sin existir checkout/creación de pedidos, pero `DashboardController` ya h
 Request → routes/web.php (o settings.php)
         → Middleware: HandleAppearance, HandleInertiaRequests, AddLinkHeadersForPreloadedAssets
         → HandleInertiaRequests::share() inyecta en TODAS las páginas:
-              name, auth.user, sidebarOpen, menu (vía MenuService::build(), se ejecuta en cada request)
+              name, auth.user, sidebarOpen, menu (vía MenuService::build(), se ejecuta en cada request),
+              carrito.cantidad (vía CarritoService::contarItems(), lazy closure, seguro para no-clientes)
         → Controller (Eloquent y/o DB::table)
         → Inertia::render('pages/algo', [...props])
         → resources/js/pages/algo.tsx recibe los props ya tipados (idealmente contra resources/js/types/*)
@@ -239,7 +251,23 @@ Request → routes/web.php (o settings.php)
 ### 6.4 Alta de producto (el flujo más complejo del sistema)
 `POST /admin/productos` → valida animal/marca/unidad/estado/subcategoría → si el animal es Perro o Gato exige y valida que la subcategoría pertenezca a ese animal; si es un animal exótico, auto-crea (o reutiliza) categoría "General" → subcategoría "General" bajo ese animal → genera SKU determinístico (`PREFIJO_ANIMAL-PREFIJO_MARCA-NOMBRE_NORMALIZADO`) → si el SKU ya existe, sólo suma stock al producto existente (no duplica); si no, inserta producto nuevo (con imagen subida a `storage/app/public/productos` si se envió) → redirige al listado con mensaje flash.
 
-### 6.5 Mega menú (se construye en cada request, no es una página aparte)
+### 6.5 Catálogo público por subcategoría/categoría/animal
+`GET /catalogo/subcategoria/{subcategoria}` → `CatalogoController::porSubcategoria()` → Eloquent `Producto::activos()->where('fk_id_subcategorias', $id)->with(['marca','descuentoActivo'])` → `formato()` (mismo shape que HomeService pero usando `Storage::url()`) → `Inertia::render('catalogo/index', [titulo, breadcrumbs, productos])` → `catalogo/index.tsx` (`StorefrontLayout`, breadcrumbs, grid, useFavoritos, add to cart). Mismo patrón para `porCategoria` y `porAnimal` (los dos últimos recorren la jerarquía para obtener todos los productos hijos).
+
+### 6.6 Carrito de compras
+`POST /carrito/items` → `CarritoController::store()` → `CarritoService::resolverCarrito()` (obtiene o crea carrito para el usuario/invitado) → `CarritoService::agregarProducto()` (inserta o suma cantidad en `carrito_detalle`) → redirect back con `preserveScroll`.
+`GET /carrito` → `CarritoController::index()` → `CarritoService::encontrarCarrito()` + `CarritoService::obtenerItems()` → `Inertia::render('carrito/index', [items, total])`.
+`PATCH /carrito/items/{detalle}` → valida ownership → actualiza `cantidad`; `DELETE` → borra fila.
+El contador del Header se actualiza en cada Inertia response completa via el prop compartido `carrito.cantidad` inyectado por `HandleInertiaRequests`.
+
+### 6.7 Búsqueda pública
+`GET /buscar?q=texto` → `BusquedaController::__invoke()` → `Producto::activos()->with(['marca','descuentoActivo'])->where('nombre','like',"%{q}%")->limit(40)` → `formato()` con `Storage::url()` → `Inertia::render('buscar', [query, productos])` → `buscar.tsx` (StorefrontLayout, breadcrumbs, contador de resultados, grid con favoritos y add-to-cart).
+El buscador del Header usa `router.get('/buscar', { q: query.trim() })` en el submit del formulario.
+
+### 6.8 Favoritos (localStorage)
+No hay request al servidor. `useFavoritos` lee/escribe `localStorage['mosso_favoritos']` (array de `ProductoCard[]`). Al hacer `toggle(producto)`, emite evento DOM `mosso:favoritos-updated` para sincronizar el badge del Header y cualquier otra instancia del hook montada al mismo tiempo. `FavoritosController::__invoke()` solo renderiza la página shell — los datos los lee `favoritos.tsx` desde el hook en el cliente.
+
+### 6.9 Mega menú (se construye en cada request, no es una página aparte)
 `MenuService::build()` lee `menus` (activo=true, ordenado) y por cada fila arma sus "columnas" de submenú según `tipo_enlace`: `animal` → categorías+subcategorías de ese animal; `tipo_animal` → lista simple de animales de ese tipo (exóticos); `marca` → todas las marcas; `tipo_servicio` → todos los tipos de servicio; `url` → enlace directo. El resultado tipado en frontend por `types/menu.ts` y consumido por `MegaMenu.tsx`/`MobileMenu.tsx` dentro de `Header.tsx`.
 
 ## 7. Convenciones a respetar en trabajo futuro
@@ -254,3 +282,9 @@ Request → routes/web.php (o settings.php)
 - **Cualquier página nueva del storefront público** (no admin) debe agregarse al `case` que devuelve `null` en el resolver `layout` de `resources/js/app.tsx` (junto a `'welcome'` y `'libro-de-reclamaciones'`) y envolver su propio contenido en `<StorefrontLayout>` dentro del componente. Si se omite ese paso, Inertia usa el `default` del switch (`AppLayout`, el shell con sidebar del panel admin) para envolver la página pública por error.
 - Componentes de dominio del storefront (`Header.tsx`, `Footer.tsx`, `MegaMenu.tsx`, `MobileMenu.tsx`, `HomeSections.tsx`) siguen un estilo deliberadamente distinto al panel admin: funciones simples + Tailwind puro + íconos SVG hechos a mano al final del archivo. **No** usan `lucide-react` ni los componentes de `components/ui/` (esos son del panel admin) — lucide-react tampoco trae íconos de marcas (Facebook/Instagram/TikTok no existen ahí), por eso esos van a mano.
 - Para páginas públicas con un formulario real (POST con validación de Laravel), usa el componente `<Form>` de `@inertiajs/react` con el helper generado por Wayfinder (`@/actions/App/Http/Controllers/<Controller>`, se regenera solo al correr `vite build`/`vite dev`, está en `.gitignore`) — es el mismo patrón que ya usan las páginas de auth (`register.tsx`, etc.) y el que sigue `libro-de-reclamaciones.tsx`. Para notificaciones tipo toast tras un submit, usa `Inertia::flash('toast', ['type' => ..., 'message' => ...])` en el controlador (lo consume `useFlashToast`, montado globalmente en `app.tsx`) — **no** el patrón `->with('success', '...')` que usan `ProductoController`/`DistritoController`, que no está conectado a ningún toast y no se ve en pantalla.
+- **Tokens de carrito para invitados: usa sesión, no cookies.** En XAMPP local, `Cookie::queue()` / `$request->cookie()` falla silenciosamente por el middleware `EncryptCookies` — el cookie cifrado no puede leerse de vuelta correctamente en desarrollo. Solución: `$request->session()->put('cart_token', $token)` / `$request->session()->get('cart_token')`. La sesión ya funciona (auth/CSRF dependen de ella).
+- **`CarritoService::encontrarCarrito()` y `resolverCarrito()` deben tener la misma lógica de fallback.** Si un usuario autenticado no tiene registro en `clientes` (trabajadores, admins), ambos métodos deben caer al path del token de sesión — no asumir que auth siempre implica cliente. Si solo `resolverCarrito` tiene el fallback pero `encontrarCarrito` no, el contador del carrito siempre retorna 0 para esos usuarios.
+- **Imágenes de producto: siempre `Storage::url($p->imagen_principal)`.** La columna almacena una ruta relativa al disco `public` (ej. `productos/foto.jpg`). `Storage::url()` la convierte a URL absoluta `/storage/productos/foto.jpg`. `HomeService` tiene un bug histórico usando `/image/productos/` como prefijo — no replicar ese patrón en código nuevo.
+- **`CarritoDetalle` no tiene `updated_at`:** declarar `const UPDATED_AT = null;` en el modelo. Sin esto, Eloquent intenta escribir en una columna que no existe y falla en cada update de cantidad.
+- **`app.tsx` layout resolver:** toda página nueva del storefront público (no admin) necesita su `case` en el bloque que retorna `null`. Actualmente cubre: `welcome`, `libro-de-reclamaciones`, `cuenta`, `mi-cuenta`, `mi-cuenta-direcciones`, `mi-cuenta-detalles`, prefijo `catalogo/`, prefijo `carrito/`, `buscar`, `favoritos`. El `default` devuelve `AppLayout` (sidebar admin) — omitir el case hace que la página pública aparezca con la barra lateral negra del panel de control.
+- **Favoritos en localStorage, no en BD.** No existe tabla `favoritos`. Si en el futuro se quiere persistir en servidor (para clientes autenticados), habrá que crear la tabla y migrar el hook para sincronizar con la API al iniciar sesión.

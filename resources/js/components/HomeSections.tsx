@@ -1,5 +1,6 @@
-import { Link } from '@inertiajs/react';
-import { useRef, useState } from 'react';
+import { useFavoritos } from '@/hooks/use-favoritos';
+import { Link, router } from '@inertiajs/react';
+import { useEffect, useRef, useState } from 'react';
 import type { ProductoCard as ProductoCardType, MarcaCard } from '@/types/producto';
 
 /**
@@ -85,9 +86,28 @@ export function ProductoCarrusel({
   productos?: ProductoCardType[];
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [pausado, setPausado] = useState(false);
+
+  // Auto-scroll: avanza un paso cada 3 s, vuelve al inicio al llegar al final
+  useEffect(() => {
+    if (pausado || productos.length === 0) return;
+
+    const id = setInterval(() => {
+      const el = scrollRef.current;
+      if (!el) return;
+      const alFinal = el.scrollLeft + el.clientWidth >= el.scrollWidth - 8;
+      if (alFinal) {
+        el.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        el.scrollBy({ left: 232, behavior: 'smooth' }); // ancho tarjeta w-56 (224) + gap-4 (16)
+      }
+    }, 3000);
+
+    return () => clearInterval(id);
+  }, [pausado, productos.length]);
 
   const scroll = (dir: 'left' | 'right') => {
-    scrollRef.current?.scrollBy({ left: dir === 'left' ? -280 : 280, behavior: 'smooth' });
+    scrollRef.current?.scrollBy({ left: dir === 'left' ? -232 : 232, behavior: 'smooth' });
   };
 
   if (productos.length === 0) return null;
@@ -96,7 +116,11 @@ export function ProductoCarrusel({
     <section className="max-w-[1440px] mx-auto px-6 py-10">
       <h2 className="text-2xl font-bold text-center text-gray-900 mb-6">{titulo}</h2>
 
-      <div className="relative">
+      <div
+        className="relative"
+        onMouseEnter={() => setPausado(true)}
+        onMouseLeave={() => setPausado(false)}
+      >
         <button
           onClick={() => scroll('left')}
           aria-label="Anterior"
@@ -130,8 +154,22 @@ export function ProductoCarrusel({
 
 /** Tarjeta individual de producto. Interna: solo la usa ProductoCarrusel. */
 function ProductoCardItem({ producto }: { producto: ProductoCardType }) {
-  const [favorito, setFavorito] = useState(false);
+  const { toggle, esFavorito } = useFavoritos();
+  const [agregando, setAgregando] = useState(false);
+  const favorito = esFavorito(producto.id);
   const tieneDescuento = producto.porcentajeOff !== null;
+
+  const agregarAlCarrito = () => {
+    setAgregando(true);
+    router.post(
+      '/carrito/items',
+      { producto_id: producto.id, cantidad: 1 },
+      {
+        preserveScroll: true,
+        onFinish: () => setAgregando(false),
+      },
+    );
+  };
 
   return (
     <div className="relative border border-gray-100 rounded-xl p-3 hover:shadow-md transition-shadow bg-white">
@@ -142,9 +180,9 @@ function ProductoCardItem({ producto }: { producto: ProductoCardType }) {
       )}
 
       <button
-        onClick={() => setFavorito(!favorito)}
-        aria-label="Agregar a favoritos"
-        className={`absolute top-2 right-2 z-10 ${favorito ? 'text-red-500' : 'text-gray-300'}`}
+        onClick={() => toggle(producto)}
+        aria-label={favorito ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+        className={`absolute top-2 right-2 z-10 transition-colors ${favorito ? 'text-red-500' : 'text-gray-300 hover:text-red-400'}`}
       >
         <HeartIcon filled={favorito} />
       </button>
@@ -177,8 +215,12 @@ function ProductoCardItem({ producto }: { producto: ProductoCardType }) {
         </div>
       </Link>
 
-      <button className="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded-full">
-        Agregar al carrito
+      <button
+        onClick={agregarAlCarrito}
+        disabled={agregando}
+        className="mt-3 w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-wait text-white text-sm font-semibold py-2 rounded-full transition-colors"
+      >
+        {agregando ? 'Agregando…' : 'Agregar al carrito'}
       </button>
     </div>
   );

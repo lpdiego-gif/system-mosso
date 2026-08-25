@@ -7,6 +7,9 @@ use App\Http\Controllers\Admin\ProductoController;
 use App\Http\Controllers\Admin\SubCategoriaController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BusquedaController;
+use App\Http\Controllers\CatalogoController;
+use App\Http\Controllers\CarritoController;
+use App\Http\Controllers\FavoritosController;
 
 use App\Http\Controllers\ClienteRegistroController;
 use App\Http\Controllers\CuentaController;
@@ -17,6 +20,38 @@ use App\Http\Controllers\MiCuentaDireccionController;
 use App\Http\Controllers\ReclamoController;
 
 Route::get('/', HomeController::class)->name('home');
+
+Route::get('/buscar', BusquedaController::class)->name('buscar');
+Route::get('/favoritos', FavoritosController::class)->name('favoritos');
+
+/*
+|--------------------------------------------------------------------------
+| Carrito de compras (público: invitado + cliente autenticado)
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/carrito', [CarritoController::class, 'index'])->name('carrito.index');
+Route::post('/carrito/items', [CarritoController::class, 'store'])->name('carrito.store');
+Route::patch('/carrito/items/{detalle}', [CarritoController::class, 'update'])->whereNumber('detalle')->name('carrito.update');
+Route::delete('/carrito/items/{detalle}', [CarritoController::class, 'destroy'])->whereNumber('detalle')->name('carrito.destroy');
+
+/*
+|--------------------------------------------------------------------------
+| Catálogo público (subcategoría, categoría, animal)
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/catalogo/subcategoria/{subcategoria}', [CatalogoController::class, 'porSubcategoria'])
+    ->whereNumber('subcategoria')
+    ->name('catalogo.subcategoria');
+
+Route::get('/catalogo/categoria/{categoria}', [CatalogoController::class, 'porCategoria'])
+    ->whereNumber('categoria')
+    ->name('catalogo.categoria');
+
+Route::get('/catalogo/animal/{animal}', [CatalogoController::class, 'porAnimal'])
+    ->whereNumber('animal')
+    ->name('catalogo.animal');
 
 /*
 |--------------------------------------------------------------------------
