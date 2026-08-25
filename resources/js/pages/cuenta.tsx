@@ -11,7 +11,7 @@ import StorefrontLayout from '@/layouts/storefront-layout';
 import type { RegistroPendienteFlash } from '@/types/cuenta';
 
 const inputClass =
-  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500';
+  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-mosso-yellow focus:border-mosso-yellow';
 
 /**
  * Puerta pública de login/registro. Si ya hay sesión, CuentaController
@@ -73,14 +73,14 @@ function FormularioLogin({ onIrARegistro }: { onIrARegistro: () => void }) {
             </div>
 
             <label className="flex items-center gap-2 text-sm text-gray-600">
-              <input type="checkbox" name="remember" className="h-4 w-4 rounded border-gray-300 text-orange-500" />
+              <input type="checkbox" name="remember" className="h-4 w-4 rounded border-gray-300 text-mosso-yellow" />
               Recordarme
             </label>
 
             <button
               type="submit"
               disabled={processing}
-              className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-bold px-6 py-2.5 rounded-lg"
+              className="w-full bg-mosso-yellow hover:bg-mosso-yellow/85 disabled:opacity-60 text-gray-900 font-bold px-6 py-2.5 rounded-xl"
             >
               {processing ? 'Ingresando…' : 'Ingresar'}
             </button>
@@ -90,7 +90,7 @@ function FormularioLogin({ onIrARegistro }: { onIrARegistro: () => void }) {
 
       <p className="mt-6 text-center text-sm text-gray-500">
         ¿Aún no tienes cuenta?{' '}
-        <button type="button" onClick={onIrARegistro} className="text-orange-500 font-semibold hover:underline">
+        <button type="button" onClick={onIrARegistro} className="text-gray-900 font-semibold hover:text-mosso-yellow transition-colors hover:underline">
           Regístrate como cliente
         </button>
       </p>
@@ -145,7 +145,7 @@ function FormularioRegistro({ onIrALogin }: { onIrALogin: () => void }) {
             <button
               type="submit"
               disabled={processing}
-              className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-bold px-6 py-2.5 rounded-lg"
+              className="w-full bg-mosso-yellow hover:bg-mosso-yellow/85 disabled:opacity-60 text-gray-900 font-bold px-6 py-2.5 rounded-xl"
             >
               {processing ? 'Creando cuenta…' : 'Crear cuenta y enviar código'}
             </button>
@@ -155,7 +155,7 @@ function FormularioRegistro({ onIrALogin }: { onIrALogin: () => void }) {
 
       <p className="mt-6 text-center text-sm text-gray-500">
         ¿Ya tienes cuenta?{' '}
-        <button type="button" onClick={onIrALogin} className="text-orange-500 font-semibold hover:underline">
+        <button type="button" onClick={onIrALogin} className="text-gray-900 font-semibold hover:text-mosso-yellow transition-colors hover:underline">
           Inicia sesión
         </button>
       </p>
@@ -213,7 +213,7 @@ function FormularioCodigo({ email }: { email: string }) {
             <button
               type="submit"
               disabled={processing}
-              className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-bold px-6 py-2.5 rounded-lg"
+              className="w-full bg-mosso-yellow hover:bg-mosso-yellow/85 disabled:opacity-60 text-gray-900 font-bold px-6 py-2.5 rounded-xl"
             >
               {processing ? 'Verificando…' : 'Verificar y terminar registro'}
             </button>
@@ -227,7 +227,7 @@ function FormularioCodigo({ email }: { email: string }) {
           type="button"
           onClick={reenviar}
           disabled={reenviando}
-          className="text-orange-500 font-semibold hover:underline disabled:opacity-60"
+          className="text-gray-900 font-semibold hover:text-mosso-yellow transition-colors hover:underline disabled:opacity-60"
         >
           {reenviando ? 'Reenviando…' : 'Reenviar código'}
         </button>

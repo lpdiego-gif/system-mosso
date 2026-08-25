@@ -7,7 +7,7 @@ import StorefrontLayout from '@/layouts/storefront-layout';
 import type { MiCuentaDireccionesProps } from '@/types/cuenta';
 
 const inputClass =
-  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500';
+  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-mosso-yellow focus:border-mosso-yellow';
 
 export default function MiCuentaDirecciones({
   direcciones,
@@ -48,7 +48,7 @@ export default function MiCuentaDirecciones({
                     <p className="text-sm font-semibold text-gray-900">
                       {d.alias || 'Dirección'}{' '}
                       {d.es_principal === 1 && (
-                        <span className="ml-1 inline-block rounded-full bg-orange-100 text-orange-700 text-[11px] font-bold px-2 py-0.5 align-middle">
+                        <span className="ml-1 inline-block rounded-full bg-mosso-yellow/20 text-gray-900 text-[11px] font-bold px-2 py-0.5 align-middle">
                           Principal
                         </span>
                       )}
@@ -66,7 +66,7 @@ export default function MiCuentaDirecciones({
                         href={`/mi-cuenta/direcciones/${d.id_direccion}/principal`}
                         method="patch"
                         as="button"
-                        className="text-xs text-orange-500 hover:underline whitespace-nowrap"
+                        className="text-xs text-gray-900 font-semibold hover:text-mosso-yellow whitespace-nowrap transition-colors"
                       >
                         Marcar como principal
                       </Link>
@@ -118,7 +118,7 @@ export default function MiCuentaDirecciones({
                       type="checkbox"
                       name="es_principal"
                       value="1"
-                      className="h-4 w-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500"
+                      className="h-4 w-4 rounded border-gray-300 text-mosso-yellow focus:ring-mosso-yellow"
                     />
                     Usar como dirección principal
                   </label>
@@ -203,7 +203,7 @@ export default function MiCuentaDirecciones({
                 <button
                   type="submit"
                   disabled={processing}
-                  className="bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-bold px-6 py-2.5 rounded-lg"
+                  className="bg-mosso-yellow hover:bg-mosso-yellow/85 disabled:opacity-60 text-gray-900 font-bold px-6 py-2.5 rounded-xl"
                 >
                   {processing ? 'Guardando…' : 'Guardar dirección'}
                 </button>

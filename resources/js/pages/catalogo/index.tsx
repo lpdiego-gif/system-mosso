@@ -21,14 +21,14 @@ export default function CatalogoIndex({ titulo, breadcrumbs, productos }: Props)
             {/* Breadcrumb */}
             <div className="max-w-[1440px] mx-auto px-6 pt-6 pb-2">
                 <nav className="flex flex-wrap items-center gap-1.5 text-sm text-gray-500">
-                    <Link href="/" className="hover:text-orange-500 transition-colors">
+                    <Link href="/" className="hover:text-mosso-yellow transition-colors">
                         Inicio
                     </Link>
                     {breadcrumbs.map((b, i) => (
                         <span key={i} className="flex items-center gap-1.5">
                             <span className="text-gray-300">/</span>
                             {b.href ? (
-                                <Link href={b.href} className="hover:text-orange-500 transition-colors">
+                                <Link href={b.href} className="hover:text-mosso-yellow transition-colors">
                                     {b.label}
                                 </Link>
                             ) : (
@@ -41,7 +41,7 @@ export default function CatalogoIndex({ titulo, breadcrumbs, productos }: Props)
 
             {/* Encabezado */}
             <div className="max-w-[1440px] mx-auto px-6 py-4 border-b border-gray-100">
-                <h1 className="text-2xl font-bold text-gray-900">{titulo}</h1>
+                <h1 className="text-2xl font-black text-gray-900">{titulo}</h1>
                 <p className="text-sm text-gray-500 mt-1">
                     {productos.length}{' '}
                     {productos.length === 1 ? 'producto encontrado' : 'productos encontrados'}
@@ -66,7 +66,7 @@ export default function CatalogoIndex({ titulo, breadcrumbs, productos }: Props)
                             />
                         </svg>
                         <p className="text-lg font-medium">No hay productos en esta categoría aún.</p>
-                        <Link href="/" className="text-sm text-orange-500 hover:underline">
+                        <Link href="/" className="text-sm text-mosso-yellow hover:underline font-bold">
                             Volver al inicio
                         </Link>
                     </div>
@@ -101,9 +101,9 @@ function ProductoCard({ producto }: { producto: ProductoCard }) {
     };
 
     return (
-        <div className="relative border border-gray-100 rounded-xl p-3 hover:shadow-md transition-shadow bg-white flex flex-col">
+        <div className="relative border border-gray-100 rounded-xl p-3 hover:shadow-lg transition-all duration-200 bg-white flex flex-col">
             {tieneDescuento && (
-                <span className="absolute top-2 left-2 bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded z-10">
+                <span className="absolute top-2 left-2 bg-mosso-red text-white text-xs font-bold px-2 py-1 rounded-lg z-10">
                     -{producto.porcentajeOff}%
                 </span>
             )}
@@ -112,7 +112,7 @@ function ProductoCard({ producto }: { producto: ProductoCard }) {
                 onClick={() => toggle(producto)}
                 aria-label="Agregar a favoritos"
                 className={`absolute top-2 right-2 z-10 transition-colors ${
-                    favorito ? 'text-red-500' : 'text-gray-300 hover:text-red-400'
+                    favorito ? 'text-mosso-red' : 'text-gray-300 hover:text-mosso-red'
                 }`}
             >
                 <HeartIcon filled={favorito} />
@@ -147,13 +147,13 @@ function ProductoCard({ producto }: { producto: ProductoCard }) {
                     {producto.nombre}
                 </p>
                 {producto.marca && (
-                    <p className="text-xs text-gray-500 uppercase mt-0.5 tracking-wide">
+                    <p className="text-xs text-gray-400 uppercase mt-0.5 tracking-wide">
                         {producto.marca}
                     </p>
                 )}
 
                 <div className="mt-2 flex items-baseline gap-2">
-                    <span className="text-lg font-bold text-blue-600">
+                    <span className="text-lg font-black text-gray-900">
                         S/ {producto.precioFinal.toFixed(2)}
                     </span>
                     {tieneDescuento && (
@@ -167,7 +167,7 @@ function ProductoCard({ producto }: { producto: ProductoCard }) {
             <button
                 onClick={agregarAlCarrito}
                 disabled={agregando}
-                className="mt-3 w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-wait text-white text-sm font-semibold py-2 rounded-full transition-colors"
+                className="mt-3 w-full bg-mosso-yellow hover:bg-mosso-yellow/85 disabled:opacity-60 disabled:cursor-wait text-gray-900 text-sm font-bold py-2 rounded-full transition-colors"
             >
                 {agregando ? 'Agregando…' : 'Agregar al carrito'}
             </button>

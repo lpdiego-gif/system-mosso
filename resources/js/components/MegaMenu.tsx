@@ -65,8 +65,8 @@ function MenuLinkItem({ item, align }: { item: MenuItem; align: 'left' | 'right'
       <Link
         href={item.href ?? '#'}
         className={`flex items-center gap-1 text-sm font-semibold whitespace-nowrap ${
-          item.destacado ? 'text-orange-500' : 'text-gray-900'
-        } hover:text-orange-500 transition-colors`}
+          item.destacado ? 'text-mosso-yellow' : 'text-gray-900'
+        } hover:text-mosso-yellow transition-colors`}
       >
         {item.icono && <span>{item.icono}</span>}
         {item.nombre}
@@ -86,7 +86,7 @@ function MenuLinkItem({ item, align }: { item: MenuItem; align: 'left' | 'right'
                 <Link
                   key={marca.id}
                   href={marca.href}
-                  className="flex items-center justify-center border border-gray-100 rounded-lg h-16 p-2 hover:border-orange-300 transition-colors"
+                  className="flex items-center justify-center border border-gray-100 rounded-lg h-16 p-2 hover:border-mosso-yellow transition-colors"
                 >
                   {marca.logo ? (
                     <img
@@ -107,7 +107,7 @@ function MenuLinkItem({ item, align }: { item: MenuItem; align: 'left' | 'right'
                 <li key={op.id}>
                   <Link
                     href={op.href}
-                    className="block px-2 py-1.5 text-sm text-gray-700 hover:text-orange-500 hover:bg-gray-50 rounded"
+                    className="block px-2 py-1.5 text-sm text-gray-700 hover:text-mosso-yellow hover:bg-gray-50 rounded"
                   >
                     {op.nombre}
                   </Link>
@@ -124,7 +124,7 @@ function MenuLinkItem({ item, align }: { item: MenuItem; align: 'left' | 'right'
                       href={categoria.href}
                       className={`flex items-center justify-between px-4 py-2 text-sm ${
                         activeCategoria?.id === categoria.id
-                          ? 'text-orange-500 font-semibold bg-orange-50'
+                          ? 'text-gray-900 font-semibold bg-mosso-yellow/10'
                           : 'text-gray-700 hover:bg-gray-50'
                       }`}
                     >
@@ -138,11 +138,11 @@ function MenuLinkItem({ item, align }: { item: MenuItem; align: 'left' | 'right'
               {/* Columna derecha: subcategorías de la categoría activa */}
               {activeCategoria && activeCategoria.hijos.length > 0 && (
                 <div className="flex-1 py-4 px-4 border-l border-gray-100">
-                  <p className="text-orange-500 font-semibold text-sm mb-2">Categorías</p>
+                  <p className="text-mosso-yellow font-bold text-sm mb-2 uppercase tracking-wide">Categorías</p>
                   <ul className="space-y-1">
                     {activeCategoria.hijos.map((sub) => (
                       <li key={sub.id}>
-                        <Link href={sub.href} className="text-sm text-gray-700 hover:text-orange-500">
+                        <Link href={sub.href} className="text-sm text-gray-700 hover:text-mosso-yellow">
                           {sub.nombre}
                         </Link>
                       </li>

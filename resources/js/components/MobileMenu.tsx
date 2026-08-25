@@ -40,7 +40,7 @@ export default function MobileMenu({
                 <Link
                   href={item.href ?? '#'}
                   className={`text-sm font-semibold ${
-                    item.destacado ? 'text-orange-500' : 'text-gray-900'
+                    item.destacado ? 'text-mosso-yellow' : 'text-gray-900'
                   }`}
                   onClick={() => item.columnas.length === 0 && onClose()}
                 >

@@ -4,16 +4,11 @@ import { useState, type FormEvent } from 'react';
 import MegaMenu from './MegaMenu';
 import MobileMenu from './MobileMenu';
 
-/**
- * Header principal del sitio.
- * Contiene: Logo, Buscador, Ayuda, Cuenta, Favoritos, Carrito, MegaMenu (desktop)
- * y hamburguesa + MobileMenu (mobile).
- */
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <header className="w-full bg-white sticky top-0 z-50 shadow-sm">
+    <header className="w-full bg-white sticky top-0 z-50 shadow-sm border-b border-gray-100">
       <TopBar onOpenMobileMenu={() => setMobileOpen(true)} />
       <MegaMenu />
       <MobileMenu open={mobileOpen} onClose={() => setMobileOpen(false)} />
@@ -24,7 +19,6 @@ export default function Header() {
 function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu: () => void }) {
   return (
     <div className="flex items-center justify-between gap-3 md:gap-8 px-4 md:px-6 py-3 md:py-4 max-w-[1440px] mx-auto">
-      {/* Hamburguesa: solo mobile */}
       <button
         onClick={onOpenMobileMenu}
         aria-label="Abrir menú"
@@ -36,10 +30,9 @@ function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu: () => void }) {
       <Logo />
       <SearchBar />
 
-      {/* En mobile solo mostramos el carrito; el resto vive en el drawer */}
       <div className="hidden md:flex items-center gap-5 shrink-0">
         <HelpDropdown />
-        <Link href="/cuenta" aria-label="Mi cuenta" className="text-gray-700 hover:text-orange-500">
+        <Link href="/cuenta" aria-label="Mi cuenta" className="text-gray-900 hover:text-mosso-yellow transition-colors">
           <UserIcon />
         </Link>
         <FavoritosButton />
@@ -54,7 +47,7 @@ function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu: () => void }) {
 
 function Logo() {
   return (
-    <Link href="/" className="shrink-0 text-xl md:text-2xl font-bold tracking-tight text-gray-900">
+    <Link href="/" className="shrink-0 text-xl md:text-2xl font-black tracking-tight text-gray-900">
       MOSSO
     </Link>
   );
@@ -73,18 +66,18 @@ function SearchBar() {
     <div className="flex-1 max-w-2xl">
       <form
         onSubmit={handleSubmit}
-        className="relative flex items-center border border-gray-300 rounded-full overflow-hidden"
+        className="relative flex items-center border-2 border-gray-200 rounded-full overflow-hidden focus-within:border-mosso-yellow transition-colors"
       >
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Buscar productos"
+          placeholder="Buscar productos para tu mascota..."
           className="w-full pl-4 md:pl-5 pr-2 py-2 md:py-2.5 text-sm outline-none min-w-0 text-gray-900 placeholder-gray-400 bg-white"
         />
         <button
           type="submit"
-          className="bg-gray-900 hover:bg-gray-800 text-white rounded-full w-8 h-8 md:w-9 md:h-9 flex items-center justify-center mr-1 shrink-0"
+          className="bg-mosso-dark hover:bg-mosso-dark/80 text-white rounded-full w-8 h-8 md:w-9 md:h-9 flex items-center justify-center mr-1 shrink-0 transition-colors"
           aria-label="Buscar"
         >
           <SearchIcon />
@@ -96,7 +89,7 @@ function SearchBar() {
 
 function HelpDropdown() {
   return (
-    <button className="flex items-center gap-1 text-sm text-gray-700 hover:text-orange-500 whitespace-nowrap">
+    <button className="flex items-center gap-1 text-sm text-gray-900 hover:text-mosso-yellow whitespace-nowrap transition-colors">
       <HelpIcon />
       ¿Necesitas ayuda?
       <ChevronDown />
@@ -107,11 +100,11 @@ function HelpDropdown() {
 function FavoritosButton() {
   const { total } = useFavoritos();
   return (
-    <Link href="/favoritos" aria-label="Favoritos" className="relative text-gray-700 hover:text-orange-500">
+    <Link href="/favoritos" aria-label="Favoritos" className="relative text-gray-900 hover:text-mosso-yellow transition-colors">
       <span className="relative inline-flex">
         <HeartIcon />
         {total > 0 && (
-          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold min-w-[16px] h-4 px-0.5 rounded-full flex items-center justify-center leading-none pointer-events-none select-none">
+          <span className="absolute -top-2 -right-2 bg-mosso-red text-white text-[10px] font-bold min-w-[16px] h-4 px-0.5 rounded-full flex items-center justify-center leading-none pointer-events-none select-none">
             {total > 99 ? '99+' : total}
           </span>
         )}
@@ -126,10 +119,10 @@ function CartButton({ compact = false }: { compact?: boolean }) {
   const cantidad = carritoProps?.cantidad ?? 0;
 
   return (
-    <Link href="/carrito" className="relative flex items-center gap-2 text-gray-900 hover:text-orange-500">
+    <Link href="/carrito" className="relative flex items-center gap-2 text-gray-900 hover:text-mosso-yellow transition-colors">
       <span className="relative inline-flex">
         <CartIcon />
-        <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-[10px] font-bold min-w-[16px] h-4 px-0.5 rounded-full flex items-center justify-center leading-none pointer-events-none select-none">
+        <span className="absolute -top-2 -right-2 bg-mosso-red text-white text-[10px] font-bold min-w-[16px] h-4 px-0.5 rounded-full flex items-center justify-center leading-none pointer-events-none select-none">
           {cantidad > 99 ? '99+' : cantidad}
         </span>
       </span>

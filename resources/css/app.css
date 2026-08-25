@@ -13,6 +13,12 @@
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
         'Noto Color Emoji';
 
+    /* Paleta MOSSO */
+    --color-mosso-yellow: #FFC527;
+    --color-mosso-dark:   #4A4D53;
+    --color-mosso-red:    #FF4B4B;
+    --color-mosso-cream:  #FFFDF8;
+
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
     --radius-sm: calc(var(--radius) - 4px);

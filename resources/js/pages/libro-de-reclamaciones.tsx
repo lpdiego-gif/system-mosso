@@ -17,7 +17,7 @@ const EMPRESA = {
 };
 
 const inputClass =
-  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500';
+  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-mosso-yellow focus:border-mosso-yellow';
 
 export default function LibroDeReclamaciones() {
   const { flash } = usePage().props as unknown as {
@@ -200,7 +200,7 @@ export default function LibroDeReclamaciones() {
                     value="1"
                     checked={esMenorEdad}
                     onChange={(e) => setEsMenorEdad(e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500"
+                    className="h-4 w-4 rounded border-gray-300 text-mosso-yellow focus:ring-mosso-yellow"
                   />
                   Soy menor de edad (estos datos los completa mi padre, madre o apoderado)
                 </label>
@@ -243,7 +243,7 @@ export default function LibroDeReclamaciones() {
                 <button
                   type="submit"
                   disabled={processing}
-                  className="mt-4 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-bold px-8 py-3 rounded-lg"
+                  className="mt-4 bg-mosso-yellow hover:bg-mosso-yellow/85 disabled:opacity-60 text-gray-900 font-bold px-8 py-3 rounded-xl"
                 >
                   {processing ? 'Enviando…' : 'Enviar'}
                 </button>
@@ -306,14 +306,14 @@ function RadioCard({
   defaultChecked?: boolean;
 }) {
   return (
-    <label className="flex items-start gap-3 rounded-lg border border-gray-300 px-4 py-3 cursor-pointer has-[:checked]:border-orange-500 has-[:checked]:bg-orange-50">
+    <label className="flex items-start gap-3 rounded-lg border border-gray-300 px-4 py-3 cursor-pointer has-[:checked]:border-mosso-yellow has-[:checked]:bg-mosso-yellow/10">
       <input
         type="radio"
         name={name}
         value={value}
         defaultChecked={defaultChecked}
         required
-        className="mt-1 h-4 w-4 border-gray-300 text-orange-500 focus:ring-orange-500"
+        className="mt-1 h-4 w-4 border-gray-300 text-mosso-yellow focus:ring-mosso-yellow"
       />
       <span>
         <span className="block text-sm font-semibold text-gray-900">{label}</span>

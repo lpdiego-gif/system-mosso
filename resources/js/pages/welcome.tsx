@@ -16,22 +16,22 @@ export default function Welcome({
   return (
     <StorefrontLayout>
       {/* Banner principal */}
-      <section className="bg-orange-50 px-6 py-16 overflow-hidden">
+      <section className="bg-mosso-yellow/15 px-6 py-16 overflow-hidden">
         <div className="max-w-[1440px] mx-auto flex items-end justify-between gap-8">
           <div className="max-w-lg shrink-0">
             <h1 className="text-5xl font-black text-gray-900 leading-tight">
               Todo para tu engreído, en{' '}
-              <span className="text-orange-500">un solo lugar</span>
+              <span className="text-mosso-yellow">un solo lugar</span>
             </h1>
             <p className="mt-4 text-gray-600">
               Alimentos, accesorios e higiene para perros y gatos, con delivery
               directo a tu hogar.
             </p>
             <div className="mt-6 flex gap-3">
-              <button className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold px-6 py-3 rounded-lg">
+              <button className="bg-mosso-yellow hover:bg-mosso-yellow/85 text-gray-900 font-bold px-6 py-3 rounded-xl transition-colors shadow-sm">
                 Ver catálogo
               </button>
-              <button className="border border-gray-300 font-bold px-6 py-3 rounded-lg">
+              <button className="border-2 border-gray-900 text-gray-900 font-bold px-6 py-3 rounded-xl hover:bg-gray-900 hover:text-white transition-colors">
                 Ver ofertas
               </button>
             </div>

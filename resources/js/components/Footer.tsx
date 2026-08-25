@@ -1,11 +1,5 @@
 import { Link } from '@inertiajs/react';
 
-/**
- * Footer del sitio público (StorefrontLayout). Mismo criterio visual que Header.tsx:
- * componentes simples + íconos SVG hechos a mano (sin lucide-react ni componentes de ui/,
- * esos son del panel admin).
- */
-
 const enlacesTienda = [
   { label: 'Perros', href: '/catalogo/animal/1' },
   { label: 'Gatos', href: '/catalogo/animal/2' },
@@ -28,11 +22,11 @@ const mediosPago = ['VISA', 'Mastercard', 'Amex', 'Yape', 'Plin', 'Culqi'];
 
 export default function Footer() {
   return (
-    <footer className="bg-[#1A1A1A] text-gray-300">
+    <footer className="bg-black text-gray-300">
       <div className="max-w-[1440px] mx-auto px-6 py-10 md:py-14 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 md:gap-10">
         {/* Columna 1: Branding */}
         <div className="sm:col-span-2 md:col-span-1">
-          <Link href="/" className="text-xl font-bold tracking-tight text-white">
+          <Link href="/" className="text-xl font-black tracking-tight text-white">
             MOSSO
           </Link>
           <p className="mt-3 text-sm text-gray-400 max-w-[220px]">
@@ -72,23 +66,23 @@ export default function Footer() {
         {/* Columna 4: Contacto */}
         <FooterColumna titulo="Contacto">
           <li className="flex items-start gap-2 text-sm text-gray-400">
-            <MapPinIcon className="shrink-0 mt-0.5 text-orange-500" />
+            <MapPinIcon className="shrink-0 mt-0.5 text-mosso-yellow" />
             Lima, Perú
           </li>
           <li className="flex items-start gap-2 text-sm">
-            <PhoneIcon className="shrink-0 mt-0.5 text-orange-500" />
+            <PhoneIcon className="shrink-0 mt-0.5 text-mosso-yellow" />
             <a
               href="https://wa.me/51999123456"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-400 hover:text-white"
+              className="text-gray-400 hover:text-white transition-colors"
             >
               +51 999 123 456
             </a>
           </li>
           <li className="flex items-start gap-2 text-sm">
-            <MailIcon className="shrink-0 mt-0.5 text-orange-500" />
-            <a href="mailto:hola@mosso.com.pe" className="text-gray-400 hover:text-white">
+            <MailIcon className="shrink-0 mt-0.5 text-mosso-yellow" />
+            <a href="mailto:hola@mosso.com.pe" className="text-gray-400 hover:text-white transition-colors">
               hola@mosso.com.pe
             </a>
           </li>
@@ -100,7 +94,7 @@ export default function Footer() {
             {mediosPago.map((medio) => (
               <span
                 key={medio}
-                className="flex items-center justify-center rounded-md bg-white/10 px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-gray-200"
+                className="flex items-center justify-center rounded-lg bg-white/10 px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-gray-200"
               >
                 {medio}
               </span>
@@ -114,11 +108,11 @@ export default function Footer() {
         <div className="max-w-[1440px] mx-auto px-6 py-5 flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-3 text-xs text-gray-500 text-center">
           <p>© {new Date().getFullYear()} MOSSO. Todos los derechos reservados.</p>
           <p className="flex flex-wrap items-center justify-center gap-2">
-            <a href="#" className="hover:text-gray-300">
+            <a href="#" className="hover:text-gray-300 transition-colors">
               Política de privacidad
             </a>
             <span aria-hidden="true">|</span>
-            <a href="#" className="hover:text-gray-300">
+            <a href="#" className="hover:text-gray-300 transition-colors">
               Términos y condiciones
             </a>
           </p>
@@ -131,7 +125,7 @@ export default function Footer() {
 function FooterColumna({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
     <div>
-      <h3 className="text-sm font-bold text-white uppercase tracking-wide">{titulo}</h3>
+      <h3 className="text-sm font-bold text-mosso-yellow uppercase tracking-wide">{titulo}</h3>
       <ul className="mt-4 space-y-3">{children}</ul>
     </div>
   );
@@ -143,7 +137,7 @@ function FooterLink({ href, children }: { href: string; children: React.ReactNod
   if (esExterno) {
     return (
       <li>
-        <a href={href} className="text-sm text-gray-400 hover:text-white">
+        <a href={href} className="text-sm text-gray-400 hover:text-white transition-colors">
           {children}
         </a>
       </li>
@@ -152,7 +146,7 @@ function FooterLink({ href, children }: { href: string; children: React.ReactNod
 
   return (
     <li>
-      <Link href={href} className="text-sm text-gray-400 hover:text-white">
+      <Link href={href} className="text-sm text-gray-400 hover:text-white transition-colors">
         {children}
       </Link>
     </li>
@@ -174,7 +168,7 @@ function RedSocialIcon({
       target="_blank"
       rel="noopener noreferrer"
       aria-label={label}
-      className="w-9 h-9 rounded-full border border-white/15 flex items-center justify-center text-gray-300 hover:bg-orange-500 hover:border-orange-500 hover:text-white transition-colors"
+      className="w-9 h-9 rounded-full border border-white/15 flex items-center justify-center text-gray-300 hover:bg-mosso-yellow hover:border-mosso-yellow hover:text-gray-900 transition-colors"
     >
       {children}
     </a>
