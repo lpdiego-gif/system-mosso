@@ -2,6 +2,7 @@ export interface MenuHijo {
   id: number;
   nombre: string;
   href: string;
+  logo?: string | null;
   hijos: MenuHijo[];
 }
 

@@ -1,11 +1,24 @@
 import StorefrontLayout from '@/layouts/storefront-layout';
+import { BeneficiosBar, ProductoCarrusel, MarcaCarrusel } from '@/components/HomeSections';
+import type { ProductoCard, MarcaCard } from '@/types/producto';
 
-export default function Welcome() {
+interface WelcomeProps {
+  productosDestacados: ProductoCard[];
+  productosEnOferta: ProductoCard[];
+  marcasDestacadas: MarcaCard[];
+}
+
+export default function Welcome({
+  productosDestacados = [],
+  productosEnOferta = [],
+  marcasDestacadas = [],
+}: WelcomeProps) {
   return (
     <StorefrontLayout>
-      <section className="bg-orange-50 px-6 py-16">
-        <div className="max-w-[1440px] mx-auto flex items-center justify-between">
-          <div className="max-w-lg">
+      {/* Banner principal */}
+      <section className="bg-orange-50 px-6 py-16 overflow-hidden">
+        <div className="max-w-[1440px] mx-auto flex items-end justify-between gap-8">
+          <div className="max-w-lg shrink-0">
             <h1 className="text-5xl font-black text-gray-900 leading-tight">
               Todo para tu engreído, en{' '}
               <span className="text-orange-500">un solo lugar</span>
@@ -23,20 +36,20 @@ export default function Welcome() {
               </button>
             </div>
           </div>
-          <img
-            src="/image/pets-duo.png"
-            alt="Perrito y cachorro MOSSO"
-            className="max-w-md w-full h-auto"
-          />
+          <div className="flex-1 flex justify-end">
+            <img
+              src="/image/pets-duo.png"
+              alt="Perrito y cachorro MOSSO"
+              className="max-w-md w-full h-auto"
+            />
+          </div>
         </div>
       </section>
 
-      {/* Franja de beneficios: Delivery rápido, Paga seguro, Calidad, WhatsApp */}
-      <section className="border-t border-gray-100 px-6 py-8">
-        <div className="max-w-[1440px] mx-auto grid grid-cols-4 gap-6">
-          {/* aquí van tus 4 bloques de beneficios */}
-        </div>
-      </section>
+      <BeneficiosBar />
+      <ProductoCarrusel titulo="Productos Recomendados" productos={productosDestacados} />
+      <MarcaCarrusel marcas={marcasDestacadas} />
+      <ProductoCarrusel titulo="Ofertas Especiales" productos={productosEnOferta} />
     </StorefrontLayout>
   );
 }

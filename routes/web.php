@@ -6,10 +6,21 @@ use App\Http\Controllers\Admin\MarcaController;
 use App\Http\Controllers\Admin\ProductoController;
 use App\Http\Controllers\Admin\SubCategoriaController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\BusquedaController;
 
-Route::inertia('/', 'welcome')->name('home');
+use App\Http\Controllers\HomeController;
+
+Route::get('/', HomeController::class)->name('home');
 
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+
+/*
+    |--------------------------------------------------------------------------
+    | BUSCADOR
+    |--------------------------------------------------------------------------
+    */
+
+Route::get('/buscar', BusquedaController::class)->name('buscar');
 
     /*
     |--------------------------------------------------------------------------

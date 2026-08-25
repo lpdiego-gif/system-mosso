@@ -6,33 +6,29 @@ use Illuminate\Database\Eloquent\Model;
 
 class Producto extends Model
 {
-    protected $table = 'productos';
-
     protected $primaryKey = 'id_producto';
 
-    public $incrementing = true;
-
-    protected $keyType = 'int';
-
     protected $fillable = [
-        'sku',
-        'nombre',
-        'descripcion',
-        'fk_marca',
-        'fk_unidad_medida',
-        'fk_id_subcategorias',
-        'precio',
-        'stock',
-        'imagen_principal',
-        'fk_estado',
+        'sku', 'nombre', 'descripcion', 'fk_marca', 'fk_unidad_medida',
+        'fk_id_subcategorias', 'precio', 'stock', 'imagen_principal', 'fk_estado',
     ];
 
-    protected $casts = [
-        'precio' => 'decimal:2',
-        'stock' => 'integer',
-        'fk_marca' => 'integer',
-        'fk_unidad_medida' => 'integer',
-        'fk_id_subcategorias' => 'integer',
-        'fk_estado' => 'integer',
-    ];
+    public function marca()
+    {
+        return $this->belongsTo(Marca::class, 'fk_marca', 'id_marca');
+    }
+
+    public function descuentoActivo()
+    {
+        return $this->hasOne(Descuento::class, 'fk_producto', 'id_producto')
+            ->where('activo', true)
+            ->where('fecha_inicio', '<=', now())
+            ->where('fecha_fin', '>=', now())
+            ->latest('id_descuento');
+    }
+
+    public function scopeActivos($query)
+    {
+        return $query->where('fk_estado', 1); // 1 = 'Activo' en estados_producto
+    }
 }

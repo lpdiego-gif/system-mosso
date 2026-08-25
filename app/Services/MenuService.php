@@ -111,6 +111,10 @@ class MenuService
                     'id' => $m->id_marca,
                     'nombre' => $m->nombre,
                     'href' => "/marcas/{$m->id_marca}",
+                    // Asume que guardas solo el nombre de archivo y las imágenes
+                    // viven en public/image/marcas/ (mismo patrón que pets-duo.png).
+                    // Si guardas la ruta completa en la BD, cambia esto a: $m->logo
+                    'logo' => $m->logo ? "/image/marcas/{$m->logo}" : null,
                     'hijos' => [],
                 ]),
             ],

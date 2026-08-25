@@ -8,10 +8,8 @@ interface PageProps {
 }
 
 /**
- * Barra de navegación con mega menu.
- * Se divide en dos grupos según el orden que ya trae `menu` desde la BD:
- * - Izquierda: ítems tipo 'animal' / 'tipo_animal' (Perros, Gatos, Exóticos)
- * - Derecha: el resto (Marca, Servicios, Ofertas)
+ * Barra de navegación con mega menu (solo desktop, md: en adelante).
+ * En mobile se usa MobileMenu.tsx en su lugar.
  */
 export default function MegaMenu() {
   const { menu } = usePage<PageProps>().props;
@@ -20,16 +18,16 @@ export default function MegaMenu() {
   const grupoDerecho = menu.filter((i) => i.tipo !== 'animal' && i.tipo !== 'tipo_animal');
 
   return (
-    <nav className="border-t border-b border-gray-200 relative">
+    <nav className="hidden md:block border-t border-b border-gray-200 relative">
       <div className="flex items-center justify-between px-6 py-3 max-w-[1440px] mx-auto">
         <ul className="flex items-center gap-6">
           {grupoIzquierdo.map((item) => (
-            <MenuLinkItem key={item.id} item={item} />
+            <MenuLinkItem key={item.id} item={item} align="left" />
           ))}
         </ul>
         <ul className="flex items-center gap-6">
           {grupoDerecho.map((item) => (
-            <MenuLinkItem key={item.id} item={item} />
+            <MenuLinkItem key={item.id} item={item} align="right" />
           ))}
         </ul>
       </div>
@@ -38,9 +36,14 @@ export default function MegaMenu() {
 }
 
 /** Un ítem individual del menú, con su dropdown si tiene columnas */
-function MenuLinkItem({ item }: { item: MenuItem }) {
+function MenuLinkItem({ item, align }: { item: MenuItem; align: 'left' | 'right' }) {
   const [open, setOpen] = useState(false);
   const [activeCategoria, setActiveCategoria] = useState<MenuHijo | null>(null);
+
+  // "Marca": grid de logos. "Servicios"/"Exóticos": lista simple.
+  const esMarca = item.tipo === 'marca';
+  const esListaPlana =
+    item.columnas.length > 0 && item.columnas[0].items.every((i) => i.hijos.length === 0);
 
   const handleOpen = () => {
     if (item.columnas.length === 0) return;
@@ -61,7 +64,7 @@ function MenuLinkItem({ item }: { item: MenuItem }) {
     >
       <Link
         href={item.href ?? '#'}
-        className={`flex items-center gap-1 text-sm font-semibold ${
+        className={`flex items-center gap-1 text-sm font-semibold whitespace-nowrap ${
           item.destacado ? 'text-orange-500' : 'text-gray-900'
         } hover:text-orange-500 transition-colors`}
       >
@@ -71,40 +74,83 @@ function MenuLinkItem({ item }: { item: MenuItem }) {
       </Link>
 
       {open && item.columnas.length > 0 && (
-        <div className="absolute top-full left-0 mt-0 bg-white shadow-lg rounded-lg border border-gray-100 flex min-w-[500px] z-50">
-          {/* Columna izquierda: lista de categorías (Alimentos, Necesidad/Condición...) */}
-          <ul className="w-56 py-2">
-            {item.columnas[0].items.map((categoria) => (
-              <li key={categoria.id} onMouseEnter={() => setActiveCategoria(categoria)}>
+        <div
+          className={`absolute top-full mt-0 bg-white shadow-lg rounded-lg border border-gray-100 z-50 ${
+            align === 'left' ? 'left-0' : 'right-0'
+          } ${esMarca ? 'w-[420px] p-4' : esListaPlana ? 'w-56 p-3' : 'flex min-w-[500px]'}`}
+        >
+          {esMarca ? (
+            // Grid de logos, estilo tienda de marcas
+            <div className="grid grid-cols-3 gap-3">
+              {item.columnas[0].items.map((marca) => (
                 <Link
-                  href={categoria.href}
-                  className={`flex items-center justify-between px-4 py-2 text-sm ${
-                    activeCategoria?.id === categoria.id
-                      ? 'text-orange-500 font-semibold bg-orange-50'
-                      : 'text-gray-700 hover:bg-gray-50'
-                  }`}
+                  key={marca.id}
+                  href={marca.href}
+                  className="flex items-center justify-center border border-gray-100 rounded-lg h-16 p-2 hover:border-orange-300 transition-colors"
                 >
-                  {categoria.nombre}
-                  {categoria.hijos.length > 0 && <span>›</span>}
+                  {marca.logo ? (
+                    <img
+                      src={marca.logo}
+                      alt={marca.nombre}
+                      className="max-h-10 max-w-full object-contain"
+                    />
+                  ) : (
+                    <span className="text-xs text-gray-600 text-center">{marca.nombre}</span>
+                  )}
                 </Link>
-              </li>
-            ))}
-          </ul>
-
-          {/* Columna derecha: subcategorías de la categoría activa (Alimento Seco, Húmedo...) */}
-          {activeCategoria && activeCategoria.hijos.length > 0 && (
-            <div className="flex-1 py-4 px-4 border-l border-gray-100">
-              <p className="text-orange-500 font-semibold text-sm mb-2">Categorías</p>
-              <ul className="space-y-1">
-                {activeCategoria.hijos.map((sub) => (
-                  <li key={sub.id}>
-                    <Link href={sub.href} className="text-sm text-gray-700 hover:text-orange-500">
-                      {sub.nombre}
+              ))}
+            </div>
+          ) : esListaPlana ? (
+            // Lista simple: Servicios, Exóticos
+            <ul>
+              {item.columnas[0].items.map((op) => (
+                <li key={op.id}>
+                  <Link
+                    href={op.href}
+                    className="block px-2 py-1.5 text-sm text-gray-700 hover:text-orange-500 hover:bg-gray-50 rounded"
+                  >
+                    {op.nombre}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <>
+              {/* Columna izquierda: categorías (Alimentos, Necesidad/Condición...) */}
+              <ul className="w-56 py-2">
+                {item.columnas[0].items.map((categoria) => (
+                  <li key={categoria.id} onMouseEnter={() => setActiveCategoria(categoria)}>
+                    <Link
+                      href={categoria.href}
+                      className={`flex items-center justify-between px-4 py-2 text-sm ${
+                        activeCategoria?.id === categoria.id
+                          ? 'text-orange-500 font-semibold bg-orange-50'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      {categoria.nombre}
+                      {categoria.hijos.length > 0 && <span>›</span>}
                     </Link>
                   </li>
                 ))}
               </ul>
-            </div>
+
+              {/* Columna derecha: subcategorías de la categoría activa */}
+              {activeCategoria && activeCategoria.hijos.length > 0 && (
+                <div className="flex-1 py-4 px-4 border-l border-gray-100">
+                  <p className="text-orange-500 font-semibold text-sm mb-2">Categorías</p>
+                  <ul className="space-y-1">
+                    {activeCategoria.hijos.map((sub) => (
+                      <li key={sub.id}>
+                        <Link href={sub.href} className="text-sm text-gray-700 hover:text-orange-500">
+                          {sub.nombre}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
