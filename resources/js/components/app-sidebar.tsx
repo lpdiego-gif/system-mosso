@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, Package, FolderGit2, LayoutGrid } from 'lucide-react';
+import { BookOpen, Building2, Package, FolderGit2, LayoutGrid } from 'lucide-react';
 import { route } from 'ziggy-js';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
@@ -35,16 +35,17 @@ const mainNavItems: NavItem[] = [
         icon: Package,
     },
     {
+        title: 'Empresa',
+        href: route('empresa.index'),
+        icon: Building2,
+    },
+    {
         title: 'Trabajadores',
         href: '/trabajador',
         icon: FolderGit2,
         items: [
             {
                 title: 'Trabajadores',
-                href: '/trabajador',
-            },
-            {
-                title: 'item 2',
                 href: '/trabajador',
             },
         ],
@@ -54,13 +55,14 @@ const mainNavItems: NavItem[] = [
         icon: FolderGit2,
         items: [
             {
+                title: 'Provincia',
+                href: '/provincia',
+            },
+            {
                 title: 'Distrito',
                 href: '/distrito',
             },
-            {
-                title: 'item 2',
-                href: '/trabajador',
-            },
+            
         ],
     },
     

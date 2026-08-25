@@ -180,6 +180,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 
+use App\Http\Controllers\EmpresaController;
+Route::middleware(['auth'])->prefix('empresa')->name('empresa.')->group(function () {
+    Route::get('/', [EmpresaController::class, 'index'])->name('index');
+    Route::get('/provincias/{departamento}', [EmpresaController::class, 'provincias'])->whereNumber('departamento')->name('provincias');
+    Route::get('/distritos/{provincia}', [EmpresaController::class, 'distritos'])->whereNumber('provincia')->name('distritos');
+    Route::post('/', [EmpresaController::class, 'guardar'])->name('guardar');
+});
+
 use App\Http\Controllers\TrabajadorController;
 Route::middleware(['auth'])->prefix('trabajador')->name('trabajador.')->group(function () {
     Route::get('/', [TrabajadorController::class, 'index'])->name('index');
