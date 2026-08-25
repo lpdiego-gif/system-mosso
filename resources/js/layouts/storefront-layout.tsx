@@ -1,3 +1,4 @@
+import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 import type { ReactNode } from 'react';
 
@@ -7,10 +8,10 @@ import type { ReactNode } from 'react';
  */
 export default function StorefrontLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white flex flex-col">
       <Header />
-      <main>{children}</main>
-      {/* <Footer /> lo agregamos cuando toque el footer */}
+      <main className="flex-1">{children}</main>
+      <Footer />
     </div>
   );
 }
