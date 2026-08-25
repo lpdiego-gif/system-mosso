@@ -49,7 +49,7 @@ const mainNavItems: NavItem[] = [
 const footerNavItems: NavItem[] = [
     {
         title: 'Portal Web',
-        href: 'https://github.com/laravel/react-starter-kit',
+        href: route('home'),
         icon: FolderGit2,
     },
     {
