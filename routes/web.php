@@ -8,7 +8,12 @@ use App\Http\Controllers\Admin\SubCategoriaController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BusquedaController;
 
+use App\Http\Controllers\ClienteRegistroController;
+use App\Http\Controllers\CuentaController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\MiCuentaController;
+use App\Http\Controllers\MiCuentaDetallesController;
+use App\Http\Controllers\MiCuentaDireccionController;
 use App\Http\Controllers\ReclamoController;
 
 Route::get('/', HomeController::class)->name('home');
@@ -21,6 +26,42 @@ Route::get('/', HomeController::class)->name('home');
 
 Route::get('/libro-de-reclamaciones', [ReclamoController::class, 'create'])->name('reclamos.create');
 Route::post('/libro-de-reclamaciones', [ReclamoController::class, 'store'])->name('reclamos.store');
+
+/*
+|--------------------------------------------------------------------------
+| Mi cuenta (público): login unificado trabajador/cliente + registro cliente
+|--------------------------------------------------------------------------
+| El login en sí usa las rutas de Fortify (/login, /logout) ya existentes;
+| aquí solo vive la página "Mi cuenta" y el auto-registro de clientes.
+*/
+
+Route::get('/cuenta', [CuentaController::class, 'show'])->name('cuenta');
+Route::post('/cuenta/registro', [ClienteRegistroController::class, 'store'])->name('cliente.registro.store');
+Route::post('/cuenta/registro/verificar', [ClienteRegistroController::class, 'verificar'])->name('cliente.registro.verificar');
+Route::post('/cuenta/registro/reenviar', [ClienteRegistroController::class, 'reenviar'])->name('cliente.registro.reenviar');
+
+/*
+|--------------------------------------------------------------------------
+| Mi cuenta (cliente autenticado): escritorio, direcciones y detalles.
+|--------------------------------------------------------------------------
+| Pedidos (el otro ítem del menú lateral) todavía no tiene ruta propia.
+*/
+
+Route::middleware(['auth', 'cliente'])->group(function () {
+    Route::get('/mi-cuenta', [MiCuentaController::class, 'index'])->name('mi-cuenta');
+
+    Route::prefix('mi-cuenta/direcciones')->name('mi-cuenta.direcciones.')->group(function () {
+        Route::get('/', [MiCuentaDireccionController::class, 'index'])->name('index');
+        Route::post('/', [MiCuentaDireccionController::class, 'store'])->name('store');
+        Route::patch('/{direccion}/principal', [MiCuentaDireccionController::class, 'marcarPrincipal'])
+            ->whereNumber('direccion')->name('principal');
+        Route::delete('/{direccion}', [MiCuentaDireccionController::class, 'destroy'])
+            ->whereNumber('direccion')->name('destroy');
+    });
+
+    Route::get('/mi-cuenta/detalles', [MiCuentaDetallesController::class, 'index'])->name('mi-cuenta.detalles');
+    Route::put('/mi-cuenta/detalles', [MiCuentaDetallesController::class, 'update'])->name('mi-cuenta.detalles.update');
+});
 
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
 

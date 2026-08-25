@@ -64,7 +64,7 @@ CREATE TABLE `cache` (
 
 LOCK TABLES `cache` WRITE;
 /*!40000 ALTER TABLE `cache` DISABLE KEYS */;
-INSERT INTO `cache` VALUES ('laravel-cache-5a864f15c95b6e8983dfca1f000e7299','i:1;',1787634675),('laravel-cache-5a864f15c95b6e8983dfca1f000e7299:timer','i:1787634675;',1787634675),('laravel-cache-admin@mosso.pe|127.0.0.1','i:1;',1787633106),('laravel-cache-admin@mosso.pe|127.0.0.1:timer','i:1787633106;',1787633106),('laravel-cache-f7cc854707625fe7695d479d754b44dd','i:1;',1787633104),('laravel-cache-f7cc854707625fe7695d479d754b44dd:timer','i:1787633104;',1787633104);
+INSERT INTO `cache` VALUES ('laravel-cache-2edf651c550870469fcdb5b845224a1a','i:1;',1787641643),('laravel-cache-2edf651c550870469fcdb5b845224a1a:timer','i:1787641643;',1787641643),('laravel-cache-5a864f15c95b6e8983dfca1f000e7299','i:1;',1787641929),('laravel-cache-5a864f15c95b6e8983dfca1f000e7299:timer','i:1787641929;',1787641929),('laravel-cache-80b3b458d4f1f39ff38318c49f1e0298','i:1;',1787641506),('laravel-cache-80b3b458d4f1f39ff38318c49f1e0298:timer','i:1787641506;',1787641506),('laravel-cache-admin@mosso.pe|127.0.0.1','i:1;',1787641277),('laravel-cache-admin@mosso.pe|127.0.0.1:timer','i:1787641277;',1787641277),('laravel-cache-d89848d4114178f9811798305bb0ab36','i:2;',1787640106),('laravel-cache-d89848d4114178f9811798305bb0ab36:timer','i:1787640106;',1787640106),('laravel-cache-diego@gmail.com|127.0.0.1','i:1;',1787641643),('laravel-cache-diego@gmail.com|127.0.0.1:timer','i:1787641643;',1787641643),('laravel-cache-f7cc854707625fe7695d479d754b44dd','i:1;',1787641277),('laravel-cache-f7cc854707625fe7695d479d754b44dd:timer','i:1787641277;',1787641277),('laravel-cache-fa950f3fad9a4af60920950c52373154','i:1;',1787639642),('laravel-cache-fa950f3fad9a4af60920950c52373154:timer','i:1787639642;',1787639642);
 /*!40000 ALTER TABLE `cache` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -199,7 +199,7 @@ CREATE TABLE `cliente_direcciones` (
   KEY `fk_cliente_direcciones_direccion_idx` (`fk_direccion`),
   CONSTRAINT `fk_cliente_direcciones_cliente` FOREIGN KEY (`fk_cliente`) REFERENCES `clientes` (`id_cliente`) ON DELETE CASCADE,
   CONSTRAINT `fk_cliente_direcciones_direccion` FOREIGN KEY (`fk_direccion`) REFERENCES `direcciones` (`id_direccion`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -220,7 +220,7 @@ DROP TABLE IF EXISTS `clientes`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `clientes` (
   `id_cliente` int(11) NOT NULL AUTO_INCREMENT,
-  `fk_persona` int(11) NOT NULL,
+  `fk_persona` int(11) DEFAULT NULL,
   `fk_user` bigint(20) unsigned DEFAULT NULL,
   `correo` varchar(150) NOT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
@@ -231,7 +231,7 @@ CREATE TABLE `clientes` (
   UNIQUE KEY `clientes_fk_user_unique` (`fk_user`),
   CONSTRAINT `fk_clientes_persona` FOREIGN KEY (`fk_persona`) REFERENCES `personas` (`id_persona`),
   CONSTRAINT `fk_clientes_user` FOREIGN KEY (`fk_user`) REFERENCES `users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -240,7 +240,35 @@ CREATE TABLE `clientes` (
 
 LOCK TABLES `clientes` WRITE;
 /*!40000 ALTER TABLE `clientes` DISABLE KEYS */;
+INSERT INTO `clientes` VALUES (3,NULL,4,'lpdiego999@gmail.com','2026-08-25 06:22:15','2026-08-25 06:22:15');
 /*!40000 ALTER TABLE `clientes` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `codigos_verificacion`
+--
+
+DROP TABLE IF EXISTS `codigos_verificacion`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `codigos_verificacion` (
+  `email` varchar(255) NOT NULL,
+  `codigo` varchar(6) NOT NULL,
+  `intentos` tinyint(3) unsigned NOT NULL DEFAULT 0,
+  `expira_en` datetime NOT NULL,
+  `created_at` datetime DEFAULT NULL,
+  PRIMARY KEY (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `codigos_verificacion`
+--
+
+LOCK TABLES `codigos_verificacion` WRITE;
+/*!40000 ALTER TABLE `codigos_verificacion` DISABLE KEYS */;
+INSERT INTO `codigos_verificacion` VALUES ('lpdiego999@gmail.com','178185',0,'2026-08-25 01:37:15','2026-08-25 01:22:15');
+/*!40000 ALTER TABLE `codigos_verificacion` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -685,7 +713,7 @@ CREATE TABLE `migrations` (
   `migration` varchar(255) NOT NULL,
   `batch` int(11) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -694,7 +722,7 @@ CREATE TABLE `migrations` (
 
 LOCK TABLES `migrations` WRITE;
 /*!40000 ALTER TABLE `migrations` DISABLE KEYS */;
-INSERT INTO `migrations` VALUES (1,'2026_08_25_003439_create_reclamos_table',1);
+INSERT INTO `migrations` VALUES (1,'2026_08_25_003439_create_reclamos_table',1),(2,'2026_08_25_040000_make_clientes_fk_persona_nullable',2),(3,'2026_08_25_040001_create_codigos_verificacion_table',2),(4,'2026_08_25_060000_seed_tipo_documento',3);
 /*!40000 ALTER TABLE `migrations` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -910,7 +938,7 @@ CREATE TABLE `personas` (
   UNIQUE KEY `personas_num_documento_unique` (`num_documento`),
   KEY `fk_personas_tipo_documento_idx` (`fk_tipo_documento`),
   CONSTRAINT `fk_personas_tipo_documento` FOREIGN KEY (`fk_tipo_documento`) REFERENCES `tipo_documento` (`id_tipo_documento`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -919,6 +947,7 @@ CREATE TABLE `personas` (
 
 LOCK TABLES `personas` WRITE;
 /*!40000 ALTER TABLE `personas` DISABLE KEYS */;
+INSERT INTO `personas` VALUES (1,1,'00000001','Diego','Pendiente',NULL,'000000000',NULL,'2026-08-25 07:10:36','2026-08-25 07:10:36');
 /*!40000 ALTER TABLE `personas` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1318,7 +1347,7 @@ CREATE TABLE `sessions` (
 
 LOCK TABLES `sessions` WRITE;
 /*!40000 ALTER TABLE `sessions` DISABLE KEYS */;
-INSERT INTO `sessions` VALUES ('mt5eUpy4DwmFWJAMdUhtBUMv8NhSTkJuZPJtYJ8n',3,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36','eyJfdG9rZW4iOiI1ajRqS29zcDFIbDZPRUhxTkFsQnIweGJPMnJXbzYyaWZZWk1oa2x5IiwiX2ZsYXNoIjp7Im9sZCI6W10sIm5ldyI6W119LCJfcHJldmlvdXMiOnsidXJsIjoiaHR0cDpcL1wvbG9jYWxob3N0OjgwMDBcL3RyYWJhamFkb3JcL2RhdGE/cGFnZT0xJnBlcl9wYWdlPTEwIiwicm91dGUiOiJ0cmFiYWphZG9yLmRhdGEifSwibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiOjN9',1787635053);
+INSERT INTO `sessions` VALUES ('DDKXNrHqAgfDpiMzT5gTTcPO6QwqbWkQ4p1dHXe6',NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36','eyJfdG9rZW4iOiJsY3BXemxFZXJTckVFSkZQSVdXQ3lHRWhXeUNlNUhPSERVdTRwVTlhIiwiX2ZsYXNoIjp7Im9sZCI6W10sIm5ldyI6W119fQ==',1787641186),('k16kABSOt6vYkJ8JzKghZQWXuoMWkVbpTTKmmG7u',NULL,'127.0.0.1','curl/8.19.0','eyJfdG9rZW4iOiJhWDdpRDlFUUtyMWhiTkQxdFg3ZXNzS051SnBucUwyN2RIMWRXZGw5IiwiX3ByZXZpb3VzIjp7InVybCI6Imh0dHA6XC9cL2xvY2FsaG9zdDo4MDAwIiwicm91dGUiOiJob21lIn0sIl9mbGFzaCI6eyJvbGQiOltdLCJuZXciOltdfX0=',1787641885),('nydyqWuahBmLy0aFCGzVYOgYOviz5Wi5uQVUjzr2',NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36','eyJfdG9rZW4iOiJraWZzbXVaQmUwcTJXTlhVZlVoeGh2NUw1U2VMUjY5WkpvejVMMzY2IiwiX2ZsYXNoIjp7Im9sZCI6W10sIm5ldyI6W119fQ==',1787639361),('Tc6ZXp8TrkRKWXzOiy1S32tCOmM0wofHr7xXIobC',NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36','eyJfdG9rZW4iOiJ0RTgwbWN1YU55bU5MYXpwSVo5UnhEb2NLTUZYUUdBOTFtRnVyR0JZIiwiX2ZsYXNoIjp7Im9sZCI6W10sIm5ldyI6W119fQ==',1787641695);
 /*!40000 ALTER TABLE `sessions` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1408,7 +1437,7 @@ CREATE TABLE `tipo_documento` (
   `id_tipo_documento` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
   PRIMARY KEY (`id_tipo_documento`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1417,6 +1446,7 @@ CREATE TABLE `tipo_documento` (
 
 LOCK TABLES `tipo_documento` WRITE;
 /*!40000 ALTER TABLE `tipo_documento` DISABLE KEYS */;
+INSERT INTO `tipo_documento` VALUES (1,'DNI'),(2,'CE'),(3,'Pasaporte');
 /*!40000 ALTER TABLE `tipo_documento` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1494,7 +1524,7 @@ CREATE TABLE `trabajadores` (
   CONSTRAINT `fk_trabajadores_persona` FOREIGN KEY (`fk_persona`) REFERENCES `personas` (`id_persona`),
   CONSTRAINT `fk_trabajadores_rol` FOREIGN KEY (`fk_rol`) REFERENCES `roles` (`id_rol`),
   CONSTRAINT `fk_trabajadores_user` FOREIGN KEY (`fk_user`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1503,6 +1533,7 @@ CREATE TABLE `trabajadores` (
 
 LOCK TABLES `trabajadores` WRITE;
 /*!40000 ALTER TABLE `trabajadores` DISABLE KEYS */;
+INSERT INTO `trabajadores` VALUES (3,1,5,1,NULL,'2026-08-25',1,'2026-08-25 07:10:36','2026-08-25 07:10:36');
 /*!40000 ALTER TABLE `trabajadores` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1552,7 +1583,7 @@ CREATE TABLE `users` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `users_email_unique` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1561,7 +1592,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (2,'mili','jonceano26cristian@gmail.com',NULL,'$2y$12$O7xkFKqSccWzhFanFV1DkuB991QAxnJyXfpko7W62GaNa2aDh.cCm',NULL,NULL,NULL,NULL,'2026-08-24 20:20:10','2026-08-24 20:20:10'),(3,'Heiner','diego@mosso.com',NULL,'$2y$12$Du3HuTSknD3jDbch9dBl5.KNa3PGeQSBuvkwdiT2B3JiNriHwUXtG',NULL,NULL,NULL,NULL,'2026-08-25 04:44:42','2026-08-25 04:44:42');
+INSERT INTO `users` VALUES (2,'mili','jonceano26cristian@gmail.com',NULL,'$2y$12$O7xkFKqSccWzhFanFV1DkuB991QAxnJyXfpko7W62GaNa2aDh.cCm',NULL,NULL,NULL,NULL,'2026-08-24 20:20:10','2026-08-24 20:20:10'),(4,'lpdiego999','lpdiego999@gmail.com',NULL,'$2y$12$2gWeN2knFltKWcRPJxwMbeJJsCjnid2GatmJvGoBUgKK44T5KPuRS',NULL,NULL,NULL,NULL,'2026-08-25 06:22:15','2026-08-25 06:22:15'),(5,'Diego','diego@mosso.com','2026-08-25 07:10:36','$2y$12$5kDBlvHIC7MOkd/AD2Nqc.QJFNvun/KA.osw2Driy8brVz5NcI/PK',NULL,NULL,NULL,NULL,'2026-08-25 07:10:36','2026-08-25 07:10:36');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1578,4 +1609,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-08-25  0:44:22
+-- Dump completed on 2026-08-25  2:11:32
