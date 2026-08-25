@@ -14,7 +14,7 @@ export default function MiCuenta({ user }: MiCuentaProps) {
       <MiCuentaShell activo="escritorio">
         <p className="text-gray-900">
           Hola <strong>{user.name}</strong> (¿no eres <strong>{user.name}</strong>?{' '}
-          <Link href={logout()} as="button" className="text-orange-500 hover:underline">
+          <Link href={logout()} as="button" className="text-gray-900 font-semibold hover:text-mosso-yellow transition-colors hover:underline">
             Cerrar sesión
           </Link>
           )
@@ -22,15 +22,15 @@ export default function MiCuenta({ user }: MiCuentaProps) {
 
         <p className="mt-3 text-sm text-gray-600 leading-relaxed max-w-2xl">
           Desde el escritorio de tu cuenta puedes ver tus{' '}
-          <Link href="/mi-cuenta/pedidos" className="text-orange-500 hover:underline">
+          <Link href="/mi-cuenta/pedidos" className="text-gray-900 font-semibold hover:text-mosso-yellow transition-colors hover:underline">
             pedidos
           </Link>{' '}
           recientes, gestionar tus{' '}
-          <Link href="/mi-cuenta/direcciones" className="text-orange-500 hover:underline">
+          <Link href="/mi-cuenta/direcciones" className="text-gray-900 font-semibold hover:text-mosso-yellow transition-colors hover:underline">
             direcciones de envío y facturación
           </Link>{' '}
           y editar tu{' '}
-          <Link href="/mi-cuenta/detalles" className="text-orange-500 hover:underline">
+          <Link href="/mi-cuenta/detalles" className="text-gray-900 font-semibold hover:text-mosso-yellow transition-colors hover:underline">
             contraseña y los detalles de tu cuenta
           </Link>
           .
@@ -62,9 +62,9 @@ function TarjetaAcceso({
     <Link
       href={href}
       as={logout ? 'button' : undefined}
-      className="flex flex-col items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white p-5 text-center hover:border-orange-300 hover:shadow-md transition-all"
+      className="flex flex-col items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white p-5 text-center hover:border-mosso-yellow hover:shadow-md transition-all"
     >
-      <span className="text-orange-500">{icono}</span>
+      <span className="text-mosso-yellow">{icono}</span>
       <span className="text-sm font-semibold text-gray-900">{titulo}</span>
     </Link>
   );

@@ -22,6 +22,7 @@ createInertiaApp({
             case name.startsWith('carrito/'):
             case name === 'buscar':
             case name === 'favoritos':
+            case name === 'ofertas':
                 return null;
             case name.startsWith('auth/'):
                 return AuthLayout;

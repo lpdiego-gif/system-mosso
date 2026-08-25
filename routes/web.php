@@ -10,6 +10,7 @@ use App\Http\Controllers\BusquedaController;
 use App\Http\Controllers\CatalogoController;
 use App\Http\Controllers\CarritoController;
 use App\Http\Controllers\FavoritosController;
+use App\Http\Controllers\OfertasController;
 
 use App\Http\Controllers\ClienteRegistroController;
 use App\Http\Controllers\CuentaController;
@@ -23,6 +24,7 @@ Route::get('/', HomeController::class)->name('home');
 
 Route::get('/buscar', BusquedaController::class)->name('buscar');
 Route::get('/favoritos', FavoritosController::class)->name('favoritos');
+Route::get('/ofertas', OfertasController::class)->name('ofertas');
 
 /*
 |--------------------------------------------------------------------------

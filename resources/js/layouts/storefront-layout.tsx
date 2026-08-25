@@ -8,7 +8,7 @@ import type { ReactNode } from 'react';
  */
 export default function StorefrontLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-mosso-cream flex flex-col">
       <Header />
       <main className="flex-1">{children}</main>
       <Footer />

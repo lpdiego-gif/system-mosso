@@ -23,14 +23,14 @@ export default function CarritoIndex({ items, total }: Props) {
             <div className="max-w-[1440px] mx-auto px-6 py-8">
                 {/* Breadcrumb */}
                 <nav className="flex items-center gap-1.5 text-sm text-gray-500 mb-6">
-                    <Link href="/" className="hover:text-orange-500 transition-colors">
+                    <Link href="/" className="hover:text-mosso-yellow transition-colors">
                         Inicio
                     </Link>
                     <span className="text-gray-300">/</span>
                     <span className="text-gray-900 font-medium">Carrito</span>
                 </nav>
 
-                <h1 className="text-2xl font-bold text-gray-900 mb-8">Mi carrito</h1>
+                <h1 className="text-2xl font-black text-gray-900 mb-8">Mi carrito</h1>
 
                 {items.length === 0 ? (
                     <EstadoVacio />
@@ -47,7 +47,7 @@ export default function CarritoIndex({ items, total }: Props) {
 
                         {/* Resumen */}
                         <div className="w-full lg:w-80 shrink-0">
-                            <div className="border border-gray-100 rounded-xl p-6">
+                            <div className="border border-gray-100 rounded-xl p-6 bg-white">
                                 <h2 className="text-lg font-bold text-gray-900 mb-4">
                                     Resumen del pedido
                                 </h2>
@@ -67,14 +67,14 @@ export default function CarritoIndex({ items, total }: Props) {
 
                                 <div className="border-t border-gray-100 mt-4 pt-4 flex justify-between font-bold text-gray-900">
                                     <span>Total</span>
-                                    <span className="text-blue-600 text-lg">
+                                    <span className="text-xl">
                                         S/ {total.toFixed(2)}
                                     </span>
                                 </div>
 
                                 <button
                                     disabled
-                                    className="mt-6 w-full bg-orange-500 text-white font-bold py-3 rounded-full text-sm opacity-60 cursor-not-allowed"
+                                    className="mt-6 w-full bg-mosso-yellow text-gray-900 font-bold py-3 rounded-full text-sm opacity-50 cursor-not-allowed"
                                 >
                                     Proceder al pago
                                 </button>
@@ -84,7 +84,7 @@ export default function CarritoIndex({ items, total }: Props) {
 
                                 <Link
                                     href="/"
-                                    className="mt-4 block text-center text-sm text-orange-500 hover:underline"
+                                    className="mt-4 block text-center text-sm text-gray-900 font-semibold hover:text-mosso-yellow transition-colors"
                                 >
                                     ← Seguir comprando
                                 </Link>
@@ -111,9 +111,9 @@ function FilaItem({ item }: { item: ItemCarrito }) {
     };
 
     return (
-        <div className="flex gap-4 p-4 bg-white hover:bg-gray-50 transition-colors">
+        <div className="flex gap-4 p-4 bg-white hover:bg-mosso-cream/40 transition-colors">
             {/* Imagen */}
-            <div className="w-20 h-20 shrink-0 bg-gray-50 rounded-lg flex items-center justify-center overflow-hidden border border-gray-100">
+            <div className="w-20 h-20 shrink-0 bg-gray-50 rounded-xl flex items-center justify-center overflow-hidden border border-gray-100">
                 {item.imagen ? (
                     <img
                         src={item.imagen}
@@ -129,7 +129,7 @@ function FilaItem({ item }: { item: ItemCarrito }) {
             <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 line-clamp-2">{item.nombre}</p>
                 {item.marca && (
-                    <p className="text-xs text-gray-500 uppercase tracking-wide mt-0.5">
+                    <p className="text-xs text-gray-400 uppercase tracking-wide mt-0.5">
                         {item.marca}
                     </p>
                 )}
@@ -142,18 +142,18 @@ function FilaItem({ item }: { item: ItemCarrito }) {
                     <button
                         onClick={() => cambiarCantidad(item.cantidad - 1)}
                         disabled={item.cantidad <= 1}
-                        className="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                        className="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-gray-900 hover:bg-mosso-yellow hover:border-mosso-yellow disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-bold"
                         aria-label="Disminuir cantidad"
                     >
                         −
                     </button>
-                    <span className="w-8 text-center text-sm font-semibold text-gray-900">
+                    <span className="w-8 text-center text-sm font-bold text-gray-900">
                         {item.cantidad}
                     </span>
                     <button
                         onClick={() => cambiarCantidad(item.cantidad + 1)}
                         disabled={item.cantidad >= 99}
-                        className="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                        className="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center text-gray-900 hover:bg-mosso-yellow hover:border-mosso-yellow disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-bold"
                         aria-label="Aumentar cantidad"
                     >
                         +
@@ -163,12 +163,12 @@ function FilaItem({ item }: { item: ItemCarrito }) {
 
             {/* Subtotal + eliminar */}
             <div className="flex flex-col items-end justify-between shrink-0">
-                <span className="text-sm font-bold text-blue-600">
+                <span className="text-sm font-black text-gray-900">
                     S/ {item.subtotal.toFixed(2)}
                 </span>
                 <button
                     onClick={eliminar}
-                    className="text-gray-300 hover:text-red-500 transition-colors"
+                    className="text-gray-300 hover:text-mosso-red transition-colors"
                     aria-label="Eliminar producto"
                 >
                     <TrashIcon />
@@ -197,7 +197,7 @@ function EstadoVacio() {
             <p className="text-lg font-medium text-gray-500">Tu carrito está vacío</p>
             <Link
                 href="/"
-                className="bg-orange-500 hover:bg-orange-600 text-white font-bold px-6 py-3 rounded-full text-sm transition-colors"
+                className="bg-mosso-yellow hover:bg-mosso-yellow/85 text-gray-900 font-bold px-6 py-3 rounded-full text-sm transition-colors"
             >
                 Ver productos
             </Link>

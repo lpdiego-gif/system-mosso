@@ -12,13 +12,13 @@ export default function Favoritos() {
             <div className="max-w-[1440px] mx-auto px-6 py-8">
                 {/* Breadcrumb */}
                 <nav className="flex items-center gap-1.5 text-sm text-gray-500 mb-6">
-                    <Link href="/" className="hover:text-orange-500 transition-colors">Inicio</Link>
+                    <Link href="/" className="hover:text-mosso-yellow transition-colors">Inicio</Link>
                     <span className="text-gray-300">/</span>
                     <span className="text-gray-900 font-medium">Mis favoritos</span>
                 </nav>
 
                 <div className="flex items-center justify-between mb-6">
-                    <h1 className="text-2xl font-bold text-gray-900">Mis favoritos</h1>
+                    <h1 className="text-2xl font-black text-gray-900">Mis favoritos</h1>
                     {total > 0 && (
                         <span className="text-sm text-gray-500">
                             {total} {total === 1 ? 'producto' : 'productos'}
@@ -34,7 +34,7 @@ export default function Favoritos() {
                         </svg>
                         <p className="text-lg font-medium text-gray-500">Aún no tienes favoritos</p>
                         <p className="text-sm text-gray-400">Toca el corazón en cualquier producto para guardarlo aquí.</p>
-                        <Link href="/" className="mt-2 bg-orange-500 hover:bg-orange-600 text-white font-bold px-6 py-3 rounded-full text-sm transition-colors">
+                        <Link href="/" className="mt-2 bg-mosso-yellow hover:bg-mosso-yellow/85 text-gray-900 font-bold px-6 py-3 rounded-full text-sm transition-colors">
                             Ver productos
                         </Link>
                     </div>
@@ -63,16 +63,16 @@ function TarjetaFavorito({ producto, onQuitar }: { producto: ProductoCard; onQui
     };
 
     return (
-        <div className="relative border border-gray-100 rounded-xl p-3 hover:shadow-md transition-shadow bg-white flex flex-col">
+        <div className="relative border border-gray-100 rounded-xl p-3 hover:shadow-lg transition-all duration-200 bg-white flex flex-col">
             {tieneDescuento && (
-                <span className="absolute top-2 left-2 bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded z-10">
+                <span className="absolute top-2 left-2 bg-mosso-red text-white text-xs font-bold px-2 py-1 rounded-lg z-10">
                     -{producto.porcentajeOff}%
                 </span>
             )}
             <button
                 onClick={onQuitar}
                 aria-label="Quitar de favoritos"
-                className="absolute top-2 right-2 z-10 text-red-500 hover:text-red-700 transition-colors"
+                className="absolute top-2 right-2 z-10 text-mosso-red hover:text-mosso-red/70 transition-colors"
                 title="Quitar de favoritos"
             >
                 <HeartIcon filled />
@@ -86,9 +86,9 @@ function TarjetaFavorito({ producto, onQuitar }: { producto: ProductoCard; onQui
                     }
                 </div>
                 <p className="text-sm font-medium text-gray-900 line-clamp-2 min-h-[2.5rem]">{producto.nombre}</p>
-                {producto.marca && <p className="text-xs text-gray-500 uppercase mt-0.5">{producto.marca}</p>}
+                {producto.marca && <p className="text-xs text-gray-400 uppercase mt-0.5 tracking-wide">{producto.marca}</p>}
                 <div className="mt-2 flex items-baseline gap-2">
-                    <span className="text-lg font-bold text-blue-600">S/ {producto.precioFinal.toFixed(2)}</span>
+                    <span className="text-lg font-black text-gray-900">S/ {producto.precioFinal.toFixed(2)}</span>
                     {tieneDescuento && <span className="text-sm text-gray-400 line-through">S/ {producto.precio.toFixed(2)}</span>}
                 </div>
             </Link>
@@ -96,7 +96,7 @@ function TarjetaFavorito({ producto, onQuitar }: { producto: ProductoCard; onQui
             <button
                 onClick={agregarAlCarrito}
                 disabled={agregando}
-                className="mt-3 w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-semibold py-2 rounded-full transition-colors"
+                className="mt-3 w-full bg-mosso-yellow hover:bg-mosso-yellow/85 disabled:opacity-60 text-gray-900 text-sm font-bold py-2 rounded-full transition-colors"
             >
                 {agregando ? 'Agregando…' : 'Agregar al carrito'}
             </button>

@@ -125,7 +125,7 @@ export default function MiCuentaDetalles({ email, persona, tiposDocumento }: MiC
               <button
                 type="submit"
                 disabled={processing}
-                className="bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-bold px-6 py-2.5 rounded-lg"
+                className="bg-mosso-yellow hover:bg-mosso-yellow/85 disabled:opacity-60 text-gray-900 font-bold px-6 py-2.5 rounded-xl"
               >
                 {processing ? 'Guardando…' : 'Guardar cambios'}
               </button>

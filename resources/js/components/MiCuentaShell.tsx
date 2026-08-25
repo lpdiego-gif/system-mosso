@@ -18,9 +18,9 @@ const enlacesMenu: { label: string; href: string; clave: ItemMiCuenta }[] = [
 export default function MiCuentaShell({ activo, children }: { activo: ItemMiCuenta; children: ReactNode }) {
   return (
     <>
-      <div className="bg-orange-100">
+      <div className="bg-mosso-yellow/15">
         <div className="max-w-[1100px] mx-auto px-6 py-8">
-          <h1 className="text-center text-2xl md:text-3xl font-black text-orange-900">Mi cuenta</h1>
+          <h1 className="text-center text-2xl md:text-3xl font-black text-gray-900">Mi cuenta</h1>
         </div>
       </div>
 
@@ -34,7 +34,7 @@ export default function MiCuentaShell({ activo, children }: { activo: ItemMiCuen
                 href={item.href}
                 className={`shrink-0 md:shrink px-4 py-2.5 rounded-lg text-sm border-l-4 whitespace-nowrap transition-colors ${
                   activo === item.clave
-                    ? 'border-orange-500 bg-orange-50 text-orange-600 font-semibold'
+                    ? 'border-mosso-yellow bg-mosso-yellow/10 text-gray-900 font-semibold'
                     : 'border-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                 }`}
               >

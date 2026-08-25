@@ -3,14 +3,6 @@ import { Link, router } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import type { ProductoCard as ProductoCardType, MarcaCard } from '@/types/producto';
 
-/**
- * Todas las secciones del body del home, en un solo archivo:
- * - BeneficiosBar    (Delivery rápido, Paga seguro, Calidad, WhatsApp)
- * - ProductoCarrusel (Productos Recomendados / Ofertas Especiales)
- * - MarcaCarrusel    (Marcas premium)
- * ProductoCard es interno, solo lo usa ProductoCarrusel.
- */
-
 /* ============================== BENEFICIOS ============================== */
 
 const beneficios = [
@@ -22,11 +14,11 @@ const beneficios = [
 
 export function BeneficiosBar() {
   return (
-    <section className="border-t border-gray-100 px-6 py-8">
+    <section className="border-t border-gray-100 bg-white px-6 py-8">
       <div className="max-w-[1440px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {beneficios.map((b) => (
           <div key={b.titulo} className="flex items-start gap-3">
-            <span className="text-orange-500 shrink-0 mt-0.5">
+            <span className="text-mosso-yellow shrink-0 mt-0.5">
               <IconoBeneficio nombre={b.icono} />
             </span>
             <div>
@@ -88,7 +80,6 @@ export function ProductoCarrusel({
   const scrollRef = useRef<HTMLDivElement>(null);
   const [pausado, setPausado] = useState(false);
 
-  // Auto-scroll: avanza un paso cada 3 s, vuelve al inicio al llegar al final
   useEffect(() => {
     if (pausado || productos.length === 0) return;
 
@@ -99,7 +90,7 @@ export function ProductoCarrusel({
       if (alFinal) {
         el.scrollTo({ left: 0, behavior: 'smooth' });
       } else {
-        el.scrollBy({ left: 232, behavior: 'smooth' }); // ancho tarjeta w-56 (224) + gap-4 (16)
+        el.scrollBy({ left: 232, behavior: 'smooth' });
       }
     }, 3000);
 
@@ -114,7 +105,7 @@ export function ProductoCarrusel({
 
   return (
     <section className="max-w-[1440px] mx-auto px-6 py-10">
-      <h2 className="text-2xl font-bold text-center text-gray-900 mb-6">{titulo}</h2>
+      <h2 className="text-2xl font-black text-center text-gray-900 mb-6">{titulo}</h2>
 
       <div
         className="relative"
@@ -124,7 +115,7 @@ export function ProductoCarrusel({
         <button
           onClick={() => scroll('left')}
           aria-label="Anterior"
-          className="hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-9 h-9 bg-white rounded-full shadow items-center justify-center"
+          className="hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-9 h-9 bg-white rounded-full shadow-md items-center justify-center text-gray-900 hover:bg-mosso-yellow hover:text-gray-900 transition-colors"
         >
           <ChevronLeft />
         </button>
@@ -143,7 +134,7 @@ export function ProductoCarrusel({
         <button
           onClick={() => scroll('right')}
           aria-label="Siguiente"
-          className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-9 h-9 bg-white rounded-full shadow items-center justify-center"
+          className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-9 h-9 bg-white rounded-full shadow-md items-center justify-center text-gray-900 hover:bg-mosso-yellow hover:text-gray-900 transition-colors"
         >
           <ChevronRight />
         </button>
@@ -152,7 +143,6 @@ export function ProductoCarrusel({
   );
 }
 
-/** Tarjeta individual de producto. Interna: solo la usa ProductoCarrusel. */
 function ProductoCardItem({ producto }: { producto: ProductoCardType }) {
   const { toggle, esFavorito } = useFavoritos();
   const [agregando, setAgregando] = useState(false);
@@ -172,9 +162,9 @@ function ProductoCardItem({ producto }: { producto: ProductoCardType }) {
   };
 
   return (
-    <div className="relative border border-gray-100 rounded-xl p-3 hover:shadow-md transition-shadow bg-white">
+    <div className="relative border border-gray-100 rounded-xl p-3 hover:shadow-lg transition-all duration-200 bg-white group">
       {tieneDescuento && (
-        <span className="absolute top-2 left-2 bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded z-10">
+        <span className="absolute top-2 left-2 bg-mosso-red text-white text-xs font-bold px-2 py-1 rounded-lg z-10">
           -{producto.porcentajeOff}%
         </span>
       )}
@@ -182,7 +172,7 @@ function ProductoCardItem({ producto }: { producto: ProductoCardType }) {
       <button
         onClick={() => toggle(producto)}
         aria-label={favorito ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-        className={`absolute top-2 right-2 z-10 transition-colors ${favorito ? 'text-red-500' : 'text-gray-300 hover:text-red-400'}`}
+        className={`absolute top-2 right-2 z-10 transition-colors ${favorito ? 'text-mosso-red' : 'text-gray-300 hover:text-mosso-red'}`}
       >
         <HeartIcon filled={favorito} />
       </button>
@@ -200,11 +190,11 @@ function ProductoCardItem({ producto }: { producto: ProductoCardType }) {
           {producto.nombre}
         </p>
         {producto.marca && (
-          <p className="text-xs text-gray-500 uppercase mt-0.5">{producto.marca}</p>
+          <p className="text-xs text-gray-400 uppercase mt-0.5 tracking-wide">{producto.marca}</p>
         )}
 
         <div className="mt-2 flex items-baseline gap-2">
-          <span className="text-lg font-bold text-blue-600">
+          <span className="text-lg font-black text-gray-900">
             S/ {producto.precioFinal.toFixed(2)}
           </span>
           {tieneDescuento && (
@@ -218,7 +208,7 @@ function ProductoCardItem({ producto }: { producto: ProductoCardType }) {
       <button
         onClick={agregarAlCarrito}
         disabled={agregando}
-        className="mt-3 w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-wait text-white text-sm font-semibold py-2 rounded-full transition-colors"
+        className="mt-3 w-full bg-mosso-yellow hover:bg-mosso-yellow/85 disabled:opacity-60 disabled:cursor-wait text-gray-900 text-sm font-bold py-2 rounded-full transition-colors"
       >
         {agregando ? 'Agregando…' : 'Agregar al carrito'}
       </button>
@@ -247,13 +237,13 @@ export function MarcaCarrusel({ marcas = [] }: { marcas?: MarcaCard[] }) {
 
   return (
     <section className="max-w-[1440px] mx-auto px-6 py-10">
-      <h2 className="text-2xl font-bold text-center text-gray-900 mb-6">Marcas premium para tu mascota</h2>
+      <h2 className="text-2xl font-black text-center text-gray-900 mb-6">Marcas premium para tu mascota</h2>
 
       <div className="relative">
         <button
           onClick={() => scroll('left')}
           aria-label="Anterior"
-          className="hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-white border border-gray-200 rounded-full shadow items-center justify-center text-orange-500"
+          className="hidden md:flex absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-white border border-gray-200 rounded-full shadow items-center justify-center text-gray-900 hover:bg-mosso-yellow hover:text-gray-900 hover:border-mosso-yellow transition-colors"
         >
           <ChevronLeft />
         </button>
@@ -266,7 +256,7 @@ export function MarcaCarrusel({ marcas = [] }: { marcas?: MarcaCard[] }) {
             <Link
               key={m.id}
               href={m.href}
-              className="w-40 h-28 shrink-0 snap-start border border-gray-200 rounded-xl flex items-center justify-center p-4 hover:shadow-md transition-shadow"
+              className="w-40 h-28 shrink-0 snap-start border border-gray-200 rounded-xl flex items-center justify-center p-4 hover:shadow-md hover:border-mosso-yellow transition-all"
             >
               <img src={m.logo} alt={m.nombre} className="max-h-14 max-w-full object-contain" />
             </Link>
@@ -276,7 +266,7 @@ export function MarcaCarrusel({ marcas = [] }: { marcas?: MarcaCard[] }) {
         <button
           onClick={() => scroll('right')}
           aria-label="Siguiente"
-          className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-white border border-gray-200 rounded-full shadow items-center justify-center text-orange-500"
+          className="hidden md:flex absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 bg-white border border-gray-200 rounded-full shadow items-center justify-center text-gray-900 hover:bg-mosso-yellow hover:text-gray-900 hover:border-mosso-yellow transition-colors"
         >
           <ChevronRight />
         </button>

@@ -15,7 +15,7 @@ export default function Buscar({ query, productos }: Props) {
             <div className="max-w-[1440px] mx-auto px-6 py-8">
                 {/* Breadcrumb */}
                 <nav className="flex items-center gap-1.5 text-sm text-gray-500 mb-6">
-                    <Link href="/" className="hover:text-orange-500 transition-colors">Inicio</Link>
+                    <Link href="/" className="hover:text-mosso-yellow transition-colors">Inicio</Link>
                     <span className="text-gray-300">/</span>
                     <span className="text-gray-900 font-medium">Buscar</span>
                 </nav>
@@ -24,9 +24,9 @@ export default function Buscar({ query, productos }: Props) {
                 {query ? (
                     <>
                         <p className="text-sm text-gray-500 mb-6">
-                            <span className="font-medium text-gray-900">{productos.length}</span>{' '}
+                            <span className="font-bold text-gray-900">{productos.length}</span>{' '}
                             {productos.length === 1 ? 'resultado' : 'resultados'} para{' '}
-                            <span className="font-medium text-gray-900">"{query}"</span>
+                            <span className="font-bold text-gray-900">"{query}"</span>
                         </p>
 
                         {productos.length === 0 ? (
@@ -36,7 +36,7 @@ export default function Buscar({ query, productos }: Props) {
                                     <path strokeWidth="2" d="m21 21-4.3-4.3" />
                                 </svg>
                                 <p className="text-lg font-medium">No encontramos "{query}"</p>
-                                <Link href="/" className="text-sm text-orange-500 hover:underline">
+                                <Link href="/" className="text-sm text-mosso-yellow font-bold hover:underline">
                                     Ver catálogo completo
                                 </Link>
                             </div>
@@ -71,16 +71,16 @@ function TarjetaProducto({ producto }: { producto: ProductoCard }) {
     };
 
     return (
-        <div className="relative border border-gray-100 rounded-xl p-3 hover:shadow-md transition-shadow bg-white flex flex-col">
+        <div className="relative border border-gray-100 rounded-xl p-3 hover:shadow-lg transition-all duration-200 bg-white flex flex-col">
             {tieneDescuento && (
-                <span className="absolute top-2 left-2 bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded z-10">
+                <span className="absolute top-2 left-2 bg-mosso-red text-white text-xs font-bold px-2 py-1 rounded-lg z-10">
                     -{producto.porcentajeOff}%
                 </span>
             )}
             <button
                 onClick={() => toggle(producto)}
                 aria-label={favorito ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-                className={`absolute top-2 right-2 z-10 transition-colors ${favorito ? 'text-red-500' : 'text-gray-300 hover:text-red-400'}`}
+                className={`absolute top-2 right-2 z-10 transition-colors ${favorito ? 'text-mosso-red' : 'text-gray-300 hover:text-mosso-red'}`}
             >
                 <HeartIcon filled={favorito} />
             </button>
@@ -93,9 +93,9 @@ function TarjetaProducto({ producto }: { producto: ProductoCard }) {
                     }
                 </div>
                 <p className="text-sm font-medium text-gray-900 line-clamp-2 min-h-[2.5rem]">{producto.nombre}</p>
-                {producto.marca && <p className="text-xs text-gray-500 uppercase mt-0.5">{producto.marca}</p>}
+                {producto.marca && <p className="text-xs text-gray-400 uppercase mt-0.5 tracking-wide">{producto.marca}</p>}
                 <div className="mt-2 flex items-baseline gap-2">
-                    <span className="text-lg font-bold text-blue-600">S/ {producto.precioFinal.toFixed(2)}</span>
+                    <span className="text-lg font-black text-gray-900">S/ {producto.precioFinal.toFixed(2)}</span>
                     {tieneDescuento && <span className="text-sm text-gray-400 line-through">S/ {producto.precio.toFixed(2)}</span>}
                 </div>
             </Link>
@@ -103,7 +103,7 @@ function TarjetaProducto({ producto }: { producto: ProductoCard }) {
             <button
                 onClick={agregarAlCarrito}
                 disabled={agregando}
-                className="mt-3 w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-semibold py-2 rounded-full transition-colors"
+                className="mt-3 w-full bg-mosso-yellow hover:bg-mosso-yellow/85 disabled:opacity-60 text-gray-900 text-sm font-bold py-2 rounded-full transition-colors"
             >
                 {agregando ? 'Agregando…' : 'Agregar al carrito'}
             </button>
