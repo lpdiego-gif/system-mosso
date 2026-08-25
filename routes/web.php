@@ -86,8 +86,10 @@ Route::get('/buscar', BusquedaController::class)->name('buscar');
     )->name('marcas.store');
 });
 
+use App\Http\Controllers\DashboardController;
+
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('dashboard', 'dashboard')->name('dashboard');
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 });
 

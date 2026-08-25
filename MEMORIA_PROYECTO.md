@@ -51,7 +51,8 @@ app/
     Admin/                 CRUD del catálogo de productos: Animal, Categoria, SubCategoria, Marca, Producto.
     Settings/              Perfil de usuario y seguridad (2FA, passkeys) — del starter kit.
     (raíz)                 HomeController (home público), BusquedaController (buscador),
-                            TrabajadorController (CRUD empleados), DistritoController (CRUD zonas de envío).
+                            TrabajadorController (CRUD empleados), DistritoController (CRUD zonas de envío),
+                            DashboardController (KPIs y estadísticas reales del panel `/dashboard`).
   Http/Middleware/          HandleInertiaRequests (props compartidas globales), HandleAppearance (tema claro/oscuro).
   Http/Requests/            FormRequests de validación (Settings/*, Trabajador/Store|UpdateTrabajadorRequest).
   Listeners/                CheckTrabajadorActivo: bloquea el login si el trabajador está inactivo (auto-descubierto
@@ -79,16 +80,23 @@ resources/js/
                                 trabajador/         trabajadores.tsx (listado+filtros), trabajador-form.tsx
                                                     (alta/edición), distrito.tsx (CRUD zonas de envío).
                                 welcome.tsx         Home público (storefront).
+                                dashboard.tsx       Panel de Control admin, con datos reales de
+                                                    DashboardController (ver sección 5).
   components/                 Componentes reutilizables. Los de dominio (Header, MegaMenu, MobileMenu,
                              HomeSections) están en la raíz de components/ con PascalCase; los genéricos
-                             de UI (shadcn-style) viven en components/ui/ en kebab-case.
+                             de UI (shadcn-style) viven en components/ui/ en kebab-case. Los componentes
+                             propios de una sola página compleja se agrupan en una subcarpeta kebab-case con
+                             el nombre de esa página (ej. `components/dashboard/` → stat-card.tsx,
+                             sales-chart.tsx, donut-chart.tsx, usados solo por `pages/dashboard.tsx`).
   layouts/                   AppLayout (panel admin, con sidebar) vs StorefrontLayout (tienda pública, con
                              Header/MegaMenu, sin sidebar). No mezclar: cada página Inertia usa uno u otro.
   hooks/                      Hooks de dominio (use-dni-lookup, use-two-factor-auth) y de infraestructura
                              (use-mobile, use-appearance, use-flash-toast).
   types/                      Tipos TS espejo de lo que devuelven los controladores/servicios PHP. Cuando
                              cambies la forma de un prop en un controller/service, actualiza el .ts asociado
-                             (producto.ts, trabajador.ts, menu.ts, navigation.ts, ui.ts, auth.ts).
+                             (producto.ts, trabajador.ts, menu.ts, navigation.ts, ui.ts, auth.ts, dashboard.ts).
+                             `navigation.ts` (`NavItem`) soporta un campo opcional `items?: NavItem[]` para
+                             submenús colapsables en el sidebar (`app-sidebar.tsx` + `nav-main.tsx`).
   lib/utils.ts                 Helper cn() (clsx + tailwind-merge), estándar de shadcn.
 
 public/image/                 Assets estáticos servidos directo (logos, categorías, banners). Las imágenes
@@ -138,9 +146,10 @@ Jerarquía: `animales` → `categorias` (`fk_id_animal`) → `sub_categorias` (`
 ### 4.5 Menú / navegación
 `menus` (`tipo_enlace` enum: `animal`/`tipo_animal`/`marca`/`tipo_servicio`/`url`, `fk_animal`, `fk_tipo_animal`, `orden`, `destacado`, `activo`) — filas 100% data-driven que arman el mega menú del header público. Editable solo por BD directa hoy (no hay UI admin para `menus`).
 
-### 4.6 Carrito y pedidos **[sin código — solo esquema]**
+### 4.6 Carrito y pedidos **[sin código de negocio — solo esquema, más lectura agregada para el dashboard]**
 `carritos` (`fk_cliente` o `token_invitado` para invitados) → `carrito_detalle` (`fk_producto`, `cantidad`, `precio_unitario`).
 `pedidos` (`fk_cliente`, `fk_direccion_envio`, `fk_tipo_entrega`, `fk_forma_pago`, `fk_estado_pedido`, subtotal/descuento/igv/total) → `pedido_detalle`. `pedido_recojo_terceros` (datos de quien recoge un pedido si no es el cliente). Catálogos de apoyo: `estados_pedido`, `forma_pagos`, `tipo_entregas`.
+Sigue sin existir checkout/creación de pedidos, pero `DashboardController` ya hace `SELECT` de solo lectura sobre `pedidos`/`pedido_detalle` (ventas por día, pedidos recientes, productos más vendidos) — cualquier futura implementación de checkout debe mantener el significado de estas columnas (`total`, `fecha_pedido`, etc.) para no romper esas estadísticas.
 
 ### 4.7 Facturación **[sin código]**
 `comprobantes` (boleta/factura, `fk_pedido`, `fk_tipo_comprobante`, `fk_empresa`, serie/número) — `tipo_comprobante`, `empresa` (datos de la empresa emisora, RUC, dirección), `empresa_redes` + `redes_sociales` (redes sociales de la empresa).
@@ -158,6 +167,8 @@ Jerarquía: `animales` → `categorias` (`fk_id_animal`) → `sub_categorias` (`
 - **Listado de productos** (`/admin/productos`): tabla de solo lectura con joins a marca/categoría/animal/unidad/estado.
 - **Home público** (`/`): hero banner, barra de beneficios, carruseles de productos destacados/en oferta y marcas — datos armados por `HomeService`.
 - **Mega menú dinámico** (header público): 100% data-driven desde la tabla `menus`, con submenús por animal, por tipo de animal (exóticos), marcas y tipos de servicio.
+- **Panel de Control (`/dashboard`)**: reemplazado el placeholder del starter kit por un dashboard real, servido por `DashboardController` (100% `DB::table`, sin Eloquent, siguiendo el patrón de `TrabajadorController`/`DistritoController`). Muestra KPIs (ventas del mes/hoy, pedidos totales, clientes, equipo activo, productos activos, valor de inventario), gráfico de ventas de los últimos 14 días, catálogo por tipo de mascota, productos más vendidos, alerta de stock bajo, pedidos recientes, equipo por rol y descuentos activos — todo con estados vacíos explícitos (no hay seed de `pedidos`/`clientes`/`trabajadores` en la BD actual, así que la mayoría de tarjetas parten en 0 hasta que se cargue data real). Responsivo, con tema claro/oscuro/sistema y fondo degradado propio en modo oscuro (no negro puro). Componentes en `resources/js/components/dashboard/`, tipos en `types/dashboard.ts`.
+- **Submenús en el sidebar admin**: `NavItem` (`types/navigation.ts`) soporta `items?: NavItem[]`; `nav-main.tsx` los renderiza como un `Collapsible` tipo acordeón (solo un submenú abierto a la vez, se cierra al navegar a un ítem plano, resalta el ítem/submenú activo). Ya usado por "Trabajadores" y "Departamento" en `app-sidebar.tsx`.
 
 ### 🟡 Parcial / con huecos conocidos
 - **Productos**: no hay edición ni borrado (ni rutas backend ni UI) — solo alta y listado. No hay UI para gestionar descuentos ni galería de imágenes (`producto_imagenes`) aunque el esquema ya las soporta.
@@ -166,6 +177,7 @@ Jerarquía: `animales` → `categorias` (`fk_id_animal`) → `sub_categorias` (`
 - **Menú "Clientes"** en el sidebar admin (`app-sidebar.tsx`) apunta a `/client`, ruta que no existe en `routes/web.php` — enlace roto/placeholder.
 - **Modelo `App\Models\Menu`**: el método de relación `tipoAnimal()` apunta a `App\Models\TipoAnimal`, que no existe como clase (la tabla real es `tipo_animales`, no usada por ningún modelo). Hoy no truena porque `MenuService` no usa esa relación (consulta `Animal::where('id_tipo_animal', ...)` directo), pero es una landmine si alguien la invoca o hace eager-load.
 - **`resources/js/components/MarcaCarrusel.tsx`**: archivo vacío (0 bytes), no referenciado por nadie (el componente real vive en `HomeSections.tsx`). Parece un archivo huérfano de un commit anterior.
+- **Tests de negocio**: `tests/Feature/DashboardTest.php` ya valida el `DashboardController` real (con fixtures `Schema::create()` ad-hoc para las tablas de negocio y para `menus`, ver sección 7), pero sigue sin haber ningún test para productos, trabajadores, distrito ni home — el resto de la suite es del starter kit (auth/perfil/seguridad).
 
 ### 🔴 No implementado (solo existe el esquema de BD)
 - **Carrito de compras** (tablas `carritos`, `carrito_detalle`) — cero código.
@@ -174,8 +186,6 @@ Jerarquía: `animales` → `categorias` (`fk_id_animal`) → `sub_categorias` (`
 - **Clientes** del storefront (`clientes`, `cliente_direcciones`) — cero código (el registro de Fortify crea un `users`, pero nada lo vincula a `clientes`/`personas`).
 - **Servicios** (peluquería/veterinaria: `servicios` y sus 4 tablas satélite) — el menú ya enlaza a `/servicios` pero no existe controlador ni página.
 - **Roles y permisos granulares** (`permisos`, `rol_permisos`) — la tabla `roles` sí se usa (para trabajadores), pero no hay ningún control de acceso basado en `permisos`; toda la protección actual es `middleware('auth')` a nivel de ruta.
-- **Panel `/dashboard`**: existe la ruta y la página, pero es el placeholder de ejemplo del starter kit (bloques `PlaceholderPattern` sin datos reales).
-- **Tests de negocio**: no hay ningún test para productos, trabajadores, distrito ni home — toda la suite de tests es del starter kit (auth/perfil/seguridad).
 
 ## 6. Flujo de datos principal
 
@@ -212,3 +222,5 @@ Request → routes/web.php (o settings.php)
 - Antes de asumir que una tabla existe o tiene cierta columna, consúltala en la BD real (`information_schema` vía tinker, o phpMyAdmin) — no confíes en `database/migrations/`.
 - Sigue el patrón de acceso a datos ya usado en el controlador que edites (Eloquent vs. `DB::table`) en vez de mezclar estilos.
 - Los endpoints JSON "hermanos" de una página Inertia (ej. `/trabajador/data`, `/distrito/data`) existen para no recargar toda la SPA al filtrar/paginar tablas — replica ese patrón para nuevos listados administrativos en vez de usar Inertia para cada cambio de filtro.
+- Los tests de `tests/Feature/*Test.php` corren contra sqlite en memoria (`phpunit.xml`), no contra la BD `mosso` real. Como las tablas de negocio no están en `database/migrations/` (sección 4), **cualquier test que golpee una ruta cuyo controlador use esas tablas necesita sus propias fixtures** vía `Schema::create()` en `setUp()` (ver `tests/Feature/DashboardTest.php` para el patrón). Esto incluye la tabla `menus`: `HandleInertiaRequests` la consulta en **cada** respuesta Inertia completa (prop compartido `menu`), así que cualquier test que visite una página autenticada con `assertOk()` la necesita también, aunque la funcionalidad bajo prueba no la use.
+- Evita funciones SQL específicas de MySQL/MariaDB (`CURDATE()`, `NOW()`, etc.) dentro de `selectRaw()`/`whereRaw()` si el código va a tener un test de feature: no existen en sqlite y el test fallará con "no such function". Usa en su lugar comparaciones con marcas de tiempo calculadas en PHP con `Carbon` y pasadas como binding (`->selectRaw('... WHEN fecha >= ? ...', [Carbon::today()])`) — funciona igual en MySQL y es portable. `DATE(columna)` sí es soportado por ambos motores.

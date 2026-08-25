@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { BookOpen, Package, FolderGit2, LayoutGrid } from 'lucide-react';
+import { route } from 'ziggy-js';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -15,7 +16,6 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
-import { route } from 'ziggy-js';
 
 
 const mainNavItems: NavItem[] = [
@@ -28,7 +28,7 @@ const mainNavItems: NavItem[] = [
         href: '/client',
         icon: FolderGit2,
     },
-    
+
     {
         title: 'Productos',
         href: route('admin.productos.index'),
@@ -38,10 +38,30 @@ const mainNavItems: NavItem[] = [
         title: 'Trabajadores',
         href: '/trabajador',
         icon: FolderGit2,
+        items: [
+            {
+                title: 'Trabajadores',
+                href: '/trabajador',
+            },
+            {
+                title: 'item 2',
+                href: '/trabajador',
+            },
+        ],
     },{
-        title: 'Distrito',
+        title: 'Departamento',
         href: '/distrito',
         icon: FolderGit2,
+        items: [
+            {
+                title: 'Distrito',
+                href: '/distrito',
+            },
+            {
+                title: 'item 2',
+                href: '/trabajador',
+            },
+        ],
     },
     
 ];
