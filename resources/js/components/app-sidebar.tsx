@@ -28,21 +28,21 @@ const mainNavItems: NavItem[] = [
         href: '/client',
         icon: FolderGit2,
     },
-    {
-        title: 'Ventas',
-        href: '/venta',
-        icon: FolderGit2,
-    },
+    
     {
         title: 'Productos',
         href: route('admin.productos.index'),
         icon: Package,
     },
     {
-        title: 'Memo',
-        href: '/memo',
+        title: 'Trabajadores',
+        href: '/trabajador',
         icon: FolderGit2,
-    }
+    },{
+        title: 'Distrito',
+        href: '/distrito',
+        icon: FolderGit2,
+    },
     
 ];
 

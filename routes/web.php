@@ -94,5 +94,14 @@ Route::middleware(['auth'])->prefix('trabajador')->name('trabajador.')->group(fu
     Route::patch('/{trabajador}/estado', [TrabajadorController::class, 'toggleEstado'])->whereNumber('trabajador')->name('estado');
     Route::delete('/{trabajador}', [TrabajadorController::class, 'destroy'])->whereNumber('trabajador')->name('destroy');
 });
+
+use App\Http\Controllers\DistritoController;
+Route::middleware(['auth'])->prefix('distrito')->name('distrito.')->group(function () {
+    Route::get('/', [DistritoController::class, 'index'])->name('index');
+    Route::get('/data', [DistritoController::class, 'data'])->name('data');
+    Route::post('/', [DistritoController::class, 'store'])->name('store');
+    Route::put('/{distrito}', [DistritoController::class, 'update'])->whereNumber('distrito')->name('update');
+    Route::delete('/{distrito}', [DistritoController::class, 'destroy'])->whereNumber('distrito')->name('destroy');
+});
 //
 require __DIR__.'/settings.php';
