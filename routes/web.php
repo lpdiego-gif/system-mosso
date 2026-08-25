@@ -4,7 +4,9 @@ use App\Http\Controllers\Admin\AnimalController;
 use App\Http\Controllers\Admin\CategoriaController;
 use App\Http\Controllers\Admin\MarcaController;
 use App\Http\Controllers\Admin\ProductoController;
+use App\Http\Controllers\Admin\ServicioController as AdminServicioController;
 use App\Http\Controllers\Admin\SubCategoriaController;
+use App\Http\Controllers\Admin\TipoServicioController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BusquedaController;
 use App\Http\Controllers\CatalogoController;
@@ -19,12 +21,27 @@ use App\Http\Controllers\MiCuentaController;
 use App\Http\Controllers\MiCuentaDetallesController;
 use App\Http\Controllers\MiCuentaDireccionController;
 use App\Http\Controllers\ReclamoController;
+use App\Http\Controllers\ServicioController;
 
 Route::get('/', HomeController::class)->name('home');
 
 Route::get('/buscar', BusquedaController::class)->name('buscar');
 Route::get('/favoritos', FavoritosController::class)->name('favoritos');
 Route::get('/ofertas', OfertasController::class)->name('ofertas');
+
+/*
+|--------------------------------------------------------------------------
+| Servicios (público): listado, listado por tipo y detalle.
+|--------------------------------------------------------------------------
+| /servicios y /servicios/{tipo} son los mismos hrefs que ya genera
+| MenuService::columnasServicios(); /servicio/{slug} (singular) es el
+| detalle, mismo patrón que /catalogo/... (listado) vs /producto/{id}
+| (detalle) que ya usa CatalogoController.
+*/
+
+Route::get('/servicios', [ServicioController::class, 'index'])->name('servicios.index');
+Route::get('/servicios/{tipo}', [ServicioController::class, 'porTipo'])->whereNumber('tipo')->name('servicios.tipo');
+Route::get('/servicio/{slug}', [ServicioController::class, 'show'])->name('servicio.show');
 
 /*
 |--------------------------------------------------------------------------
@@ -172,6 +189,21 @@ Route::get('/buscar', BusquedaController::class)->name('buscar');
         '/marcas',
         [MarcaController::class, 'store']
     )->name('marcas.store');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Servicios (admin)
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/servicios', [AdminServicioController::class, 'index'])->name('servicios.index');
+    Route::get('/servicios/create', [AdminServicioController::class, 'create'])->name('servicios.create');
+    Route::post('/servicios', [AdminServicioController::class, 'store'])->name('servicios.store');
+    Route::get('/servicios/{servicio}/edit', [AdminServicioController::class, 'edit'])->whereNumber('servicio')->name('servicios.edit');
+    Route::post('/servicios/{servicio}', [AdminServicioController::class, 'update'])->whereNumber('servicio')->name('servicios.update');
+    Route::delete('/servicios/{servicio}', [AdminServicioController::class, 'destroy'])->whereNumber('servicio')->name('servicios.destroy');
+
+    Route::post('/tipos-servicio', [TipoServicioController::class, 'store'])->name('tipos-servicio.store');
 });
 
 use App\Http\Controllers\DashboardController;
