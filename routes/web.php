@@ -9,8 +9,18 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BusquedaController;
 
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ReclamoController;
 
 Route::get('/', HomeController::class)->name('home');
+
+/*
+|--------------------------------------------------------------------------
+| Libro de Reclamaciones (público, sin auth)
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/libro-de-reclamaciones', [ReclamoController::class, 'create'])->name('reclamos.create');
+Route::post('/libro-de-reclamaciones', [ReclamoController::class, 'store'])->name('reclamos.store');
 
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
 
