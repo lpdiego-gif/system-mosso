@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CarritoDetalle;
 use App\Services\CarritoService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -24,7 +25,7 @@ class CarritoController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         $request->validate([
             'producto_id' => 'required|integer|exists:productos,id_producto',
@@ -33,6 +34,10 @@ class CarritoController extends Controller
 
         $carrito = $this->carrito->resolverCarrito($request);
         $this->carrito->agregarProducto($carrito, $request->producto_id, $request->cantidad);
+
+        if ($request->expectsJson()) {
+            return response()->json(['cantidad' => $this->carrito->contarItems($request)]);
+        }
 
         return back()->with('success', 'Producto agregado al carrito.');
     }

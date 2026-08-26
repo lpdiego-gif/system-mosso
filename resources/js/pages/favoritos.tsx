@@ -1,8 +1,8 @@
+import { useAgregarAlCarrito } from '@/hooks/use-agregar-al-carrito';
 import StorefrontLayout from '@/layouts/storefront-layout';
 import { useFavoritos } from '@/hooks/use-favoritos';
 import type { ProductoCard } from '@/types/producto';
-import { Link, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { Link } from '@inertiajs/react';
 
 export default function Favoritos() {
     const { favoritos, toggle, total } = useFavoritos();
@@ -51,16 +51,8 @@ export default function Favoritos() {
 }
 
 function TarjetaFavorito({ producto, onQuitar }: { producto: ProductoCard; onQuitar: () => void }) {
-    const [agregando, setAgregando] = useState(false);
+    const { agregar, agregando, agregado } = useAgregarAlCarrito(producto.id);
     const tieneDescuento = producto.porcentajeOff !== null;
-
-    const agregarAlCarrito = () => {
-        setAgregando(true);
-        router.post('/carrito/items', { producto_id: producto.id, cantidad: 1 }, {
-            preserveScroll: true,
-            onFinish: () => setAgregando(false),
-        });
-    };
 
     return (
         <div className="relative border border-gray-100 rounded-xl p-3 hover:shadow-lg transition-all duration-200 bg-white flex flex-col">
@@ -94,11 +86,11 @@ function TarjetaFavorito({ producto, onQuitar }: { producto: ProductoCard; onQui
             </Link>
 
             <button
-                onClick={agregarAlCarrito}
+                onClick={agregar}
                 disabled={agregando}
-                className="mt-3 w-full bg-mosso-yellow hover:bg-mosso-yellow/85 disabled:opacity-60 text-gray-900 text-sm font-bold py-2 rounded-full transition-colors"
+                className="mt-3 w-full cursor-pointer bg-mosso-yellow hover:bg-mosso-yellow/85 disabled:opacity-60 disabled:cursor-wait text-gray-900 text-sm font-bold py-2 rounded-full transition-colors"
             >
-                {agregando ? 'Agregando…' : 'Agregar al carrito'}
+                {agregado ? '¡Agregado! ✓' : agregando ? 'Agregando…' : 'Agregar al carrito'}
             </button>
         </div>
     );

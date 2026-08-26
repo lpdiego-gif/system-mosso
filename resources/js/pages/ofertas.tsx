@@ -1,7 +1,7 @@
+import { useAgregarAlCarrito } from '@/hooks/use-agregar-al-carrito';
 import { useFavoritos } from '@/hooks/use-favoritos';
 import StorefrontLayout from '@/layouts/storefront-layout';
-import { Link, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { Link } from '@inertiajs/react';
 import type { ProductoCard } from '@/types/producto';
 
 interface Props {
@@ -65,7 +65,7 @@ function EstadoVacio() {
             <p className="text-sm text-gray-400 text-center max-w-xs">
                 Pronto habrá descuentos disponibles. Mientras tanto, revisa nuestro catálogo completo.
             </p>
-            <Link href="/" className="mt-2 bg-mosso-yellow hover:bg-mosso-yellow/85 text-gray-900 font-bold px-6 py-3 rounded-full text-sm transition-colors">
+            <Link href="/" className="mt-2 bg-mosso-yellow hover:bg-mosso-yellow/85 text-gray-900 font-bold px-6 py-3 rounded-full text-sm transition-colors cursor-pointer">
                 Ver todos los productos
             </Link>
         </div>
@@ -74,21 +74,12 @@ function EstadoVacio() {
 
 function TarjetaOferta({ producto }: { producto: ProductoCard }) {
     const { toggle, esFavorito } = useFavoritos();
-    const [agregando, setAgregando] = useState(false);
+    const { agregar, agregando, agregado } = useAgregarAlCarrito(producto.id);
     const favorito = esFavorito(producto.id);
     const ahorro = producto.precio - producto.precioFinal;
 
-    const agregarAlCarrito = () => {
-        setAgregando(true);
-        router.post('/carrito/items', { producto_id: producto.id, cantidad: 1 }, {
-            preserveScroll: true,
-            onFinish: () => setAgregando(false),
-        });
-    };
-
     return (
         <div className="relative border border-gray-100 rounded-xl p-3 hover:shadow-lg transition-all duration-200 bg-white flex flex-col">
-            {/* Badge de descuento — siempre visible en ofertas */}
             <span className="absolute top-2 left-2 bg-mosso-red text-white text-xs font-bold px-2 py-1 rounded-lg z-10">
                 -{producto.porcentajeOff}%
             </span>
@@ -130,11 +121,11 @@ function TarjetaOferta({ producto }: { producto: ProductoCard }) {
             </Link>
 
             <button
-                onClick={agregarAlCarrito}
+                onClick={agregar}
                 disabled={agregando}
-                className="mt-3 w-full bg-mosso-yellow hover:bg-mosso-yellow/85 disabled:opacity-60 text-gray-900 text-sm font-bold py-2 rounded-full transition-colors"
+                className="mt-3 w-full cursor-pointer bg-mosso-yellow hover:bg-mosso-yellow/85 disabled:opacity-60 disabled:cursor-wait text-gray-900 text-sm font-bold py-2 rounded-full transition-colors"
             >
-                {agregando ? 'Agregando…' : 'Agregar al carrito'}
+                {agregado ? '¡Agregado! ✓' : agregando ? 'Agregando…' : 'Agregar al carrito'}
             </button>
         </div>
     );

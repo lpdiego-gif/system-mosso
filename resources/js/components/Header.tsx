@@ -1,5 +1,5 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useFavoritos } from '@/hooks/use-favoritos';
 import type { EmpresaPublica } from '@/types/empresa';
@@ -180,7 +180,19 @@ function FavoritosButton() {
 function CartButton({ compact = false }: { compact?: boolean }) {
   const props = usePage().props as Record<string, unknown>;
   const carritoProps = props.carrito as { cantidad?: number } | undefined;
-  const cantidad = carritoProps?.cantidad ?? 0;
+  const [cantidad, setCantidad] = useState(carritoProps?.cantidad ?? 0);
+
+  useEffect(() => {
+    setCantidad(carritoProps?.cantidad ?? 0);
+  }, [carritoProps?.cantidad]);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      setCantidad((e as CustomEvent<{ cantidad: number }>).detail.cantidad);
+    };
+    window.addEventListener('cart-updated', handler);
+    return () => window.removeEventListener('cart-updated', handler);
+  }, []);
 
   return (
     <Link
