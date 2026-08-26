@@ -1,54 +1,111 @@
-import { useFavoritos } from '@/hooks/use-favoritos';
 import { Link, router, usePage } from '@inertiajs/react';
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
+import type { FormEvent } from 'react';
+import { useFavoritos } from '@/hooks/use-favoritos';
+import type { EmpresaPublica } from '@/types/empresa';
 import MegaMenu from './MegaMenu';
 import MobileMenu from './MobileMenu';
+
+interface HeaderPageProps {
+  empresa: EmpresaPublica | null;
+  [key: string]: unknown;
+}
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <header className="w-full bg-white sticky top-0 z-50 shadow-sm border-b border-gray-100">
-      <TopBar onOpenMobileMenu={() => setMobileOpen(true)} />
+      <TopBar mobileOpen={mobileOpen} onToggleMobileMenu={() => setMobileOpen((v) => !v)} />
       <MegaMenu />
       <MobileMenu open={mobileOpen} onClose={() => setMobileOpen(false)} />
     </header>
   );
 }
 
-function TopBar({ onOpenMobileMenu }: { onOpenMobileMenu: () => void }) {
+function TopBar({
+  mobileOpen,
+  onToggleMobileMenu,
+}: {
+  mobileOpen: boolean;
+  onToggleMobileMenu: () => void;
+}) {
   return (
-    <div className="flex items-center justify-between gap-3 md:gap-8 px-4 md:px-6 py-3 md:py-4 max-w-[1440px] mx-auto">
-      <button
-        onClick={onOpenMobileMenu}
-        aria-label="Abrir menú"
-        className="md:hidden p-1 text-gray-900 shrink-0"
-      >
-        <MenuIcon />
-      </button>
+    <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-4 px-4 py-3 md:justify-center md:gap-8 md:px-6 md:py-3.5">
+      {/* Izquierda: hamburguesa (mobile) + logo */}
+      <div className="flex items-center gap-2 md:gap-3">
+        <button
+          onClick={onToggleMobileMenu}
+          aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
+          aria-expanded={mobileOpen}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-gray-700 transition-colors hover:bg-gray-100 active:bg-gray-200 md:hidden"
+        >
+          <MenuIcon open={mobileOpen} />
+        </button>
 
-      <Logo />
-      <SearchBar />
-
-      <div className="hidden md:flex items-center gap-5 shrink-0">
-        <HelpDropdown />
-        <Link href="/cuenta" aria-label="Mi cuenta" className="text-gray-900 hover:text-mosso-yellow transition-colors">
-          <UserIcon />
-        </Link>
-        <FavoritosButton />
-        <CartButton />
+        <Logo />
       </div>
-      <div className="md:hidden shrink-0">
-        <CartButton compact />
+
+      {/* Centro: buscador. En mobile crece para llenar el espacio; en desktop es compacto y el grupo entero queda centrado. */}
+      <div className="min-w-0 flex-1 md:max-w-3xl">
+        <SearchBar />
+      </div>
+
+      {/* Derecha: acciones */}
+      <div className="flex items-center gap-1">
+        <div className="hidden items-center gap-1 md:flex">
+          <HelpDropdown />
+          <span className="mx-0.5 h-6 w-px bg-gray-200" aria-hidden="true" />
+          <Link
+            href="/cuenta"
+            aria-label="Mi cuenta"
+            className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-600 transition-colors hover:bg-gray-50 hover:text-mosso-dark"
+          >
+            <UserIcon />
+          </Link>
+          <FavoritosButton />
+          <CartButton />
+        </div>
+        <div className="md:hidden">
+          <CartButton compact />
+        </div>
       </div>
     </div>
   );
 }
 
+/** Si el nombre tiene más de 2 palabras, se muestra solo la primera (evita nombres largos en el header). */
+function nombreCorto(nombre: string): string {
+  const palabras = nombre.trim().split(/\s+/);
+
+  return palabras.length > 2 ? palabras[0] : nombre;
+}
+
 function Logo() {
+  const { empresa } = usePage<HeaderPageProps>().props;
+  const nombreCompleto = empresa?.nombre_comercial || 'MOSSO';
+  const nombre = nombreCorto(nombreCompleto);
+
   return (
-    <Link href="/" className="shrink-0 text-xl md:text-2xl font-black tracking-tight text-gray-900">
-      MOSSO
+    <Link href="/" aria-label={nombreCompleto} className="flex h-10 shrink-0 items-center gap-2">
+      {empresa?.logo ? (
+        <>
+          <img
+            src={`/storage/${empresa.logo}`}
+            alt={nombreCompleto}
+            className="h-8 w-auto max-w-[40px] object-contain sm:h-9 md:h-10 md:max-w-[44px]"
+          />
+          {/* El nombre solo se muestra en pantallas grandes; en mobile queda solo el logo. */}
+          <span className="hidden h-6 w-px shrink-0 bg-gray-200 md:block" aria-hidden="true" />
+          <span className="hidden bg-gradient-to-r from-amber-500 to-yellow-400 bg-clip-text text-xl font-extrabold tracking-normal text-transparent whitespace-nowrap md:inline">
+            {nombre}
+          </span>
+        </>
+      ) : (
+        <span className="text-xl font-black tracking-tight whitespace-nowrap text-gray-900 md:text-2xl">
+          {nombre}
+        </span>
+      )}
     </Link>
   );
 }
@@ -58,26 +115,30 @@ function SearchBar() {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (!query.trim()) return;
+
+    if (!query.trim()) {
+      return;
+    }
+
     router.get('/buscar', { q: query.trim() });
   };
 
   return (
-    <div className="flex-1 max-w-2xl">
+    <div className="w-full">
       <form
         onSubmit={handleSubmit}
-        className="relative flex items-center border-2 border-gray-200 rounded-full overflow-hidden focus-within:border-mosso-yellow transition-colors"
+        className="relative flex h-10 items-center overflow-hidden rounded-full border-2 border-gray-200 bg-white transition-all focus-within:border-mosso-yellow focus-within:shadow-[0_0_0_4px_rgba(255,197,39,0.15)]"
       >
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Buscar productos para tu mascota..."
-          className="w-full pl-4 md:pl-5 pr-2 py-2 md:py-2.5 text-sm outline-none min-w-0 text-gray-900 placeholder-gray-400 bg-white"
+          className="h-full w-full min-w-0 bg-white pr-2 pl-4 text-sm text-gray-900 placeholder-gray-400 outline-none md:pl-5"
         />
         <button
           type="submit"
-          className="bg-mosso-dark hover:bg-mosso-dark/80 text-white rounded-full w-8 h-8 md:w-9 md:h-9 flex items-center justify-center mr-1 shrink-0 transition-colors"
+          className="mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-mosso-dark text-white transition-colors hover:bg-mosso-dark/80"
           aria-label="Buscar"
         >
           <SearchIcon />
@@ -89,7 +150,7 @@ function SearchBar() {
 
 function HelpDropdown() {
   return (
-    <button className="flex items-center gap-1 text-sm text-gray-900 hover:text-mosso-yellow whitespace-nowrap transition-colors">
+    <button className="flex h-10 items-center gap-1.5 rounded-lg px-3 text-sm font-medium whitespace-nowrap text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900">
       <HelpIcon />
       ¿Necesitas ayuda?
       <ChevronDown />
@@ -99,16 +160,19 @@ function HelpDropdown() {
 
 function FavoritosButton() {
   const { total } = useFavoritos();
+
   return (
-    <Link href="/favoritos" aria-label="Favoritos" className="relative text-gray-900 hover:text-mosso-yellow transition-colors">
-      <span className="relative inline-flex">
-        <HeartIcon />
-        {total > 0 && (
-          <span className="absolute -top-2 -right-2 bg-mosso-red text-white text-[10px] font-bold min-w-[16px] h-4 px-0.5 rounded-full flex items-center justify-center leading-none pointer-events-none select-none">
-            {total > 99 ? '99+' : total}
-          </span>
-        )}
-      </span>
+    <Link
+      href="/favoritos"
+      aria-label="Favoritos"
+      className="relative flex h-10 w-10 items-center justify-center rounded-lg text-gray-600 transition-colors hover:bg-gray-50 hover:text-mosso-dark"
+    >
+      <HeartIcon />
+      {total > 0 && (
+        <span className="absolute top-1 right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-mosso-red px-0.5 text-[10px] leading-none font-bold text-white select-none">
+          {total > 99 ? '99+' : total}
+        </span>
+      )}
     </Link>
   );
 }
@@ -119,27 +183,40 @@ function CartButton({ compact = false }: { compact?: boolean }) {
   const cantidad = carritoProps?.cantidad ?? 0;
 
   return (
-    <Link href="/carrito" className="relative flex items-center gap-2 text-gray-900 hover:text-mosso-yellow transition-colors">
+    <Link
+      href="/carrito"
+      className={`relative flex h-10 items-center gap-2 rounded-lg text-gray-600 transition-colors hover:bg-gray-50 hover:text-mosso-dark ${compact ? 'w-10 justify-center' : 'px-3'
+        }`}
+    >
       <span className="relative inline-flex">
         <CartIcon />
-        <span className="absolute -top-2 -right-2 bg-mosso-red text-white text-[10px] font-bold min-w-[16px] h-4 px-0.5 rounded-full flex items-center justify-center leading-none pointer-events-none select-none">
+        <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-mosso-red px-0.5 text-[10px] leading-none font-bold text-white select-none">
           {cantidad > 99 ? '99+' : cantidad}
         </span>
       </span>
-      {!compact && (
-        <span className="text-sm font-semibold hidden sm:inline">Carrito</span>
-      )}
+      {!compact && <span className="hidden text-sm font-semibold sm:inline">Carrito</span>}
     </Link>
   );
 }
 
 /* --- Iconos --- */
 
-function MenuIcon() {
+function MenuIcon({ open }: { open: boolean }) {
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M3 12h18M3 6h18M3 18h18" />
-    </svg>
+    <span className="relative flex h-4 w-5 flex-col justify-between">
+      <span
+        className={`block h-0.5 w-full rounded-full bg-current transition-transform duration-300 ${open ? 'translate-y-[7px] rotate-45' : ''
+          }`}
+      />
+      <span
+        className={`block h-0.5 w-full rounded-full bg-current transition-opacity duration-200 ${open ? 'opacity-0' : 'opacity-100'
+          }`}
+      />
+      <span
+        className={`block h-0.5 w-full rounded-full bg-current transition-transform duration-300 ${open ? '-translate-y-[7px] -rotate-45' : ''
+          }`}
+      />
+    </span>
   );
 }
 

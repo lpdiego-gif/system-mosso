@@ -1,4 +1,10 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
+import type { EmpresaPublica } from '@/types/empresa';
+
+interface FooterPageProps {
+  empresa: EmpresaPublica | null;
+  [key: string]: unknown;
+}
 
 const enlacesTienda = [
   { label: 'Perros', href: '/catalogo/animal/1' },
@@ -20,19 +26,57 @@ const enlacesAyuda = [
 
 const mediosPago = ['VISA', 'Mastercard', 'Amex', 'Yape', 'Plin', 'Culqi'];
 
+function whatsappUrl(telefono: string): string {
+  const digitos = telefono.replace(/\D/g, '');
+  const conCodigo = digitos.startsWith('51') ? digitos : `51${digitos}`;
+
+  return `https://wa.me/${conCodigo}`;
+}
+
 export default function Footer() {
+  const { empresa } = usePage<FooterPageProps>().props;
+
+  const nombre = empresa?.nombre_comercial || 'MOSSO';
+  const direccion = empresa?.direccion
+    ? `${empresa.direccion}${empresa.distrito ? `, ${empresa.distrito}` : ''}`
+    : 'Lima, Perú';
+  const telefono = empresa?.telefono || '+51 999 123 456';
+  const correo = empresa?.correo || 'hola@mosso.com.pe';
+
   return (
-    <footer className="bg-black text-gray-300">
-      <div className="max-w-[1440px] mx-auto px-6 py-10 md:py-14 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 md:gap-10">
+    <footer className="relative overflow-hidden bg-black text-gray-300">
+      {/* Acento de marca */}
+      <div className="h-[3px] w-full bg-gradient-to-r from-mosso-yellow via-amber-300 to-mosso-yellow" />
+
+      {/* Resplandores decorativos */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-20 left-1/4 h-72 w-72 rounded-full bg-mosso-yellow/10 blur-[110px]" />
+        <div className="absolute -bottom-24 right-1/4 h-72 w-72 rounded-full bg-mosso-red/5 blur-[110px]" />
+      </div>
+
+      <div className="relative mx-auto grid max-w-[1440px] grid-cols-1 gap-10 px-4 py-12 sm:grid-cols-2 sm:gap-x-8 sm:px-6 md:py-16 lg:grid-cols-[1.3fr_1fr_1fr_1fr_1fr] lg:gap-x-10">
         {/* Columna 1: Branding */}
-        <div className="sm:col-span-2 md:col-span-1">
-          <Link href="/" className="text-xl font-black tracking-tight text-white">
-            MOSSO
+        <div className="sm:col-span-2 lg:col-span-1">
+          <Link href="/" aria-label={nombre} className="flex items-center gap-2.5">
+            {empresa?.logo ? (
+              <>
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white p-1.5 shadow-lg shadow-black/20">
+                  <img
+                    src={`/storage/${empresa.logo}`}
+                    alt={nombre}
+                    className="h-full w-full object-contain"
+                  />
+                </span>
+                <span className="text-lg font-black tracking-tight text-white">{nombre}</span>
+              </>
+            ) : (
+              <span className="text-xl font-black tracking-tight text-white">{nombre}</span>
+            )}
           </Link>
-          <p className="mt-3 text-sm text-gray-400 max-w-[220px]">
+          <p className="mt-4 max-w-[240px] text-sm leading-relaxed text-gray-400">
             Todo para tu engreído, en un solo lugar.
           </p>
-          <div className="mt-5 flex items-center gap-3">
+          <div className="mt-6 flex items-center gap-2.5">
             <RedSocialIcon href="#" label="Facebook">
               <FacebookIcon />
             </RedSocialIcon>
@@ -65,25 +109,34 @@ export default function Footer() {
 
         {/* Columna 4: Contacto */}
         <FooterColumna titulo="Contacto">
-          <li className="flex items-start gap-2 text-sm text-gray-400">
-            <MapPinIcon className="shrink-0 mt-0.5 text-mosso-yellow" />
-            Lima, Perú
+          <li className="flex items-start gap-3 text-sm">
+            <IconChip>
+              <MapPinIcon />
+            </IconChip>
+            <span className="break-words pt-1.5 text-gray-400">{direccion}</span>
           </li>
-          <li className="flex items-start gap-2 text-sm">
-            <PhoneIcon className="shrink-0 mt-0.5 text-mosso-yellow" />
+          <li className="group flex items-start gap-3 text-sm">
+            <IconChip>
+              <PhoneIcon />
+            </IconChip>
             <a
-              href="https://wa.me/51999123456"
+              href={whatsappUrl(telefono)}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-400 hover:text-white transition-colors"
+              className="break-words pt-1.5 text-gray-400 transition-colors group-hover:text-white"
             >
-              +51 999 123 456
+              {telefono}
             </a>
           </li>
-          <li className="flex items-start gap-2 text-sm">
-            <MailIcon className="shrink-0 mt-0.5 text-mosso-yellow" />
-            <a href="mailto:hola@mosso.com.pe" className="text-gray-400 hover:text-white transition-colors">
-              hola@mosso.com.pe
+          <li className="group flex items-start gap-3 text-sm">
+            <IconChip>
+              <MailIcon />
+            </IconChip>
+            <a
+              href={`mailto:${correo}`}
+              className="break-all pt-1.5 text-gray-400 transition-colors group-hover:text-white"
+            >
+              {correo}
             </a>
           </li>
         </FooterColumna>
@@ -94,7 +147,7 @@ export default function Footer() {
             {mediosPago.map((medio) => (
               <span
                 key={medio}
-                className="flex items-center justify-center rounded-lg bg-white/10 px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-gray-200"
+                className="flex items-center justify-center rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-gray-300 transition-colors hover:border-mosso-yellow/40 hover:text-white"
               >
                 {medio}
               </span>
@@ -104,15 +157,18 @@ export default function Footer() {
       </div>
 
       {/* Barra inferior */}
-      <div className="border-t border-white/10">
-        <div className="max-w-[1440px] mx-auto px-6 py-5 flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-3 text-xs text-gray-500 text-center">
-          <p>© {new Date().getFullYear()} MOSSO. Todos los derechos reservados.</p>
-          <p className="flex flex-wrap items-center justify-center gap-2">
-            <a href="#" className="hover:text-gray-300 transition-colors">
+      <div className="relative border-t border-white/10">
+        <div className="mx-auto flex max-w-[1440px] flex-col items-center justify-center gap-3 px-4 py-6 text-center text-xs text-gray-500 sm:flex-row sm:justify-between sm:px-6">
+          <p>
+            © {new Date().getFullYear()} <span className="font-semibold text-gray-400">{nombre.toUpperCase()}</span>.
+            Todos los derechos reservados.
+          </p>
+          <p className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+            <a href="#" className="transition-colors hover:text-gray-300">
               Política de privacidad
             </a>
-            <span aria-hidden="true">|</span>
-            <a href="#" className="hover:text-gray-300 transition-colors">
+            <span className="h-1 w-1 shrink-0 rounded-full bg-gray-700" aria-hidden="true" />
+            <a href="#" className="transition-colors hover:text-gray-300">
               Términos y condiciones
             </a>
           </p>
@@ -125,7 +181,10 @@ export default function Footer() {
 function FooterColumna({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
     <div>
-      <h3 className="text-sm font-bold text-mosso-yellow uppercase tracking-wide">{titulo}</h3>
+      <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-white">
+        <span className="h-3.5 w-1 shrink-0 rounded-full bg-mosso-yellow" aria-hidden="true" />
+        {titulo}
+      </h3>
       <ul className="mt-4 space-y-3">{children}</ul>
     </div>
   );
@@ -133,11 +192,13 @@ function FooterColumna({ titulo, children }: { titulo: string; children: React.R
 
 function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
   const esExterno = href === '#';
+  const className =
+    'inline-block text-sm text-gray-400 transition-all duration-200 hover:translate-x-0.5 hover:text-white';
 
   if (esExterno) {
     return (
       <li>
-        <a href={href} className="text-sm text-gray-400 hover:text-white transition-colors">
+        <a href={href} className={className}>
           {children}
         </a>
       </li>
@@ -146,10 +207,18 @@ function FooterLink({ href, children }: { href: string; children: React.ReactNod
 
   return (
     <li>
-      <Link href={href} className="text-sm text-gray-400 hover:text-white transition-colors">
+      <Link href={href} className={className}>
         {children}
       </Link>
     </li>
+  );
+}
+
+function IconChip({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/5 text-mosso-yellow ring-1 ring-white/10">
+      {children}
+    </span>
   );
 }
 
@@ -168,7 +237,7 @@ function RedSocialIcon({
       target="_blank"
       rel="noopener noreferrer"
       aria-label={label}
-      className="w-9 h-9 rounded-full border border-white/15 flex items-center justify-center text-gray-300 hover:bg-mosso-yellow hover:border-mosso-yellow hover:text-gray-900 transition-colors"
+      className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-gray-300 transition-all duration-200 hover:-translate-y-0.5 hover:border-mosso-yellow hover:bg-mosso-yellow hover:text-gray-900 hover:shadow-lg hover:shadow-mosso-yellow/20"
     >
       {children}
     </a>

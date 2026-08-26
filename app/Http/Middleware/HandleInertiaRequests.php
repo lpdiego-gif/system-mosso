@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Services\CarritoService;
 use App\Services\MenuService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -52,6 +53,16 @@ class HandleInertiaRequests extends Middleware
             'carrito' => fn () => [
                 'cantidad' => app(CarritoService::class)->contarItems($request),
             ],
+
+            // Datos públicos de la empresa (logo, contacto, dirección) para el header/footer.
+            'empresa' => fn () => DB::table('empresa as e')
+                ->leftJoin('direcciones as d', 'd.id_direccion', '=', 'e.fk_direccion')
+                ->leftJoin('distritos as dist', 'dist.id_distrito', '=', 'd.fk_distrito')
+                ->select([
+                    'e.nombre_comercial', 'e.logo', 'e.correo', 'e.telefono',
+                    'd.direccion', 'dist.nombre as distrito',
+                ])
+                ->first(),
         ];
     }
 }

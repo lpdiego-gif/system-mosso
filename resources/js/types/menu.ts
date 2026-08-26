@@ -1,9 +1,20 @@
+/** Vista previa de un producto (para mostrar su imagen junto a la subcategoría en el menú). */
+export interface ProductoMenu {
+  id: number;
+  nombre: string;
+  imagen: string;
+}
+
 export interface MenuHijo {
   id: number;
   nombre: string;
   href: string;
   logo?: string | null;
   hijos: MenuHijo[];
+  /** Solo presente en subcategorías: vista previa de sus productos con imagen. */
+  productos?: ProductoMenu[];
+  /** Total de productos con imagen en la subcategoría (puede ser mayor a `productos.length`). */
+  totalProductos?: number;
 }
 
 export interface MenuColumna {

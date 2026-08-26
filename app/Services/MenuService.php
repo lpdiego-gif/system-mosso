@@ -9,6 +9,9 @@ use App\Models\TipoServicio;
 
 class MenuService
 {
+    /** Máximo de miniaturas de producto a mostrar por subcategoría en el menú. */
+    private const MAX_PRODUCTOS_PREVIEW = 10;
+
     public function build(): array
     {
         return Menu::where('activo', true)
@@ -59,12 +62,15 @@ class MenuService
         };
     }
 
-    // Perros / Gatos -> categorías (izquierda) + subcategorías (derecha)
+    // Perros / Gatos -> categorías (izquierda) + subcategorías con vista previa de productos (derecha)
     private function columnasAnimal(int $fkAnimal): array
     {
         $categorias = Animal::findOrFail($fkAnimal)
             ->categorias() // hasMany en el modelo Animal
-            ->with('subCategorias')
+            ->with(['subCategorias.productos' => function ($query) {
+                // Solo productos activos y con imagen: son los únicos que tiene sentido mostrar en el menú.
+                $query->activos()->whereNotNull('imagen_principal')->latest('id_producto');
+            }])
             ->get();
 
         return [
@@ -74,11 +80,21 @@ class MenuService
                     'id' => $cat->id_categoria,
                     'nombre' => $cat->nombre,
                     'href' => "/catalogo/categoria/{$cat->id_categoria}",
-                    'hijos' => $cat->subCategorias->map(fn ($sub) => [
-                        'id' => $sub->id_subcategorias,
-                        'nombre' => $sub->nom_sub_categoria,
-                        'href' => "/catalogo/subcategoria/{$sub->id_subcategorias}",
-                    ]),
+                    'hijos' => $cat->subCategorias->map(function ($sub) {
+                        $productos = $sub->productos;
+
+                        return [
+                            'id' => $sub->id_subcategorias,
+                            'nombre' => $sub->nom_sub_categoria,
+                            'href' => "/catalogo/subcategoria/{$sub->id_subcategorias}",
+                            'productos' => $productos->take(self::MAX_PRODUCTOS_PREVIEW)->map(fn ($p) => [
+                                'id' => $p->id_producto,
+                                'nombre' => $p->nombre,
+                                'imagen' => $p->imagen_principal,
+                            ])->values(),
+                            'totalProductos' => $productos->count(),
+                        ];
+                    }),
                 ]),
             ],
         ];
