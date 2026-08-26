@@ -228,6 +228,24 @@ function HeartIcon({ filled }: { filled: boolean }) {
 
 export function MarcaCarrusel({ marcas = [] }: { marcas?: MarcaCard[] }) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [pausado, setPausado] = useState(false);
+
+  useEffect(() => {
+    if (pausado || marcas.length === 0) return;
+
+    const id = setInterval(() => {
+      const el = scrollRef.current;
+      if (!el) return;
+      const alFinal = el.scrollLeft + el.clientWidth >= el.scrollWidth - 8;
+      if (alFinal) {
+        el.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        el.scrollBy({ left: 176, behavior: 'smooth' });
+      }
+    }, 2500);
+
+    return () => clearInterval(id);
+  }, [pausado, marcas.length]);
 
   const scroll = (dir: 'left' | 'right') => {
     scrollRef.current?.scrollBy({ left: dir === 'left' ? -200 : 200, behavior: 'smooth' });
@@ -239,7 +257,11 @@ export function MarcaCarrusel({ marcas = [] }: { marcas?: MarcaCard[] }) {
     <section className="max-w-[1440px] mx-auto px-6 py-10">
       <h2 className="text-2xl font-black text-center text-gray-900 mb-6">Marcas premium para tu mascota</h2>
 
-      <div className="relative">
+      <div
+        className="relative"
+        onMouseEnter={() => setPausado(true)}
+        onMouseLeave={() => setPausado(false)}
+      >
         <button
           onClick={() => scroll('left')}
           aria-label="Anterior"
@@ -256,9 +278,12 @@ export function MarcaCarrusel({ marcas = [] }: { marcas?: MarcaCard[] }) {
             <Link
               key={m.id}
               href={m.href}
-              className="w-40 h-28 shrink-0 snap-start border border-gray-200 rounded-xl flex items-center justify-center p-4 hover:shadow-md hover:border-mosso-yellow transition-all"
+              className="w-40 h-28 shrink-0 snap-start border border-gray-200 rounded-xl flex flex-col items-center justify-center p-4 hover:shadow-md hover:border-mosso-yellow transition-all bg-white"
             >
-              <img src={m.logo} alt={m.nombre} className="max-h-14 max-w-full object-contain" />
+              {m.logo
+                ? <img src={m.logo} alt={m.nombre} className="max-h-14 max-w-full object-contain" />
+                : <span className="text-xs font-bold text-gray-900 text-center leading-tight">{m.nombre}</span>
+              }
             </Link>
           ))}
         </div>
