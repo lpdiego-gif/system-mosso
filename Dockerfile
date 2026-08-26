@@ -1,4 +1,15 @@
-# ── Base ──────────────────────────────────────────────────────────────────────
+# ── Stage 1: Frontend (Node) ───────────────────────────────────────────────────
+FROM node:20-alpine AS frontend
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
+# ── Stage 2: PHP/Apache ────────────────────────────────────────────────────────
 FROM php:8.4-apache
 
 # ── Dependencias del sistema ───────────────────────────────────────────────────
@@ -43,6 +54,9 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-di
 
 # ── Código fuente ─────────────────────────────────────────────────────────────
 COPY . .
+
+# ── Assets compilados desde stage frontend ────────────────────────────────────
+COPY --from=frontend /app/public/build ./public/build
 
 # ── Scripts post-install (requieren artisan) ──────────────────────────────────
 RUN php artisan package:discover --ansi
