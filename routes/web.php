@@ -115,13 +115,18 @@ Route::post('/cuenta/registro/reenviar', [ClienteRegistroController::class, 'ree
 
 /*
 |--------------------------------------------------------------------------
-| Mi cuenta (cliente autenticado): escritorio, direcciones y detalles.
+| Mi cuenta (cliente autenticado)
 |--------------------------------------------------------------------------
-| Pedidos (el otro ítem del menú lateral) todavía no tiene ruta propia.
 */
+
+use App\Http\Controllers\MiCuentaPedidosController;
+use App\Http\Controllers\MiCuentaMascotaController;
+use App\Http\Controllers\MiCuentaPuntosController;
 
 Route::middleware(['auth', 'cliente'])->group(function () {
     Route::get('/mi-cuenta', [MiCuentaController::class, 'index'])->name('mi-cuenta');
+
+    Route::get('/mi-cuenta/pedidos', [MiCuentaPedidosController::class, 'index'])->name('mi-cuenta.pedidos');
 
     Route::prefix('mi-cuenta/direcciones')->name('mi-cuenta.direcciones.')->group(function () {
         Route::get('/', [MiCuentaDireccionController::class, 'index'])->name('index');
@@ -134,6 +139,14 @@ Route::middleware(['auth', 'cliente'])->group(function () {
 
     Route::get('/mi-cuenta/detalles', [MiCuentaDetallesController::class, 'index'])->name('mi-cuenta.detalles');
     Route::put('/mi-cuenta/detalles', [MiCuentaDetallesController::class, 'update'])->name('mi-cuenta.detalles.update');
+
+    Route::prefix('mi-cuenta/mascotas')->name('mi-cuenta.mascotas.')->group(function () {
+        Route::get('/', [MiCuentaMascotaController::class, 'index'])->name('index');
+        Route::post('/', [MiCuentaMascotaController::class, 'store'])->name('store');
+        Route::delete('/{mascota}', [MiCuentaMascotaController::class, 'destroy'])->whereNumber('mascota')->name('destroy');
+    });
+
+    Route::get('/mi-cuenta/puntos', [MiCuentaPuntosController::class, 'index'])->name('mi-cuenta.puntos');
 });
 
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {

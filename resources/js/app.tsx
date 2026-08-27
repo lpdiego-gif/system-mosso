@@ -15,9 +15,8 @@ createInertiaApp({
             case name === 'welcome':
             case name === 'libro-de-reclamaciones':
             case name === 'cuenta':
-            case name === 'mi-cuenta':
-            case name === 'mi-cuenta-direcciones':
-            case name === 'mi-cuenta-detalles':
+            // All mi-cuenta/* pages own their StorefrontLayout — never wrap with AppLayout.
+            case name.startsWith('mi-cuenta'):
             case name.startsWith('catalogo/'):
             case name.startsWith('carrito/'):
             case name.startsWith('checkout/'):

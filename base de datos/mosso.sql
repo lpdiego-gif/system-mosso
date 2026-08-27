@@ -1,13 +1,13 @@
--- MariaDB dump 10.19  Distrib 10.4.32-MariaDB, for Win64 (AMD64)
+-- MySQL dump 10.13  Distrib 8.0.46, for Win64 (x86_64)
 --
--- Host: localhost    Database: mosso
+-- Host: 127.0.0.1    Database: mosso2
 -- ------------------------------------------------------
--- Server version	10.4.32-MariaDB
+-- Server version	5.5.5-10.4.34-MariaDB-1:10.4.34+maria~ubu2004
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
+/*!50503 SET NAMES utf8mb4 */;
 /*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
 /*!40103 SET TIME_ZONE='+00:00' */;
 /*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
@@ -21,7 +21,7 @@
 
 DROP TABLE IF EXISTS `animales`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `animales` (
   `id_animal` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
@@ -38,7 +38,7 @@ CREATE TABLE `animales` (
 
 LOCK TABLES `animales` WRITE;
 /*!40000 ALTER TABLE `animales` DISABLE KEYS */;
-INSERT INTO `animales` VALUES (1,'Perro',1),(2,'Gato',1),(3,'Hámster',2),(4,'Aves',2),(5,'Peces',2),(6,'Conejo',2);
+INSERT INTO `animales` VALUES (1,'Perro',1),(2,'Gato',1),(3,'Hámster',2),(4,'Avess',2),(5,'Peces',2),(6,'Conejo',2);
 /*!40000 ALTER TABLE `animales` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -48,7 +48,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `cache`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `cache` (
   `key` varchar(255) NOT NULL,
   `value` mediumtext NOT NULL,
@@ -64,7 +64,7 @@ CREATE TABLE `cache` (
 
 LOCK TABLES `cache` WRITE;
 /*!40000 ALTER TABLE `cache` DISABLE KEYS */;
-INSERT INTO `cache` VALUES ('laravel-cache-2edf651c550870469fcdb5b845224a1a','i:1;',1787641643),('laravel-cache-2edf651c550870469fcdb5b845224a1a:timer','i:1787641643;',1787641643),('laravel-cache-5a864f15c95b6e8983dfca1f000e7299','i:1;',1787641929),('laravel-cache-5a864f15c95b6e8983dfca1f000e7299:timer','i:1787641929;',1787641929),('laravel-cache-80b3b458d4f1f39ff38318c49f1e0298','i:1;',1787641506),('laravel-cache-80b3b458d4f1f39ff38318c49f1e0298:timer','i:1787641506;',1787641506),('laravel-cache-admin@mosso.pe|127.0.0.1','i:1;',1787641277),('laravel-cache-admin@mosso.pe|127.0.0.1:timer','i:1787641277;',1787641277),('laravel-cache-d89848d4114178f9811798305bb0ab36','i:2;',1787640106),('laravel-cache-d89848d4114178f9811798305bb0ab36:timer','i:1787640106;',1787640106),('laravel-cache-diego@gmail.com|127.0.0.1','i:1;',1787641643),('laravel-cache-diego@gmail.com|127.0.0.1:timer','i:1787641643;',1787641643),('laravel-cache-f7cc854707625fe7695d479d754b44dd','i:1;',1787641277),('laravel-cache-f7cc854707625fe7695d479d754b44dd:timer','i:1787641277;',1787641277),('laravel-cache-fa950f3fad9a4af60920950c52373154','i:1;',1787639642),('laravel-cache-fa950f3fad9a4af60920950c52373154:timer','i:1787639642;',1787639642);
+INSERT INTO `cache` VALUES ('laravel-cache-0b4054a53774766efe60bf3f0fee01e0','i:2;',1787803982),('laravel-cache-0b4054a53774766efe60bf3f0fee01e0:timer','i:1787803982;',1787803982);
 /*!40000 ALTER TABLE `cache` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -74,7 +74,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `cache_locks`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `cache_locks` (
   `key` varchar(255) NOT NULL,
   `owner` varchar(255) NOT NULL,
@@ -94,12 +94,46 @@ LOCK TABLES `cache_locks` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `canjes_premio`
+--
+
+DROP TABLE IF EXISTS `canjes_premio`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `canjes_premio` (
+  `id_canje` int(11) NOT NULL AUTO_INCREMENT,
+  `fk_cliente` int(11) NOT NULL,
+  `fk_premio` int(11) NOT NULL,
+  `fk_punto` int(11) NOT NULL,
+  `fecha` timestamp NOT NULL DEFAULT current_timestamp(),
+  `estado` enum('pendiente','entregado','cancelado') NOT NULL DEFAULT 'pendiente',
+  PRIMARY KEY (`id_canje`),
+  KEY `fk_canjes_premio_cliente_idx` (`fk_cliente`),
+  KEY `fk_canjes_premio_premio_idx` (`fk_premio`),
+  KEY `fk_canjes_premio_punto_idx` (`fk_punto`),
+  CONSTRAINT `fk_canjes_premio_cliente` FOREIGN KEY (`fk_cliente`) REFERENCES `clientes` (`id_cliente`) ON DELETE CASCADE,
+  CONSTRAINT `fk_canjes_premio_premio` FOREIGN KEY (`fk_premio`) REFERENCES `premios` (`id_premio`),
+  CONSTRAINT `fk_canjes_premio_punto` FOREIGN KEY (`fk_punto`) REFERENCES `puntos_cliente` (`id_punto`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `canjes_premio`
+--
+
+LOCK TABLES `canjes_premio` WRITE;
+/*!40000 ALTER TABLE `canjes_premio` DISABLE KEYS */;
+INSERT INTO `canjes_premio` VALUES (1,3,1,1,'2026-08-17 03:59:35','entregado'),(2,3,2,2,'2026-08-19 03:59:35','pendiente'),(3,3,3,3,'2026-08-22 03:59:35','entregado'),(4,3,4,4,'2026-08-25 03:59:35','cancelado');
+/*!40000 ALTER TABLE `canjes_premio` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `carrito_detalle`
 --
 
 DROP TABLE IF EXISTS `carrito_detalle`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `carrito_detalle` (
   `id_carrito_detalle` int(11) NOT NULL AUTO_INCREMENT,
   `fk_carrito` int(11) NOT NULL,
@@ -112,7 +146,7 @@ CREATE TABLE `carrito_detalle` (
   KEY `fk_carrito_detalle_producto_idx` (`fk_producto`),
   CONSTRAINT `fk_carrito_detalle_carrito` FOREIGN KEY (`fk_carrito`) REFERENCES `carritos` (`id_carrito`) ON DELETE CASCADE,
   CONSTRAINT `fk_carrito_detalle_producto` FOREIGN KEY (`fk_producto`) REFERENCES `productos` (`id_producto`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -121,6 +155,7 @@ CREATE TABLE `carrito_detalle` (
 
 LOCK TABLES `carrito_detalle` WRITE;
 /*!40000 ALTER TABLE `carrito_detalle` DISABLE KEYS */;
+INSERT INTO `carrito_detalle` VALUES (1,1,104,1,179.90,'2026-08-26 01:05:39'),(2,1,105,1,89.90,'2026-08-26 01:05:44');
 /*!40000 ALTER TABLE `carrito_detalle` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -130,7 +165,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `carritos`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `carritos` (
   `id_carrito` int(11) NOT NULL AUTO_INCREMENT,
   `fk_cliente` int(11) DEFAULT NULL,
@@ -141,7 +176,7 @@ CREATE TABLE `carritos` (
   KEY `fk_carritos_cliente_idx` (`fk_cliente`),
   KEY `carritos_token_invitado_idx` (`token_invitado`),
   CONSTRAINT `fk_carritos_cliente` FOREIGN KEY (`fk_cliente`) REFERENCES `clientes` (`id_cliente`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -150,6 +185,7 @@ CREATE TABLE `carritos` (
 
 LOCK TABLES `carritos` WRITE;
 /*!40000 ALTER TABLE `carritos` DISABLE KEYS */;
+INSERT INTO `carritos` VALUES (1,NULL,'2ba1db8a-a7c5-4d61-b464-5b635dc40a72','2026-08-26 01:05:39','2026-08-26 01:05:39');
 /*!40000 ALTER TABLE `carritos` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -159,7 +195,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `categorias`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `categorias` (
   `id_categoria` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
@@ -187,7 +223,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `cliente_direcciones`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `cliente_direcciones` (
   `id_cliente_direccion` int(11) NOT NULL AUTO_INCREMENT,
   `fk_cliente` int(11) NOT NULL,
@@ -217,7 +253,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `clientes`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `clientes` (
   `id_cliente` int(11) NOT NULL AUTO_INCREMENT,
   `fk_persona` int(11) DEFAULT NULL,
@@ -226,8 +262,8 @@ CREATE TABLE `clientes` (
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id_cliente`),
-  UNIQUE KEY `clientes_fk_persona_unique` (`fk_persona`),
   UNIQUE KEY `clientes_correo_unique` (`correo`),
+  UNIQUE KEY `clientes_fk_persona_unique` (`fk_persona`),
   UNIQUE KEY `clientes_fk_user_unique` (`fk_user`),
   CONSTRAINT `fk_clientes_persona` FOREIGN KEY (`fk_persona`) REFERENCES `personas` (`id_persona`),
   CONSTRAINT `fk_clientes_user` FOREIGN KEY (`fk_user`) REFERENCES `users` (`id`) ON DELETE SET NULL
@@ -250,7 +286,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `codigos_verificacion`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `codigos_verificacion` (
   `email` varchar(255) NOT NULL,
   `codigo` varchar(6) NOT NULL,
@@ -277,7 +313,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `comprobantes`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `comprobantes` (
   `id_comprobante` int(11) NOT NULL AUTO_INCREMENT,
   `fk_pedido` int(11) NOT NULL,
@@ -307,12 +343,55 @@ LOCK TABLES `comprobantes` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `cupones`
+--
+
+DROP TABLE IF EXISTS `cupones`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `cupones` (
+  `id_cupon` int(11) NOT NULL AUTO_INCREMENT,
+  `codigo` varchar(30) NOT NULL,
+  `fk_cliente` int(11) DEFAULT NULL COMMENT 'NULL si es un cupón genérico, no personal',
+  `fk_mascota` int(11) DEFAULT NULL COMMENT 'qué mascota lo originó (solo aplica a origen=cumpleanos_mascota)',
+  `origen` enum('cumpleanos_mascota','bienvenida','promocion_manual') NOT NULL,
+  `tipo` enum('descuento_porcentaje','descuento_monto','envio_gratis','producto_gratis','puntos_bonus') NOT NULL,
+  `valor` decimal(10,2) DEFAULT NULL COMMENT 'porcentaje, monto, o cantidad de puntos según el tipo',
+  `fk_producto_regalo` int(11) DEFAULT NULL COMMENT 'solo si tipo=producto_gratis',
+  `fecha_emision` timestamp NOT NULL DEFAULT current_timestamp(),
+  `fecha_vencimiento` date NOT NULL,
+  `usado` tinyint(1) NOT NULL DEFAULT 0,
+  `fk_pedido_uso` int(11) DEFAULT NULL COMMENT 'pedido donde se canjeó',
+  PRIMARY KEY (`id_cupon`),
+  UNIQUE KEY `cupones_codigo_unique` (`codigo`),
+  KEY `fk_cupones_cliente_idx` (`fk_cliente`),
+  KEY `fk_cupones_mascota_idx` (`fk_mascota`),
+  KEY `fk_cupones_producto_regalo_idx` (`fk_producto_regalo`),
+  KEY `fk_cupones_pedido_uso_idx` (`fk_pedido_uso`),
+  CONSTRAINT `fk_cupones_cliente` FOREIGN KEY (`fk_cliente`) REFERENCES `clientes` (`id_cliente`) ON DELETE CASCADE,
+  CONSTRAINT `fk_cupones_mascota` FOREIGN KEY (`fk_mascota`) REFERENCES `mascotas` (`id_mascota`) ON DELETE SET NULL,
+  CONSTRAINT `fk_cupones_pedido_uso` FOREIGN KEY (`fk_pedido_uso`) REFERENCES `pedidos` (`id_pedido`) ON DELETE SET NULL,
+  CONSTRAINT `fk_cupones_producto_regalo` FOREIGN KEY (`fk_producto_regalo`) REFERENCES `productos` (`id_producto`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `cupones`
+--
+
+LOCK TABLES `cupones` WRITE;
+/*!40000 ALTER TABLE `cupones` DISABLE KEYS */;
+INSERT INTO `cupones` VALUES (1,'CUMPLE-FIRULAIS-2026',3,1,'cumpleanos_mascota','descuento_porcentaje',10.00,NULL,'2026-08-27 03:59:35','2026-09-26',0,NULL),(2,'CUMPLE-MICHI-2026',3,2,'cumpleanos_mascota','puntos_bonus',100.00,NULL,'2026-08-27 03:59:35','2026-09-26',0,NULL),(3,'BIENVENIDA-LPDIEGO',3,NULL,'bienvenida','descuento_monto',15.00,NULL,'2026-08-27 03:59:35','2026-10-26',0,NULL),(4,'PROMO-VERANO2026',NULL,NULL,'promocion_manual','descuento_porcentaje',20.00,NULL,'2026-08-27 03:59:35','2026-09-11',0,NULL);
+/*!40000 ALTER TABLE `cupones` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `departamentos`
 --
 
 DROP TABLE IF EXISTS `departamentos`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `departamentos` (
   `id_departamento` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
@@ -336,7 +415,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `descuentos`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `descuentos` (
   `id_descuento` int(11) NOT NULL AUTO_INCREMENT,
   `fk_producto` int(11) NOT NULL,
@@ -369,7 +448,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `direcciones`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `direcciones` (
   `id_direccion` int(11) NOT NULL AUTO_INCREMENT,
   `direccion` varchar(150) NOT NULL,
@@ -396,7 +475,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `distritos`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `distritos` (
   `id_distrito` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
@@ -424,7 +503,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `empresa`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `empresa` (
   `id_empresa` int(11) NOT NULL AUTO_INCREMENT,
   `ruc` varchar(11) NOT NULL,
@@ -455,7 +534,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `empresa_redes`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `empresa_redes` (
   `id_empresa_red` int(11) NOT NULL AUTO_INCREMENT,
   `fk_empresa` int(11) NOT NULL,
@@ -484,7 +563,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `estados_pedido`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `estados_pedido` (
   `id_estado_pedido` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
@@ -507,7 +586,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `estados_producto`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `estados_producto` (
   `id_estado_producto` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
@@ -526,12 +605,41 @@ INSERT INTO `estados_producto` VALUES (1,'Activo'),(2,'Inactivo');
 UNLOCK TABLES;
 
 --
+-- Table structure for table `etapas_vida`
+--
+
+DROP TABLE IF EXISTS `etapas_vida`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `etapas_vida` (
+  `id_etapa_vida` int(11) NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(45) NOT NULL,
+  `fk_animal` int(11) NOT NULL,
+  `edad_min_meses` int(11) NOT NULL,
+  `edad_max_meses` int(11) DEFAULT NULL COMMENT 'NULL = sin límite superior (ej. Senior)',
+  PRIMARY KEY (`id_etapa_vida`),
+  KEY `fk_etapas_vida_animal_idx` (`fk_animal`),
+  CONSTRAINT `fk_etapas_vida_animal` FOREIGN KEY (`fk_animal`) REFERENCES `animales` (`id_animal`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `etapas_vida`
+--
+
+LOCK TABLES `etapas_vida` WRITE;
+/*!40000 ALTER TABLE `etapas_vida` DISABLE KEYS */;
+INSERT INTO `etapas_vida` VALUES (1,'Cachorro',1,0,12),(2,'Adulto',1,13,84),(3,'Senior',1,85,NULL),(4,'Cachorro',2,0,12);
+/*!40000 ALTER TABLE `etapas_vida` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `failed_jobs`
 --
 
 DROP TABLE IF EXISTS `failed_jobs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `failed_jobs` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `uuid` varchar(255) NOT NULL,
@@ -561,7 +669,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `forma_pagos`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `forma_pagos` (
   `id_forma_pago` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
@@ -584,7 +692,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `job_batches`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `job_batches` (
   `id` varchar(255) NOT NULL,
   `name` varchar(255) NOT NULL,
@@ -615,7 +723,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `jobs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `jobs` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `queue` varchar(255) NOT NULL,
@@ -644,7 +752,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `marcas`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `marcas` (
   `id_marca` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
@@ -659,8 +767,42 @@ CREATE TABLE `marcas` (
 
 LOCK TABLES `marcas` WRITE;
 /*!40000 ALTER TABLE `marcas` DISABLE KEYS */;
-INSERT INTO `marcas` VALUES (1,'Royal Canin','royal-canin.png'),(2,'Purina Pro Plan','pro-plan.png'),(3,'Hill\'s Science Diet','hills.png'),(4,'Eukanuba','eukanuba.png'),(5,'Iams','iams.png'),(6,'Pedigree','pedigree.png'),(7,'Whiskas','whiskas.png'),(8,'Friskies','friskies.png'),(9,'Sheba',NULL),(10,'Vitakraft',NULL),(11,'Beaphar',NULL),(12,'Seresto',NULL),(13,'Bravecto','bravecto.png'),(14,'NexGard',NULL),(15,'Simparica',NULL);
+INSERT INTO `marcas` VALUES (1,'Royal Canin','royal-canin.png'),(2,'Purina Pro Plan','pro-plan.png'),(3,'Hill\'s Science Diet','Hill\'s Science Diet.png'),(4,'Eukanuba','eukanuba.png'),(5,'Iams','iams.png'),(6,'Pedigree','pedigree.png'),(7,'Whiskas','Whiskas.png'),(8,'Friskies','Friskies.png'),(9,'Sheba','Sheba.png'),(10,'Vitakraft',NULL),(11,'Beaphar',NULL),(12,'Seresto',NULL),(13,'Bravecto','bravecto.png'),(14,'NexGard',NULL),(15,'Simparica',NULL);
 /*!40000 ALTER TABLE `marcas` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `mascotas`
+--
+
+DROP TABLE IF EXISTS `mascotas`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `mascotas` (
+  `id_mascota` int(11) NOT NULL AUTO_INCREMENT,
+  `fk_cliente` int(11) NOT NULL,
+  `nombre` varchar(60) NOT NULL,
+  `fk_animal` int(11) NOT NULL,
+  `fecha_nacimiento` date DEFAULT NULL,
+  `ultimo_anio_cumple_premiado` year(4) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id_mascota`),
+  KEY `fk_mascotas_cliente_idx` (`fk_cliente`),
+  KEY `fk_mascotas_animal_idx` (`fk_animal`),
+  CONSTRAINT `fk_mascotas_animal` FOREIGN KEY (`fk_animal`) REFERENCES `animales` (`id_animal`),
+  CONSTRAINT `fk_mascotas_cliente` FOREIGN KEY (`fk_cliente`) REFERENCES `clientes` (`id_cliente`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `mascotas`
+--
+
+LOCK TABLES `mascotas` WRITE;
+/*!40000 ALTER TABLE `mascotas` DISABLE KEYS */;
+INSERT INTO `mascotas` VALUES (1,3,'Firulais',1,'2023-05-14',NULL,'2026-08-27 03:59:35','2026-08-27 03:59:35'),(2,3,'Michi',2,'2024-02-10',NULL,'2026-08-27 03:59:35','2026-08-27 03:59:35'),(3,3,'Rocky',1,'2019-11-02',NULL,'2026-08-27 03:59:35','2026-08-27 03:59:35'),(4,3,'Nala',2,'2025-01-20',NULL,'2026-08-27 03:59:35','2026-08-27 03:59:35');
+/*!40000 ALTER TABLE `mascotas` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -669,7 +811,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `menus`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `menus` (
   `id_menu` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(50) NOT NULL,
@@ -707,7 +849,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `migrations`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `migrations` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `migration` varchar(255) NOT NULL,
@@ -732,7 +874,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `passkeys`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `passkeys` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `user_id` bigint(20) unsigned NOT NULL,
@@ -764,7 +906,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `password_reset_tokens`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `password_reset_tokens` (
   `email` varchar(255) NOT NULL,
   `token` varchar(255) NOT NULL,
@@ -788,7 +930,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `pedido_detalle`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `pedido_detalle` (
   `id_pedido_detalle` int(11) NOT NULL AUTO_INCREMENT,
   `fk_pedido` int(11) NOT NULL,
@@ -820,7 +962,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `pedido_recojo_terceros`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `pedido_recojo_terceros` (
   `id_pedido_recojo_tercero` int(11) NOT NULL AUTO_INCREMENT,
   `fk_pedido` int(11) NOT NULL,
@@ -853,7 +995,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `pedidos`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `pedidos` (
   `id_pedido` int(11) NOT NULL AUTO_INCREMENT,
   `fk_cliente` int(11) NOT NULL,
@@ -897,7 +1039,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `permisos`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `permisos` (
   `id_permiso` int(11) NOT NULL AUTO_INCREMENT,
   `clave` varchar(80) NOT NULL,
@@ -922,7 +1064,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `personas`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `personas` (
   `id_persona` int(11) NOT NULL AUTO_INCREMENT,
   `fk_tipo_documento` int(11) NOT NULL,
@@ -952,12 +1094,46 @@ INSERT INTO `personas` VALUES (1,1,'00000001','Diego','Pendiente',NULL,'00000000
 UNLOCK TABLES;
 
 --
+-- Table structure for table `premios`
+--
+
+DROP TABLE IF EXISTS `premios`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `premios` (
+  `id_premio` int(11) NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(150) NOT NULL,
+  `descripcion` varchar(255) DEFAULT NULL,
+  `fk_producto` int(11) DEFAULT NULL,
+  `imagen` varchar(255) DEFAULT NULL,
+  `puntos_requeridos` int(11) NOT NULL,
+  `stock` int(11) NOT NULL DEFAULT 0,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id_premio`),
+  KEY `fk_premios_producto_idx` (`fk_producto`),
+  CONSTRAINT `fk_premios_producto` FOREIGN KEY (`fk_producto`) REFERENCES `productos` (`id_producto`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `premios`
+--
+
+LOCK TABLES `premios` WRITE;
+/*!40000 ALTER TABLE `premios` DISABLE KEYS */;
+INSERT INTO `premios` VALUES (1,'Snack de regalo','Snack pequeño para perro o gato',NULL,NULL,500,100,1,'2026-08-27 03:59:35','2026-08-27 03:59:35'),(2,'Pelota de juguete','Pelota de goma resistente de regalo',106,NULL,800,40,1,'2026-08-27 03:59:35','2026-08-27 03:59:35'),(3,'Bolsa de premios sorpresa','Mix de golosinas para mascota',NULL,NULL,300,60,1,'2026-08-27 03:59:35','2026-08-27 03:59:35'),(4,'Shampoo de regalo','Shampoo de cuidado básico',NULL,NULL,650,25,1,'2026-08-27 03:59:35','2026-08-27 03:59:35');
+/*!40000 ALTER TABLE `premios` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `producto_imagenes`
 --
 
 DROP TABLE IF EXISTS `producto_imagenes`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `producto_imagenes` (
   `id_producto_imagen` int(11) NOT NULL AUTO_INCREMENT,
   `fk_producto` int(11) NOT NULL,
@@ -984,15 +1160,17 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `productos`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `productos` (
   `id_producto` int(11) NOT NULL AUTO_INCREMENT,
   `sku` varchar(50) NOT NULL,
+  `codigo_barras` varchar(20) DEFAULT NULL,
   `nombre` varchar(150) NOT NULL,
   `descripcion` text DEFAULT NULL,
   `fk_marca` int(11) NOT NULL,
   `fk_unidad_medida` int(11) NOT NULL,
   `fk_id_subcategorias` int(11) DEFAULT NULL,
+  `fk_etapa_vida` int(11) DEFAULT NULL,
   `precio` decimal(10,2) NOT NULL,
   `stock` int(11) NOT NULL DEFAULT 0,
   `imagen_principal` varchar(255) DEFAULT NULL,
@@ -1001,11 +1179,14 @@ CREATE TABLE `productos` (
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id_producto`),
   UNIQUE KEY `productos_sku_unique` (`sku`),
+  UNIQUE KEY `productos_codigo_barras_unique` (`codigo_barras`),
   KEY `fk_productos_marca_idx` (`fk_marca`),
   KEY `fk_productos_unidad_medida_idx` (`fk_unidad_medida`),
   KEY `fk_productos_estado_idx` (`fk_estado`),
   KEY `fk_productos_sub_categorias1_idx` (`fk_id_subcategorias`),
+  KEY `fk_productos_etapa_vida_idx` (`fk_etapa_vida`),
   CONSTRAINT `fk_productos_estado` FOREIGN KEY (`fk_estado`) REFERENCES `estados_producto` (`id_estado_producto`),
+  CONSTRAINT `fk_productos_etapa_vida` FOREIGN KEY (`fk_etapa_vida`) REFERENCES `etapas_vida` (`id_etapa_vida`) ON DELETE SET NULL,
   CONSTRAINT `fk_productos_marca` FOREIGN KEY (`fk_marca`) REFERENCES `marcas` (`id_marca`),
   CONSTRAINT `fk_productos_sub_categorias1` FOREIGN KEY (`fk_id_subcategorias`) REFERENCES `sub_categorias` (`id_subcategorias`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `fk_productos_unidad_medida` FOREIGN KEY (`fk_unidad_medida`) REFERENCES `unidades_medida` (`id_unidad_medida`)
@@ -1018,7 +1199,7 @@ CREATE TABLE `productos` (
 
 LOCK TABLES `productos` WRITE;
 /*!40000 ALTER TABLE `productos` DISABLE KEYS */;
-INSERT INTO `productos` VALUES (1,'GAT-BRA-MICHILON','michilon','50ok de michilon para tus gatas',13,5,37,50.00,1,'productos/Zj9zC7fwWumSzxpIgN3Y3pSSEjrOM9m4jJwDuNfI.jpg',1,'2026-08-24 20:23:14','2026-08-24 20:23:14'),(101,'RC-001','Royal Canin Adulto Razas Medianas 15kg','Alimento seco para perros adultos',1,1,1,289.90,25,NULL,1,'2026-08-25 04:37:56','2026-08-25 04:37:56'),(102,'PP-002','Pro Plan Cachorro Pollo y Arroz 15kg','Alimento seco para cachorros',2,1,1,259.90,18,NULL,1,'2026-08-25 04:37:56','2026-08-25 04:37:56'),(103,'HD-003','Hill\'s Science Diet Gato Esterilizado 3kg','Alimento para gatos esterilizados',3,1,6,145.00,12,NULL,1,'2026-08-25 04:37:56','2026-08-25 04:37:56'),(104,'PED-004','Pedigree Adulto Carne 21kg','Alimento económico para perros adultos',6,1,1,179.90,30,NULL,1,'2026-08-25 04:37:56','2026-08-25 04:37:56'),(105,'WHI-005','Whiskas Adulto Pescado 7kg','Alimento seco para gatos adultos',7,1,6,89.90,20,NULL,1,'2026-08-25 04:37:56','2026-08-25 04:37:56'),(106,'JUG-006','Pelota de goma resistente','Juguete para perros medianos y grandes',1,5,18,19.90,50,NULL,1,'2026-08-25 04:37:56','2026-08-25 04:37:56'),(107,'BRV-007','Bravecto Antipulgas 10-20kg','Tableta antipulgas y garrapatas, 1 unidad',13,5,26,65.00,15,NULL,1,'2026-08-25 04:37:56','2026-08-25 04:37:56');
+INSERT INTO `productos` VALUES (1,'GAT-BRA-MICHILON',NULL,'michilon','50ok de michilon para tus gatas',13,5,37,NULL,50.00,1,'productos/Zj9zC7fwWumSzxpIgN3Y3pSSEjrOM9m4jJwDuNfI.jpg',1,'2026-08-24 20:23:14','2026-08-24 20:23:14'),(101,'RC-001',NULL,'Royal Canin Adulto Razas Medianas 15kg','Alimento seco para perros adultos',1,1,1,NULL,289.90,25,NULL,1,'2026-08-25 04:37:56','2026-08-25 04:37:56'),(102,'PP-002',NULL,'Pro Plan Cachorro Pollo y Arroz 15kg','Alimento seco para cachorros',2,1,1,NULL,259.90,18,NULL,1,'2026-08-25 04:37:56','2026-08-25 04:37:56'),(103,'HD-003',NULL,'Hill\'s Science Diet Gato Esterilizado 3kg','Alimento para gatos esterilizados',3,1,6,NULL,145.00,12,NULL,1,'2026-08-25 04:37:56','2026-08-25 04:37:56'),(104,'PED-004',NULL,'Pedigree Adulto Carne 21kg','Alimento económico para perros adultos',6,1,1,NULL,179.90,30,NULL,1,'2026-08-25 04:37:56','2026-08-25 04:37:56'),(105,'WHI-005',NULL,'Whiskas Adulto Pescado 7kg','Alimento seco para gatos adultos',7,1,6,NULL,89.90,20,NULL,1,'2026-08-25 04:37:56','2026-08-25 04:37:56'),(106,'JUG-006',NULL,'Pelota de goma resistente','Juguete para perros medianos y grandes',1,5,18,NULL,19.90,50,NULL,1,'2026-08-25 04:37:56','2026-08-25 04:37:56'),(107,'BRV-007',NULL,'Bravecto Antipulgas 10-20kg','Tableta antipulgas y garrapatas, 1 unidad',13,5,26,NULL,65.00,15,NULL,1,'2026-08-25 04:37:56','2026-08-25 04:37:56');
 /*!40000 ALTER TABLE `productos` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1028,7 +1209,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `provincias`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `provincias` (
   `id_provincia` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
@@ -1050,12 +1231,47 @@ INSERT INTO `provincias` VALUES (1,'Chachapoyas',1),(2,'Bagua',1),(3,'Bongará',
 UNLOCK TABLES;
 
 --
+-- Table structure for table `puntos_cliente`
+--
+
+DROP TABLE IF EXISTS `puntos_cliente`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `puntos_cliente` (
+  `id_punto` int(11) NOT NULL AUTO_INCREMENT,
+  `fk_cliente` int(11) NOT NULL,
+  `fk_pedido` int(11) DEFAULT NULL COMMENT 'pedido que originó la acumulación (NULL en canjes/vencimientos)',
+  `tipo` enum('acumulacion','canje_descuento','canje_producto','vencimiento') NOT NULL,
+  `monto` int(11) NOT NULL COMMENT 'positivo = suma puntos, negativo = resta puntos',
+  `fecha` timestamp NOT NULL DEFAULT current_timestamp(),
+  `fecha_vencimiento` date DEFAULT NULL COMMENT 'solo aplica a tipo=acumulacion',
+  `descripcion` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id_punto`),
+  KEY `fk_puntos_cliente_cliente_idx` (`fk_cliente`),
+  KEY `fk_puntos_cliente_pedido_idx` (`fk_pedido`),
+  KEY `puntos_cliente_vencimiento_idx` (`fecha_vencimiento`),
+  CONSTRAINT `fk_puntos_cliente_cliente` FOREIGN KEY (`fk_cliente`) REFERENCES `clientes` (`id_cliente`) ON DELETE CASCADE,
+  CONSTRAINT `fk_puntos_cliente_pedido` FOREIGN KEY (`fk_pedido`) REFERENCES `pedidos` (`id_pedido`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `puntos_cliente`
+--
+
+LOCK TABLES `puntos_cliente` WRITE;
+/*!40000 ALTER TABLE `puntos_cliente` DISABLE KEYS */;
+INSERT INTO `puntos_cliente` VALUES (1,3,NULL,'canje_producto',-500,'2026-08-17 03:59:35',NULL,'Canje por Snack de regalo'),(2,3,NULL,'canje_producto',-800,'2026-08-19 03:59:35',NULL,'Canje por Pelota de juguete'),(3,3,NULL,'canje_producto',-300,'2026-08-22 03:59:35',NULL,'Canje por Bolsa de premios sorpresa'),(4,3,NULL,'canje_producto',-650,'2026-08-25 03:59:35',NULL,'Canje por Shampoo de regalo');
+/*!40000 ALTER TABLE `puntos_cliente` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `reclamos`
 --
 
 DROP TABLE IF EXISTS `reclamos`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `reclamos` (
   `id_reclamo` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `tipo_documento` enum('DNI','CE','Pasaporte') NOT NULL,
@@ -1102,7 +1318,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `redes_sociales`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `redes_sociales` (
   `id_red_social` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
@@ -1125,7 +1341,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `rol_permisos`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `rol_permisos` (
   `fk_rol` int(11) NOT NULL,
   `fk_permiso` int(11) NOT NULL,
@@ -1151,7 +1367,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `roles`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `roles` (
   `id_rol` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(50) NOT NULL,
@@ -1177,7 +1393,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `servicio_beneficios`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `servicio_beneficios` (
   `id_servicio_beneficio` int(11) NOT NULL AUTO_INCREMENT,
   `fk_servicio` int(11) NOT NULL,
@@ -1205,7 +1421,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `servicio_horarios`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `servicio_horarios` (
   `id_servicio_horario` int(11) NOT NULL AUTO_INCREMENT,
   `fk_servicio` int(11) NOT NULL,
@@ -1233,7 +1449,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `servicio_imagenes`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `servicio_imagenes` (
   `id_servicio_imagen` int(11) NOT NULL AUTO_INCREMENT,
   `fk_servicio` int(11) NOT NULL,
@@ -1260,7 +1476,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `servicio_redes`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `servicio_redes` (
   `id_servicio_red` int(11) NOT NULL AUTO_INCREMENT,
   `fk_servicio` int(11) NOT NULL,
@@ -1289,7 +1505,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `servicios`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `servicios` (
   `id_servicio` int(11) NOT NULL AUTO_INCREMENT,
   `fk_tipo_servicio` int(11) NOT NULL,
@@ -1327,7 +1543,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `sessions`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `sessions` (
   `id` varchar(255) NOT NULL,
   `user_id` bigint(20) unsigned DEFAULT NULL,
@@ -1347,7 +1563,7 @@ CREATE TABLE `sessions` (
 
 LOCK TABLES `sessions` WRITE;
 /*!40000 ALTER TABLE `sessions` DISABLE KEYS */;
-INSERT INTO `sessions` VALUES ('DDKXNrHqAgfDpiMzT5gTTcPO6QwqbWkQ4p1dHXe6',NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36','eyJfdG9rZW4iOiJsY3BXemxFZXJTckVFSkZQSVdXQ3lHRWhXeUNlNUhPSERVdTRwVTlhIiwiX2ZsYXNoIjp7Im9sZCI6W10sIm5ldyI6W119fQ==',1787641186),('k16kABSOt6vYkJ8JzKghZQWXuoMWkVbpTTKmmG7u',NULL,'127.0.0.1','curl/8.19.0','eyJfdG9rZW4iOiJhWDdpRDlFUUtyMWhiTkQxdFg3ZXNzS051SnBucUwyN2RIMWRXZGw5IiwiX3ByZXZpb3VzIjp7InVybCI6Imh0dHA6XC9cL2xvY2FsaG9zdDo4MDAwIiwicm91dGUiOiJob21lIn0sIl9mbGFzaCI6eyJvbGQiOltdLCJuZXciOltdfX0=',1787641885),('nydyqWuahBmLy0aFCGzVYOgYOviz5Wi5uQVUjzr2',NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36','eyJfdG9rZW4iOiJraWZzbXVaQmUwcTJXTlhVZlVoeGh2NUw1U2VMUjY5WkpvejVMMzY2IiwiX2ZsYXNoIjp7Im9sZCI6W10sIm5ldyI6W119fQ==',1787639361),('Tc6ZXp8TrkRKWXzOiy1S32tCOmM0wofHr7xXIobC',NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36','eyJfdG9rZW4iOiJ0RTgwbWN1YU55bU5MYXpwSVo5UnhEb2NLTUZYUUdBOTFtRnVyR0JZIiwiX2ZsYXNoIjp7Im9sZCI6W10sIm5ldyI6W119fQ==',1787641695);
+INSERT INTO `sessions` VALUES ('19eLHL3pNdSFMaQvUZkKBrTeeTVNkApZRq81cV3U',2,'172.18.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36','eyJfdG9rZW4iOiJlVnlqdjRoNkdueUVRcU1YZUlFUnVSaDRUOEJ2WkkwWU9MSXNkejRVIiwiX3ByZXZpb3VzIjp7InVybCI6Imh0dHA6XC9cL2xvY2FsaG9zdDo4MDAwXC9taS1jdWVudGEiLCJyb3V0ZSI6Im1pLWN1ZW50YSJ9LCJfZmxhc2giOnsib2xkIjpbXSwibmV3IjpbXX0sImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjoyfQ==',1787804273),('DDKXNrHqAgfDpiMzT5gTTcPO6QwqbWkQ4p1dHXe6',NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36','eyJfdG9rZW4iOiJsY3BXemxFZXJTckVFSkZQSVdXQ3lHRWhXeUNlNUhPSERVdTRwVTlhIiwiX2ZsYXNoIjp7Im9sZCI6W10sIm5ldyI6W119fQ==',1787641186),('k16kABSOt6vYkJ8JzKghZQWXuoMWkVbpTTKmmG7u',NULL,'127.0.0.1','curl/8.19.0','eyJfdG9rZW4iOiJhWDdpRDlFUUtyMWhiTkQxdFg3ZXNzS051SnBucUwyN2RIMWRXZGw5IiwiX3ByZXZpb3VzIjp7InVybCI6Imh0dHA6XC9cL2xvY2FsaG9zdDo4MDAwIiwicm91dGUiOiJob21lIn0sIl9mbGFzaCI6eyJvbGQiOltdLCJuZXciOltdfX0=',1787641885),('nydyqWuahBmLy0aFCGzVYOgYOviz5Wi5uQVUjzr2',NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36','eyJfdG9rZW4iOiJraWZzbXVaQmUwcTJXTlhVZlVoeGh2NUw1U2VMUjY5WkpvejVMMzY2IiwiX2ZsYXNoIjp7Im9sZCI6W10sIm5ldyI6W119fQ==',1787639361),('Qq3O9RUGczn3mtSvp1yNLPYmkdeH0ClthtYiCpik',NULL,'172.18.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36','eyJfdG9rZW4iOiJOa1puZHBOcEVUNnN3b1F4UU4wMUlSZ29GVVlTZkZjZ1RzS0xCd0t2IiwiX3ByZXZpb3VzIjp7InVybCI6Imh0dHA6XC9cL2xvY2FsaG9zdDo4MDAwIiwicm91dGUiOiJob21lIn0sIl9mbGFzaCI6eyJvbGQiOltdLCJuZXciOltdfSwiY2FydF90b2tlbiI6IjJiYTFkYjhhLWE3YzUtNGQ2MS1iNDY0LTViNjM1ZGM0MGE3MiIsInVybCI6eyJpbnRlbmRlZCI6Imh0dHA6XC9cL2xvY2FsaG9zdDo4MDAwXC9kYXNoYm9hcmQifX0=',1787725544),('Tc6ZXp8TrkRKWXzOiy1S32tCOmM0wofHr7xXIobC',NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36','eyJfdG9rZW4iOiJ0RTgwbWN1YU55bU5MYXpwSVo5UnhEb2NLTUZYUUdBOTFtRnVyR0JZIiwiX2ZsYXNoIjp7Im9sZCI6W10sIm5ldyI6W119fQ==',1787641695);
 /*!40000 ALTER TABLE `sessions` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1357,7 +1573,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `sub_categorias`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `sub_categorias` (
   `id_subcategorias` int(11) NOT NULL AUTO_INCREMENT,
   `nom_sub_categoria` varchar(105) DEFAULT NULL,
@@ -1384,7 +1600,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `tipo_animales`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `tipo_animales` (
   `id_tipo_animal` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(100) NOT NULL,
@@ -1409,7 +1625,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `tipo_comprobante`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `tipo_comprobante` (
   `id_tipo_comprobante` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
@@ -1432,7 +1648,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `tipo_documento`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `tipo_documento` (
   `id_tipo_documento` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
@@ -1456,7 +1672,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `tipo_entregas`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `tipo_entregas` (
   `id_tipo_entrega` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
@@ -1480,7 +1696,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `tipos_servicio`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `tipos_servicio` (
   `id_tipo_servicio` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(60) NOT NULL,
@@ -1504,7 +1720,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `trabajadores`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `trabajadores` (
   `id_trabajador` int(11) NOT NULL AUTO_INCREMENT,
   `fk_persona` int(11) NOT NULL,
@@ -1543,7 +1759,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `unidades_medida`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `unidades_medida` (
   `id_unidad_medida` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
@@ -1568,7 +1784,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `users`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
+/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `users` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
@@ -1595,10 +1811,6 @@ LOCK TABLES `users` WRITE;
 INSERT INTO `users` VALUES (2,'mili','jonceano26cristian@gmail.com',NULL,'$2y$12$O7xkFKqSccWzhFanFV1DkuB991QAxnJyXfpko7W62GaNa2aDh.cCm',NULL,NULL,NULL,NULL,'2026-08-24 20:20:10','2026-08-24 20:20:10'),(4,'lpdiego999','lpdiego999@gmail.com',NULL,'$2y$12$2gWeN2knFltKWcRPJxwMbeJJsCjnid2GatmJvGoBUgKK44T5KPuRS',NULL,NULL,NULL,NULL,'2026-08-25 06:22:15','2026-08-25 06:22:15'),(5,'Diego','diego@mosso.com','2026-08-25 07:10:36','$2y$12$5kDBlvHIC7MOkd/AD2Nqc.QJFNvun/KA.osw2Driy8brVz5NcI/PK',NULL,NULL,NULL,NULL,'2026-08-25 07:10:36','2026-08-25 07:10:36');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Dumping routines for database 'mosso'
---
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -1609,4 +1821,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-08-25  2:11:32
+-- Dump completed on 2026-08-26 23:26:39

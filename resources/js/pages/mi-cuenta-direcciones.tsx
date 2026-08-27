@@ -6,8 +6,8 @@ import MiCuentaShell from '@/components/MiCuentaShell';
 import StorefrontLayout from '@/layouts/storefront-layout';
 import type { MiCuentaDireccionesProps } from '@/types/cuenta';
 
-const inputClass =
-  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-mosso-yellow focus:border-mosso-yellow';
+const input =
+  'w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-mosso-yellow focus:border-transparent transition disabled:bg-gray-50 disabled:text-gray-400';
 
 export default function MiCuentaDirecciones({
   direcciones,
@@ -15,18 +15,18 @@ export default function MiCuentaDirecciones({
   provincias,
   distritos,
 }: MiCuentaDireccionesProps) {
-  const [departamentoSel, setDepartamentoSel] = useState('');
-  const [provinciaSel, setProvinciaSel] = useState('');
-  const [distritoSel, setDistritoSel] = useState('');
+  const [depSel, setDepSel] = useState('');
+  const [provSel, setProvSel] = useState('');
+  const [distSel, setDistSel] = useState('');
+  const [formOpen, setFormOpen] = useState(false);
 
-  const provinciasFiltradas = useMemo(
-    () => provincias.filter((p) => p.fk_departamento === Number(departamentoSel)),
-    [provincias, departamentoSel],
+  const provFiltradas = useMemo(
+    () => provincias.filter((p) => p.fk_departamento === Number(depSel)),
+    [provincias, depSel],
   );
-
-  const distritosFiltrados = useMemo(
-    () => distritos.filter((d) => d.fk_provincia === Number(provinciaSel)),
-    [distritos, provinciaSel],
+  const distFiltrados = useMemo(
+    () => distritos.filter((d) => d.fk_provincia === Number(provSel)),
+    [distritos, provSel],
   );
 
   return (
@@ -34,182 +34,204 @@ export default function MiCuentaDirecciones({
       <Head title="Mis direcciones" />
 
       <MiCuentaShell activo="direcciones">
-        <h1 className="text-xl font-bold text-gray-900">Direcciones</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Las direcciones que guardes aquí quedan disponibles para tus envíos y comprobantes.
-        </p>
+        <div className="mb-6">
+          <h1 className="text-xl font-black text-gray-900">Direcciones</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Tus direcciones guardadas quedan disponibles para envíos y comprobantes.
+          </p>
+        </div>
 
+        {/* Address list */}
         {direcciones.length > 0 ? (
-          <ul className="mt-6 space-y-3">
+          <div className="space-y-3 mb-4">
             {direcciones.map((d) => (
-              <li key={d.id_cliente_direccion} className="rounded-xl border border-gray-200 p-4">
-                <div className="flex items-start justify-between gap-3">
+              <div key={d.id_cliente_direccion} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-sm font-semibold text-gray-900">
-                      {d.alias || 'Dirección'}{' '}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm font-bold text-gray-900">{d.alias || 'Dirección'}</p>
                       {d.es_principal === 1 && (
-                        <span className="ml-1 inline-block rounded-full bg-mosso-yellow/20 text-gray-900 text-[11px] font-bold px-2 py-0.5 align-middle">
+                        <span className="text-[11px] font-bold bg-mosso-yellow/20 text-gray-800 rounded-full px-2 py-0.5">
                           Principal
                         </span>
                       )}
-                    </p>
-                    <p className="mt-1 text-sm text-gray-600">{d.direccion}</p>
+                    </div>
+                    <p className="mt-1 text-sm text-gray-700">{d.direccion}</p>
                     {d.referencia && <p className="text-xs text-gray-400">Ref: {d.referencia}</p>}
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-0.5 text-xs text-gray-400">
                       {d.distrito}, {d.provincia}, {d.departamento}
                     </p>
                   </div>
 
-                  <div className="flex flex-col items-end gap-2 shrink-0">
+                  <div className="flex flex-col items-end gap-1.5 shrink-0">
                     {d.es_principal !== 1 && (
                       <Link
                         href={`/mi-cuenta/direcciones/${d.id_direccion}/principal`}
                         method="patch"
                         as="button"
-                        className="text-xs text-gray-900 font-semibold hover:text-mosso-yellow whitespace-nowrap transition-colors"
+                        className="text-xs font-semibold text-gray-700 hover:text-mosso-yellow transition-colors whitespace-nowrap"
                       >
-                        Marcar como principal
+                        Hacer principal
                       </Link>
                     )}
                     <Link
                       href={`/mi-cuenta/direcciones/${d.id_direccion}`}
                       method="delete"
                       as="button"
-                      className="text-xs text-red-500 hover:underline whitespace-nowrap"
+                      className="text-xs text-gray-400 hover:text-mosso-red transition-colors hover:underline whitespace-nowrap"
                     >
                       Eliminar
                     </Link>
                   </div>
                 </div>
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
         ) : (
-          <p className="mt-6 text-sm text-gray-500">Todavía no tienes direcciones guardadas.</p>
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-10 flex flex-col items-center text-center gap-3 mb-4">
+            <div className="w-14 h-14 rounded-full bg-gray-50 flex items-center justify-center text-3xl select-none">
+              📍
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gray-800">Sin direcciones guardadas</p>
+              <p className="text-xs text-gray-400 mt-0.5">Agrega tu primera dirección aquí abajo.</p>
+            </div>
+          </div>
         )}
 
-        <div className="mt-8 rounded-xl border border-gray-200 p-5">
-          <h2 className="text-sm font-bold text-gray-900">Agregar nueva dirección</h2>
-
-          <Form
-            {...direccionesStore.form()}
-            resetOnSuccess
-            disableWhileProcessing
-            onSuccess={() => {
-              setDepartamentoSel('');
-              setProvinciaSel('');
-              setDistritoSel('');
-            }}
-            className="mt-4 space-y-4"
+        {/* Add form - collapsible */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setFormOpen((v) => !v)}
+            className="w-full flex items-center justify-between px-5 py-4 text-sm font-semibold text-gray-900 hover:bg-gray-50 transition-colors"
           >
-            {({ processing, errors }) => (
-              <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Alias <span className="text-gray-400 font-normal">(opcional)</span>
-                    </label>
-                    <input name="alias" placeholder="Casa, trabajo…" maxLength={50} className={inputClass} />
-                    <InputError message={errors.alias} className="mt-1" />
-                  </div>
+            <span className="flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-mosso-yellow/20 flex items-center justify-center text-mosso-yellow font-black text-base leading-none">
+                +
+              </span>
+              Agregar dirección
+            </span>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              className={`text-gray-400 transition-transform ${formOpen ? 'rotate-180' : ''}`}
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
 
-                  <label className="flex items-center gap-2 text-sm text-gray-600 sm:mt-6">
-                    <input
-                      type="checkbox"
-                      name="es_principal"
-                      value="1"
-                      className="h-4 w-4 rounded border-gray-300 text-mosso-yellow focus:ring-mosso-yellow"
-                    />
-                    Usar como dirección principal
-                  </label>
-                </div>
+          {formOpen && (
+            <div className="border-t border-gray-100 px-5 pb-5 pt-4">
+              <Form
+                {...direccionesStore.form()}
+                resetOnSuccess
+                disableWhileProcessing
+                onSuccess={() => {
+                  setDepSel('');
+                  setProvSel('');
+                  setDistSel('');
+                  setFormOpen(false);
+                }}
+                className="space-y-4"
+              >
+                {({ processing, errors }) => (
+                  <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                          Alias <span className="font-normal text-gray-400">(opcional)</span>
+                        </label>
+                        <input name="alias" placeholder="Casa, trabajo…" maxLength={50} className={input} />
+                        <InputError message={errors.alias} className="mt-1" />
+                      </div>
+                      <label className="flex items-center gap-2 text-sm text-gray-600 sm:mt-6">
+                        <input
+                          type="checkbox"
+                          name="es_principal"
+                          value="1"
+                          className="h-4 w-4 rounded border-gray-300 accent-mosso-yellow"
+                        />
+                        Usar como dirección principal
+                      </label>
+                    </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
-                  <input name="direccion" required maxLength={150} placeholder="Av. Ejemplo 123" className={inputClass} />
-                  <InputError message={errors.direccion} className="mt-1" />
-                </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">Dirección</label>
+                      <input name="direccion" required maxLength={150} placeholder="Av. Ejemplo 123" className={input} />
+                      <InputError message={errors.direccion} className="mt-1" />
+                    </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Referencia <span className="text-gray-400 font-normal">(opcional)</span>
-                  </label>
-                  <input name="referencia" maxLength={150} placeholder="Cerca de…" className={inputClass} />
-                  <InputError message={errors.referencia} className="mt-1" />
-                </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                        Referencia <span className="font-normal text-gray-400">(opcional)</span>
+                      </label>
+                      <input name="referencia" maxLength={150} placeholder="Cerca de…" className={input} />
+                    </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Departamento</label>
-                    <select
-                      value={departamentoSel}
-                      onChange={(e) => {
-                        setDepartamentoSel(e.target.value);
-                        setProvinciaSel('');
-                        setDistritoSel('');
-                      }}
-                      className={inputClass}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1.5">Departamento</label>
+                        <select
+                          value={depSel}
+                          onChange={(e) => { setDepSel(e.target.value); setProvSel(''); setDistSel(''); }}
+                          className={input}
+                        >
+                          <option value="">Selecciona…</option>
+                          {departamentos.map((d) => (
+                            <option key={d.id_departamento} value={d.id_departamento}>{d.nombre}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1.5">Provincia</label>
+                        <select
+                          value={provSel}
+                          onChange={(e) => { setProvSel(e.target.value); setDistSel(''); }}
+                          disabled={!depSel}
+                          className={input}
+                        >
+                          <option value="">Selecciona…</option>
+                          {provFiltradas.map((p) => (
+                            <option key={p.id_provincia} value={p.id_provincia}>{p.nombre}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1.5">Distrito</label>
+                        <select
+                          name="fk_distrito"
+                          required
+                          value={distSel}
+                          onChange={(e) => setDistSel(e.target.value)}
+                          disabled={!provSel}
+                          className={input}
+                        >
+                          <option value="">Selecciona…</option>
+                          {distFiltrados.map((d) => (
+                            <option key={d.id_distrito} value={d.id_distrito}>{d.nombre}</option>
+                          ))}
+                        </select>
+                        <InputError message={errors.fk_distrito} className="mt-1" />
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={processing}
+                      className="bg-mosso-yellow hover:bg-mosso-yellow/85 disabled:opacity-50 text-gray-900 font-semibold text-sm px-6 py-2.5 rounded-xl transition-colors"
                     >
-                      <option value="">Selecciona…</option>
-                      {departamentos.map((d) => (
-                        <option key={d.id_departamento} value={d.id_departamento}>
-                          {d.nombre}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Provincia</label>
-                    <select
-                      value={provinciaSel}
-                      onChange={(e) => {
-                        setProvinciaSel(e.target.value);
-                        setDistritoSel('');
-                      }}
-                      disabled={!departamentoSel}
-                      className={`${inputClass} disabled:bg-gray-50 disabled:text-gray-400`}
-                    >
-                      <option value="">Selecciona…</option>
-                      {provinciasFiltradas.map((p) => (
-                        <option key={p.id_provincia} value={p.id_provincia}>
-                          {p.nombre}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Distrito</label>
-                    <select
-                      name="fk_distrito"
-                      required
-                      value={distritoSel}
-                      onChange={(e) => setDistritoSel(e.target.value)}
-                      disabled={!provinciaSel}
-                      className={`${inputClass} disabled:bg-gray-50 disabled:text-gray-400`}
-                    >
-                      <option value="">Selecciona…</option>
-                      {distritosFiltrados.map((d) => (
-                        <option key={d.id_distrito} value={d.id_distrito}>
-                          {d.nombre}
-                        </option>
-                      ))}
-                    </select>
-                    <InputError message={errors.fk_distrito} className="mt-1" />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={processing}
-                  className="bg-mosso-yellow hover:bg-mosso-yellow/85 disabled:opacity-60 text-gray-900 font-bold px-6 py-2.5 rounded-xl"
-                >
-                  {processing ? 'Guardando…' : 'Guardar dirección'}
-                </button>
-              </>
-            )}
-          </Form>
+                      {processing ? 'Guardando…' : 'Guardar dirección'}
+                    </button>
+                  </>
+                )}
+              </Form>
+            </div>
+          )}
         </div>
       </MiCuentaShell>
     </StorefrontLayout>
