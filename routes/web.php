@@ -7,22 +7,22 @@ use App\Http\Controllers\Admin\ProductoController;
 use App\Http\Controllers\Admin\ServicioController as AdminServicioController;
 use App\Http\Controllers\Admin\SubCategoriaController;
 use App\Http\Controllers\Admin\TipoServicioController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BusquedaController;
-use App\Http\Controllers\CatalogoController;
 use App\Http\Controllers\CarritoController;
-use App\Http\Controllers\FavoritosController;
-use App\Http\Controllers\MarcaCatalogoController;
-use App\Http\Controllers\OfertasController;
-
+use App\Http\Controllers\CatalogoController;
+use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ClienteRegistroController;
 use App\Http\Controllers\CuentaController;
+use App\Http\Controllers\FavoritosController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\MarcaCatalogoController;
 use App\Http\Controllers\MiCuentaController;
 use App\Http\Controllers\MiCuentaDetallesController;
 use App\Http\Controllers\MiCuentaDireccionController;
+use App\Http\Controllers\OfertasController;
 use App\Http\Controllers\ReclamoController;
 use App\Http\Controllers\ServicioController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
 
@@ -55,6 +55,23 @@ Route::get('/carrito', [CarritoController::class, 'index'])->name('carrito.index
 Route::post('/carrito/items', [CarritoController::class, 'store'])->name('carrito.store');
 Route::patch('/carrito/items/{detalle}', [CarritoController::class, 'update'])->whereNumber('detalle')->name('carrito.update');
 Route::delete('/carrito/items/{detalle}', [CarritoController::class, 'destroy'])->whereNumber('detalle')->name('carrito.destroy');
+
+/*
+|--------------------------------------------------------------------------
+| Checkout / Proceder al pago (solo cliente autenticado)
+|--------------------------------------------------------------------------
+| El invitado que intente entrar es redirigido a /cuenta (login del
+| storefront) y, tras autenticarse, vuelve al checkout (URL intended).
+*/
+
+Route::middleware(['auth', 'cliente'])->prefix('checkout')->name('checkout.')->group(function () {
+    Route::get('/', [CheckoutController::class, 'show'])->name('show');
+    Route::get('/envio/{distrito}', [CheckoutController::class, 'envio'])->whereNumber('distrito')->name('envio');
+    Route::post('/iniciar', [CheckoutController::class, 'iniciar'])->name('iniciar');
+    Route::post('/{pedido}/orden', [CheckoutController::class, 'orden'])->whereNumber('pedido')->name('orden');
+    Route::post('/{pedido}/pagar', [CheckoutController::class, 'pagar'])->whereNumber('pedido')->name('pagar');
+    Route::get('/confirmacion/{pedido}', [CheckoutController::class, 'confirmacion'])->whereNumber('pedido')->name('confirmacion');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -121,13 +138,13 @@ Route::middleware(['auth', 'cliente'])->group(function () {
 
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
 
-/*
-    |--------------------------------------------------------------------------
-    | BUSCADOR
-    |--------------------------------------------------------------------------
-    */
+    /*
+        |--------------------------------------------------------------------------
+        | BUSCADOR
+        |--------------------------------------------------------------------------
+        */
 
-Route::get('/buscar', BusquedaController::class)->name('buscar');
+    Route::get('/buscar', BusquedaController::class)->name('buscar');
 
     /*
     |--------------------------------------------------------------------------
@@ -215,8 +232,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 });
 
-
 use App\Http\Controllers\EmpresaController;
+
 Route::middleware(['auth'])->prefix('empresa')->name('empresa.')->group(function () {
     Route::get('/', [EmpresaController::class, 'index'])->name('index');
     Route::get('/provincias/{departamento}', [EmpresaController::class, 'provincias'])->whereNumber('departamento')->name('provincias');
@@ -225,6 +242,7 @@ Route::middleware(['auth'])->prefix('empresa')->name('empresa.')->group(function
 });
 
 use App\Http\Controllers\TrabajadorController;
+
 Route::middleware(['auth'])->prefix('trabajador')->name('trabajador.')->group(function () {
     Route::get('/', [TrabajadorController::class, 'index'])->name('index');
     Route::get('/data', [TrabajadorController::class, 'data'])->name('data');
@@ -239,6 +257,7 @@ Route::middleware(['auth'])->prefix('trabajador')->name('trabajador.')->group(fu
 });
 
 use App\Http\Controllers\DistritoController;
+
 Route::middleware(['auth'])->prefix('distrito')->name('distrito.')->group(function () {
     Route::get('/', [DistritoController::class, 'index'])->name('index');
     Route::get('/data', [DistritoController::class, 'data'])->name('data');

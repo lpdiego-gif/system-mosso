@@ -12,7 +12,7 @@ class Cliente extends Model
     protected $primaryKey = 'id_cliente';
 
     protected $fillable = [
-        'fk_persona', 'fk_user', 'correo',
+        'fk_persona', 'fk_user', 'correo', 'razon_social', 'ruc',
     ];
 
     public function persona(): BelongsTo

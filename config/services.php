@@ -35,4 +35,15 @@ return [
         ],
     ],
 
+    /*
+    | Culqi (pasarela de pago). La clave secreta SÓLO se usa desde el backend;
+    | la pública se entrega al frontend para abrir el checkout de Culqi.
+    | Mientras 'secret_key' esté vacío, el checkout deshabilita el pago en línea.
+    */
+    'culqi' => [
+        'public_key' => env('CULQI_PUBLIC_KEY'),
+        'secret_key' => env('CULQI_SECRET_KEY'),
+        'api_url' => env('CULQI_API_URL', 'https://api.culqi.com/v2'),
+    ],
+
 ];

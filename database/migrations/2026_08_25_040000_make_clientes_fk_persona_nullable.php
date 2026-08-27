@@ -13,11 +13,21 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // `clientes` es una tabla de negocio ajena a las migraciones; en la base
+        // sqlite en memoria de los tests no existe y la sentencia MySQL no aplica.
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         DB::statement('ALTER TABLE `clientes` MODIFY `fk_persona` int(11) NULL');
     }
 
     public function down(): void
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         DB::statement('ALTER TABLE `clientes` MODIFY `fk_persona` int(11) NOT NULL');
     }
 };

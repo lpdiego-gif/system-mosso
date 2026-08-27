@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * `redes_sociales` existía vacía (0 filas) aunque `servicio_redes.fk_red` la
@@ -13,7 +14,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (DB::table('redes_sociales')->count() > 0) {
+        if (! Schema::hasTable('redes_sociales') || DB::table('redes_sociales')->count() > 0) {
             return;
         }
 

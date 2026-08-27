@@ -1,5 +1,5 @@
-import StorefrontLayout from '@/layouts/storefront-layout';
 import { Link, router } from '@inertiajs/react';
+import StorefrontLayout from '@/layouts/storefront-layout';
 
 interface ItemCarrito {
     id: number;
@@ -72,14 +72,14 @@ export default function CarritoIndex({ items, total }: Props) {
                                     </span>
                                 </div>
 
-                                <button
-                                    disabled
-                                    className="mt-6 w-full bg-mosso-yellow text-gray-900 font-bold py-3 rounded-full text-sm opacity-50 cursor-not-allowed"
+                                <Link
+                                    href="/checkout"
+                                    className="mt-6 block w-full bg-mosso-yellow hover:bg-mosso-yellow/85 text-gray-900 font-bold py-3 rounded-full text-sm text-center transition-colors"
                                 >
                                     Proceder al pago
-                                </button>
+                                </Link>
                                 <p className="text-center text-xs text-gray-400 mt-2">
-                                    Pago en línea próximamente
+                                    Pago 100% seguro con Culqi
                                 </p>
 
                                 <Link
