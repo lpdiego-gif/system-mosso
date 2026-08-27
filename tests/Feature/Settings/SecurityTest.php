@@ -4,23 +4,14 @@ namespace Tests\Feature\Settings;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Fortify\Features;
-use Tests\Concerns\CreatesDomainTables;
 use Tests\TestCase;
 
 class SecurityTest extends TestCase
 {
-    use CreatesDomainTables, RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->createDomainTables();
-    }
+    use RefreshDatabase;
 
     public function test_security_page_is_displayed()
     {
@@ -34,10 +25,7 @@ class SecurityTest extends TestCase
             'confirmPassword' => true,
         ]);
 
-        // La 2FA solo la administra el personal de MOSSO (ver EnsureEsTrabajador
-        // y SecurityController::edit): el usuario de la prueba debe ser trabajador.
         $user = User::factory()->create();
-        DB::table('trabajadores')->insert(['fk_user' => $user->id, 'activo' => true]);
 
         $this->actingAs($user)
             ->withSession(['auth.password_confirmed_at' => time()])
@@ -49,41 +37,6 @@ class SecurityTest extends TestCase
                 ->where('canManageTwoFactor', true)
                 ->where('twoFactorEnabled', false),
             );
-    }
-
-    public function test_non_trabajador_cannot_manage_two_factor()
-    {
-        $this->skipUnlessFortifyHas(Features::twoFactorAuthentication());
-
-        Features::twoFactorAuthentication([
-            'confirm' => true,
-            'confirmPassword' => true,
-        ]);
-
-        // Un cliente (sin fila en `trabajadores`) ve la página —para passkeys y
-        // contraseña— pero sin la sección de 2FA.
-        $user = User::factory()->create();
-
-        $this->actingAs($user)
-            ->withSession(['auth.password_confirmed_at' => time()])
-            ->get(route('security.edit'))
-            ->assertInertia(fn (Assert $page) => $page
-                ->component('settings/security')
-                ->where('canManageTwoFactor', false)
-                ->missing('twoFactorEnabled'),
-            );
-    }
-
-    public function test_non_trabajador_cannot_enable_two_factor()
-    {
-        $this->skipUnlessFortifyHas(Features::twoFactorAuthentication());
-
-        $user = User::factory()->create();
-
-        $this->actingAs($user)
-            ->withSession(['auth.password_confirmed_at' => time()])
-            ->post(route('two-factor.enable'))
-            ->assertForbidden();
     }
 
     public function test_security_page_requires_password_confirmation_when_enabled()

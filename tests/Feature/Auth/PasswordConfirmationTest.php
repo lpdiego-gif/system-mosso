@@ -5,19 +5,11 @@ namespace Tests\Feature\Auth;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
-use Tests\Concerns\CreatesDomainTables;
 use Tests\TestCase;
 
 class PasswordConfirmationTest extends TestCase
 {
-    use CreatesDomainTables, RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->createDomainTables();
-    }
+    use RefreshDatabase;
 
     public function test_confirm_password_screen_can_be_rendered()
     {

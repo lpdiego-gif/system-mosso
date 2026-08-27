@@ -4,19 +4,11 @@ namespace Tests\Feature\Settings;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\Concerns\CreatesDomainTables;
 use Tests\TestCase;
 
 class ProfileUpdateTest extends TestCase
 {
-    use CreatesDomainTables, RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->createDomainTables();
-    }
+    use RefreshDatabase;
 
     public function test_profile_page_is_displayed()
     {

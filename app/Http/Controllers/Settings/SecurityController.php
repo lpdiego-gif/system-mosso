@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\PasswordUpdateRequest;
 use App\Http\Requests\Settings\TwoFactorAuthenticationRequest;
-use App\Services\CuentaService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
@@ -17,16 +16,10 @@ class SecurityController extends Controller
     /**
      * Show the user's security settings page.
      */
-    public function edit(TwoFactorAuthenticationRequest $request, CuentaService $cuentaService): Response
+    public function edit(TwoFactorAuthenticationRequest $request): Response
     {
-        // La verificación en dos pasos es solo para el personal de MOSSO; un
-        // cliente ve esta página (para passkeys y contraseña) pero sin la
-        // sección de 2FA. El endpoint de habilitación además está protegido
-        // por EnsureEsTrabajador.
-        $esTrabajador = $cuentaService->tipoDe($request->user()) === 'trabajador';
-
         $props = [
-            'canManageTwoFactor' => $esTrabajador && Features::canManageTwoFactorAuthentication(),
+            'canManageTwoFactor' => Features::canManageTwoFactorAuthentication(),
             'canManagePasskeys' => Features::canManagePasskeys(),
             'passkeys' => Features::canManagePasskeys()
                 ? $request->user()
@@ -47,7 +40,7 @@ class SecurityController extends Controller
             'passwordRules' => Password::defaults()->toPasswordRulesString(),
         ];
 
-        if ($esTrabajador && Features::canManageTwoFactorAuthentication()) {
+        if (Features::canManageTwoFactorAuthentication()) {
             $request->ensureStateIsValid();
 
             $props['twoFactorEnabled'] = $request->user()->hasEnabledTwoFactorAuthentication();

@@ -29,14 +29,6 @@ class CuentaService
 
     public function redirectPara(User $user): string
     {
-        // Un cliente que se registró pero nunca confirmó su correo con el código
-        // de 6 dígitos vuelve a /cuenta, donde CuentaController le muestra el
-        // formulario del código. Los trabajadores nacen verificados
-        // (TrabajadorController::store), así que esto solo afecta a clientes.
-        if (! $user->hasVerifiedEmail()) {
-            return route('cuenta');
-        }
-
         return match ($this->tipoDe($user)) {
             'trabajador' => route('dashboard'),
             default => route('mi-cuenta'),

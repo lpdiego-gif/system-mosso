@@ -2,14 +2,13 @@ import { Link } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { logout } from '@/routes';
 
-export type ItemMiCuenta = 'escritorio' | 'pedidos' | 'direcciones' | 'detalles' | 'seguridad';
+export type ItemMiCuenta = 'escritorio' | 'pedidos' | 'direcciones' | 'detalles';
 
 const enlacesMenu: { label: string; href: string; clave: ItemMiCuenta }[] = [
   { label: 'Escritorio', href: '/mi-cuenta', clave: 'escritorio' },
   { label: 'Pedidos', href: '/mi-cuenta/pedidos', clave: 'pedidos' },
   { label: 'Direcciones', href: '/mi-cuenta/direcciones', clave: 'direcciones' },
   { label: 'Detalles de la cuenta', href: '/mi-cuenta/detalles', clave: 'detalles' },
-  { label: 'Acceso y seguridad', href: '/mi-cuenta/seguridad', clave: 'seguridad' },
 ];
 
 /**

@@ -13,22 +13,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // `clientes` es una tabla del dump externo (no existe en el sqlite de los
-        // tests) y MODIFY es sintaxis MySQL/MariaDB. Fuera de MySQL no hay nada
-        // que ajustar aquí.
-        if (DB::getDriverName() !== 'mysql') {
-            return;
-        }
-
         DB::statement('ALTER TABLE `clientes` MODIFY `fk_persona` int(11) NULL');
     }
 
     public function down(): void
     {
-        if (DB::getDriverName() !== 'mysql') {
-            return;
-        }
-
         DB::statement('ALTER TABLE `clientes` MODIFY `fk_persona` int(11) NOT NULL');
     }
 };

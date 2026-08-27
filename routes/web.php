@@ -7,22 +7,22 @@ use App\Http\Controllers\Admin\ProductoController;
 use App\Http\Controllers\Admin\ServicioController as AdminServicioController;
 use App\Http\Controllers\Admin\SubCategoriaController;
 use App\Http\Controllers\Admin\TipoServicioController;
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BusquedaController;
-use App\Http\Controllers\CarritoController;
 use App\Http\Controllers\CatalogoController;
+use App\Http\Controllers\CarritoController;
+use App\Http\Controllers\FavoritosController;
+use App\Http\Controllers\MarcaCatalogoController;
+use App\Http\Controllers\OfertasController;
+
 use App\Http\Controllers\ClienteRegistroController;
 use App\Http\Controllers\CuentaController;
-use App\Http\Controllers\FavoritosController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\MarcaCatalogoController;
 use App\Http\Controllers\MiCuentaController;
 use App\Http\Controllers\MiCuentaDetallesController;
 use App\Http\Controllers\MiCuentaDireccionController;
-use App\Http\Controllers\MiCuentaSeguridadController;
-use App\Http\Controllers\OfertasController;
 use App\Http\Controllers\ReclamoController;
 use App\Http\Controllers\ServicioController;
-use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
 
@@ -92,12 +92,9 @@ Route::post('/libro-de-reclamaciones', [ReclamoController::class, 'store'])->nam
 */
 
 Route::get('/cuenta', [CuentaController::class, 'show'])->name('cuenta');
-Route::post('/cuenta/registro', [ClienteRegistroController::class, 'store'])
-    ->middleware('throttle:6,1')->name('cliente.registro.store');
-Route::post('/cuenta/registro/verificar', [ClienteRegistroController::class, 'verificar'])
-    ->middleware('throttle:10,1')->name('cliente.registro.verificar');
-Route::post('/cuenta/registro/reenviar', [ClienteRegistroController::class, 'reenviar'])
-    ->middleware('throttle:4,1')->name('cliente.registro.reenviar');
+Route::post('/cuenta/registro', [ClienteRegistroController::class, 'store'])->name('cliente.registro.store');
+Route::post('/cuenta/registro/verificar', [ClienteRegistroController::class, 'verificar'])->name('cliente.registro.verificar');
+Route::post('/cuenta/registro/reenviar', [ClienteRegistroController::class, 'reenviar'])->name('cliente.registro.reenviar');
 
 /*
 |--------------------------------------------------------------------------
@@ -106,10 +103,8 @@ Route::post('/cuenta/registro/reenviar', [ClienteRegistroController::class, 'ree
 | Pedidos (el otro ítem del menú lateral) todavía no tiene ruta propia.
 */
 
-Route::middleware(['auth', 'cliente', 'correo.verificado'])->group(function () {
+Route::middleware(['auth', 'cliente'])->group(function () {
     Route::get('/mi-cuenta', [MiCuentaController::class, 'index'])->name('mi-cuenta');
-
-    Route::get('/mi-cuenta/seguridad', [MiCuentaSeguridadController::class, 'index'])->name('mi-cuenta.seguridad');
 
     Route::prefix('mi-cuenta/direcciones')->name('mi-cuenta.direcciones.')->group(function () {
         Route::get('/', [MiCuentaDireccionController::class, 'index'])->name('index');
@@ -126,13 +121,13 @@ Route::middleware(['auth', 'cliente', 'correo.verificado'])->group(function () {
 
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
 
-    /*
-        |--------------------------------------------------------------------------
-        | BUSCADOR
-        |--------------------------------------------------------------------------
-        */
+/*
+    |--------------------------------------------------------------------------
+    | BUSCADOR
+    |--------------------------------------------------------------------------
+    */
 
-    Route::get('/buscar', BusquedaController::class)->name('buscar');
+Route::get('/buscar', BusquedaController::class)->name('buscar');
 
     /*
     |--------------------------------------------------------------------------
@@ -215,13 +210,13 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 
 use App\Http\Controllers\DashboardController;
 
-Route::middleware(['auth', 'verified', 'trabajador'])->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 });
 
-use App\Http\Controllers\EmpresaController;
 
+use App\Http\Controllers\EmpresaController;
 Route::middleware(['auth'])->prefix('empresa')->name('empresa.')->group(function () {
     Route::get('/', [EmpresaController::class, 'index'])->name('index');
     Route::get('/provincias/{departamento}', [EmpresaController::class, 'provincias'])->whereNumber('departamento')->name('provincias');
@@ -230,7 +225,6 @@ Route::middleware(['auth'])->prefix('empresa')->name('empresa.')->group(function
 });
 
 use App\Http\Controllers\TrabajadorController;
-
 Route::middleware(['auth'])->prefix('trabajador')->name('trabajador.')->group(function () {
     Route::get('/', [TrabajadorController::class, 'index'])->name('index');
     Route::get('/data', [TrabajadorController::class, 'data'])->name('data');
@@ -245,7 +239,6 @@ Route::middleware(['auth'])->prefix('trabajador')->name('trabajador.')->group(fu
 });
 
 use App\Http\Controllers\DistritoController;
-
 Route::middleware(['auth'])->prefix('distrito')->name('distrito.')->group(function () {
     Route::get('/', [DistritoController::class, 'index'])->name('index');
     Route::get('/data', [DistritoController::class, 'data'])->name('data');

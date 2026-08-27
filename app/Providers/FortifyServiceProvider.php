@@ -6,7 +6,6 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Http\Responses\LoginResponse;
 use App\Http\Responses\LogoutResponse;
-use App\Http\Responses\PasskeyLoginResponse;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -16,8 +15,8 @@ use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 use Laravel\Fortify\Contracts\LogoutResponse as LogoutResponseContract;
+use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
-use Laravel\Passkeys\Contracts\PasskeyLoginResponse as PasskeyLoginResponseContract;
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -28,7 +27,6 @@ class FortifyServiceProvider extends ServiceProvider
     {
         $this->app->singleton(LoginResponseContract::class, LoginResponse::class);
         $this->app->singleton(LogoutResponseContract::class, LogoutResponse::class);
-        $this->app->singleton(PasskeyLoginResponseContract::class, PasskeyLoginResponse::class);
     }
 
     /**
@@ -55,10 +53,10 @@ class FortifyServiceProvider extends ServiceProvider
      */
     private function configureViews(): void
     {
-        // La única pantalla de acceso es /cuenta (CuentaController). El /login y
-        // /register de Fortify solo redirigen ahí; sus rutas POST siguen vivas
-        // (el formulario de cuenta.tsx envía a login.store).
-        Fortify::loginView(fn () => redirect()->route('cuenta'));
+        Fortify::loginView(fn (Request $request) => Inertia::render('auth/login', [
+            'canResetPassword' => Features::enabled(Features::resetPasswords()),
+            'status' => $request->session()->get('status'),
+        ]));
 
         Fortify::resetPasswordView(fn (Request $request) => Inertia::render('auth/reset-password', [
             'email' => $request->email,
@@ -74,10 +72,9 @@ class FortifyServiceProvider extends ServiceProvider
             'status' => $request->session()->get('status'),
         ]));
 
-        // El registro de clientes vive en /cuenta (ClienteRegistroController,
-        // dos pasos + código). El registro genérico de Fortify no crea la fila
-        // en `clientes`, así que su vista también redirige ahí.
-        Fortify::registerView(fn () => redirect()->route('cuenta'));
+        Fortify::registerView(fn () => Inertia::render('auth/register', [
+            'passwordRules' => Password::defaults()->toPasswordRulesString(),
+        ]));
 
         Fortify::twoFactorChallengeView(fn () => Inertia::render('auth/two-factor-challenge'));
 

@@ -47,16 +47,3 @@ export interface MiCuentaDetallesProps {
   persona: PersonaDetalle | null;
   tiposDocumento: TipoDocumento[];
 }
-
-export interface PasskeyResumen {
-  id: number;
-  name: string;
-  created_at_diff: string;
-  last_used_at_diff: string | null;
-}
-
-export interface MiCuentaSeguridadProps {
-  passwordRules: string;
-  canManagePasskeys: boolean;
-  passkeys: PasskeyResumen[];
-}

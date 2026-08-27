@@ -7,19 +7,17 @@ use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Laravel\Fortify\Features;
-use Tests\Concerns\CreatesDomainTables;
 use Tests\TestCase;
 
 class PasswordResetTest extends TestCase
 {
-    use CreatesDomainTables, RefreshDatabase;
+    use RefreshDatabase;
 
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->skipUnlessFortifyHas(Features::resetPasswords());
-        $this->createDomainTables();
     }
 
     public function test_reset_password_link_screen_can_be_rendered()

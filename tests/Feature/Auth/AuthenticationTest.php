@@ -6,26 +6,17 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
 use Laravel\Fortify\Features;
-use Tests\Concerns\CreatesDomainTables;
 use Tests\TestCase;
 
 class AuthenticationTest extends TestCase
 {
-    use CreatesDomainTables, RefreshDatabase;
+    use RefreshDatabase;
 
-    protected function setUp(): void
+    public function test_login_screen_can_be_rendered()
     {
-        parent::setUp();
-
-        $this->createDomainTables();
-    }
-
-    public function test_login_screen_redirects_to_cuenta()
-    {
-        // La pantalla de acceso vive en /cuenta; /login solo redirige ahí.
         $response = $this->get(route('login'));
 
-        $response->assertRedirect(route('cuenta'));
+        $response->assertOk();
     }
 
     public function test_users_can_authenticate_using_the_login_screen()
@@ -38,9 +29,7 @@ class AuthenticationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        // Un user sin fila en trabajadores/clientes cae en "mi-cuenta"
-        // (LoginResponse + CuentaService::redirectPara).
-        $response->assertRedirect(route('mi-cuenta', absolute: false));
+        $response->assertRedirect(route('dashboard', absolute: false));
     }
 
     public function test_users_with_two_factor_enabled_are_redirected_to_two_factor_challenge()

@@ -2,7 +2,6 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 /**
  * `tipo_documento` existía vacía (0 filas) a pesar de que `personas.fk_tipo_documento`
@@ -16,9 +15,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // `tipo_documento` es una tabla del dump externo; no existe en el sqlite
-        // de los tests (que solo corre estas migraciones).
-        if (! Schema::hasTable('tipo_documento') || DB::table('tipo_documento')->count() > 0) {
+        if (DB::table('tipo_documento')->count() > 0) {
             return;
         }
 
@@ -31,10 +28,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        if (! Schema::hasTable('tipo_documento')) {
-            return;
-        }
-
         DB::table('tipo_documento')->whereIn('nombre', ['DNI', 'CE', 'Pasaporte'])->delete();
     }
 };
