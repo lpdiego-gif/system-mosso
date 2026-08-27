@@ -855,7 +855,7 @@ CREATE TABLE `migrations` (
   `migration` varchar(255) NOT NULL,
   `batch` int(11) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -864,7 +864,7 @@ CREATE TABLE `migrations` (
 
 LOCK TABLES `migrations` WRITE;
 /*!40000 ALTER TABLE `migrations` DISABLE KEYS */;
-INSERT INTO `migrations` VALUES (1,'2026_08_25_003439_create_reclamos_table',1),(2,'2026_08_25_040000_make_clientes_fk_persona_nullable',2),(3,'2026_08_25_040001_create_codigos_verificacion_table',2),(4,'2026_08_25_060000_seed_tipo_documento',3);
+INSERT INTO `migrations` VALUES (1,'2026_08_25_003439_create_reclamos_table',1),(2,'2026_08_25_040000_make_clientes_fk_persona_nullable',2),(3,'2026_08_25_040001_create_codigos_verificacion_table',2),(4,'2026_08_25_060000_seed_tipo_documento',3),(5,'0001_01_01_000000_create_users_table',1),(6,'0001_01_01_000001_create_cache_table',1),(7,'0001_01_01_000002_create_jobs_table',1),(8,'2024_01_01_000000_create_passkeys_table',1),(9,'2025_08_14_170933_add_two_factor_columns_to_users_table',1),(10,'2026_08_25_070000_seed_redes_sociales',4);
 /*!40000 ALTER TABLE `migrations` ENABLE KEYS */;
 UNLOCK TABLES;
 

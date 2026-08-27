@@ -14,6 +14,22 @@ class DashboardController extends Controller
      */
     private const UMBRAL_STOCK_BAJO = 10;
 
+    /**
+     * Estados de pedido que cuentan como venta real (ya cobrada). Un pedido en
+     * "Pendiente de pago" o "Cancelado" no debe sumar a las ventas ni a los
+     * productos más vendidos. Se resuelven por nombre para no hardcodear IDs.
+     *
+     * @return array<int, int>
+     */
+    private function estadosVendidosIds(): array
+    {
+        return DB::table('estados_pedido')
+            ->whereIn('nombre', ['Pagado', 'En preparación', 'Enviado', 'Entregado'])
+            ->pluck('id_estado_pedido')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
     public function index(): Response
     {
         return Inertia::render('dashboard', [
@@ -45,6 +61,7 @@ class DashboardController extends Controller
             ->first();
 
         $pedidos = DB::table('pedidos')
+            ->whereIn('fk_estado_pedido', $this->estadosVendidosIds())
             ->selectRaw('COUNT(*) as total')
             ->selectRaw('COALESCE(SUM(total), 0) as total_ventas')
             ->selectRaw('COALESCE(SUM(CASE WHEN fecha_pedido >= ? AND fecha_pedido < ? THEN total ELSE 0 END), 0) as ventas_hoy', [
@@ -82,6 +99,7 @@ class DashboardController extends Controller
         $porDia = DB::table('pedidos')
             ->selectRaw('DATE(fecha_pedido) as fecha, SUM(total) as total')
             ->where('fecha_pedido', '>=', $desde)
+            ->whereIn('fk_estado_pedido', $this->estadosVendidosIds())
             ->groupBy(DB::raw('DATE(fecha_pedido)'))
             ->pluck('total', 'fecha');
 
@@ -102,6 +120,8 @@ class DashboardController extends Controller
     {
         return DB::table('pedido_detalle as pd')
             ->join('productos as p', 'p.id_producto', '=', 'pd.fk_producto')
+            ->join('pedidos as pe', 'pe.id_pedido', '=', 'pd.fk_pedido')
+            ->whereIn('pe.fk_estado_pedido', $this->estadosVendidosIds())
             ->select([
                 'p.id_producto',
                 'p.nombre',

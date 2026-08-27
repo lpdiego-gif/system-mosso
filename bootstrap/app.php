@@ -27,6 +27,16 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'cliente' => EnsureEsCliente::class,
         ]);
+
+        // El checkout es parte del storefront: el invitado va al login público
+        // (/cuenta), no al login por defecto de Fortify (/login).
+        $middleware->redirectGuestsTo(function (Request $request) {
+            if ($request->routeIs('checkout.*')) {
+                return route('cuenta');
+            }
+
+            return route('login');
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

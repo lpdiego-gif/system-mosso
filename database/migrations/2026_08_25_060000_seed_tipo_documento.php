@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * `tipo_documento` existía vacía (0 filas) a pesar de que `personas.fk_tipo_documento`
@@ -15,7 +16,9 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (DB::table('tipo_documento')->count() > 0) {
+        // `tipo_documento` es una tabla de negocio ajena a las migraciones; en la
+        // base sqlite de los tests no existe.
+        if (! Schema::hasTable('tipo_documento') || DB::table('tipo_documento')->count() > 0) {
             return;
         }
 
