@@ -31,16 +31,25 @@ class ClienteRegistroController extends Controller
 
     private const MINUTOS_VALIDEZ = 15;
 
+    private const MAX_INTENTOS = 5;
+
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
+            'name' => ['nullable', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique(User::class)],
             'password' => $this->passwordRules(),
         ]);
 
-        DB::transaction(function () use ($data) {
+        // El formulario sugiere un nombre a partir del correo y el cliente puede
+        // editarlo; si lo deja vacío, caemos a la parte local del correo. En
+        // cualquier caso es provisional: se sobrescribe cuando el cliente
+        // completa sus datos de persona en "Detalles de la cuenta".
+        $nombre = trim((string) ($data['name'] ?? '')) ?: explode('@', $data['email'])[0];
+
+        DB::transaction(function () use ($data, $nombre) {
             $user = User::create([
-                'name' => explode('@', $data['email'])[0],
+                'name' => $nombre,
                 'email' => $data['email'],
                 'password' => $data['password'],
             ]);
@@ -67,6 +76,18 @@ class ClienteRegistroController extends Controller
         ]);
 
         $registro = DB::table('codigos_verificacion')->where('email', $data['email'])->first();
+
+        // Tras 5 intentos fallidos, el código deja de ser válido: mandamos uno
+        // nuevo para cortar cualquier fuerza bruta sobre los 6 dígitos.
+        if ($registro && $registro->intentos >= self::MAX_INTENTOS) {
+            $this->enviarCodigo($data['email']);
+
+            Inertia::flash('registroPendiente', ['email' => $data['email']]);
+
+            throw ValidationException::withMessages([
+                'codigo' => 'Demasiados intentos. Te enviamos un código nuevo, revisa tu correo.',
+            ]);
+        }
 
         if (! $registro || ! hash_equals($registro->codigo, $data['codigo']) || Carbon::parse($registro->expira_en)->isPast()) {
             DB::table('codigos_verificacion')->where('email', $data['email'])->increment('intentos');

@@ -5,12 +5,14 @@ namespace Tests\Feature;
 use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Tests\Concerns\CreatesDomainTables;
 use Tests\TestCase;
 
 class DashboardTest extends TestCase
 {
-    use RefreshDatabase;
+    use CreatesDomainTables, RefreshDatabase;
 
     /**
      * El panel de control consulta directamente las tablas de negocio (productos,
@@ -37,10 +39,12 @@ class DashboardTest extends TestCase
         Schema::create('clientes', function (Blueprint $table) {
             $table->id('id_cliente');
             $table->unsignedBigInteger('fk_persona')->nullable();
+            $table->unsignedBigInteger('fk_user')->nullable();
         });
 
         Schema::create('trabajadores', function (Blueprint $table) {
             $table->id('id_trabajador');
+            $table->unsignedBigInteger('fk_user')->nullable();
             $table->unsignedBigInteger('fk_rol');
             $table->boolean('activo')->default(true);
         });
@@ -113,6 +117,10 @@ class DashboardTest extends TestCase
             $table->boolean('destacado')->default(false);
             $table->boolean('activo')->default(true);
         });
+
+        // empresa/direcciones/distritos: los consulta HandleInertiaRequests
+        // (prop compartido `empresa`) en cada render Inertia.
+        $this->createDomainTables();
     }
 
     public function test_guests_are_redirected_to_the_login_page()
@@ -121,12 +129,22 @@ class DashboardTest extends TestCase
         $response->assertRedirect(route('login'));
     }
 
-    public function test_authenticated_users_can_visit_the_dashboard()
+    public function test_trabajadores_can_visit_the_dashboard()
     {
         $user = User::factory()->create();
-        $this->actingAs($user);
+        DB::table('trabajadores')->insert(['fk_user' => $user->id, 'fk_rol' => 1, 'activo' => true]);
 
-        $response = $this->get(route('dashboard'));
-        $response->assertOk();
+        $this->actingAs($user)->get(route('dashboard'))->assertOk();
+    }
+
+    public function test_non_trabajadores_are_redirected_to_mi_cuenta()
+    {
+        // Un cliente (o cualquier user sin fila en `trabajadores`) no entra al panel.
+        $user = User::factory()->create();
+        DB::table('clientes')->insert(['fk_user' => $user->id, 'fk_persona' => null]);
+
+        $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertRedirect(route('mi-cuenta', absolute: false));
     }
 }

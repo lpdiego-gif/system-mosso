@@ -6,9 +6,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:80"
-    environment:
-      APP_ENV: production
-      APP_KEY: ${APP_KEY}
+    # Toda la configuración (incluidos APP_ENV y APP_KEY) sale de .env; no se
+    # repite aquí para no tener dos fuentes de verdad ni interpolaciones frágiles.
     env_file:
       - .env
     depends_on:
@@ -16,6 +15,9 @@ services:
         condition: service_healthy
     volumes:
       - storage_data:/var/www/html/storage/app
+      # Logs visibles desde el host: en dev, el código de verificación de
+      # clientes (MAIL_MAILER=log) se lee aquí en storage/logs/laravel.log.
+      - ./storage/logs:/var/www/html/storage/logs
     networks:
       - mosso_net
 
@@ -24,15 +26,20 @@ services:
     ports:
       - "3306:3306"
     environment:
-      MARIADB_ROOT_PASSWORD: ${DB_PASSWORD}
-      MARIADB_DATABASE: ${DB_DATABASE}
+      MARIADB_ROOT_PASSWORD: ${DB_PASSWORD:-root}
+      MARIADB_DATABASE: ${DB_DATABASE:-system_mosso}
     volumes:
       - db_data:/var/lib/mysql
+      # Import automático del esquema + datos en un volumen nuevo. MariaDB solo
+      # ejecuta esto la PRIMERA vez (db_data vacío); para reimportar hay que
+      # `docker compose down -v`.
+      - ./mosso.sql:/docker-entrypoint-initdb.d/01-mosso.sql:ro
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${DB_PASSWORD:-root}"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 40s
     networks:
       - mosso_net
 

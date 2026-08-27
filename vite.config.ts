@@ -6,7 +6,7 @@ import laravel from 'laravel-vite-plugin';
 import { bunny } from 'laravel-vite-plugin/fonts';
 import { defineConfig } from 'vite';
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
     plugins: [
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.tsx'],
@@ -24,9 +24,14 @@ export default defineConfig({
             },
         }),
         tailwindcss(),
-        wayfinder({
-            formVariants: true,
-        }),
+        // El plugin de Wayfinder invoca `php artisan`, que no existe en el stage
+        // Node del Dockerfile. En 'build' los archivos generados llegan del stage
+        // `codegen` del Dockerfile (o del host en un build local); en 'serve' se
+        // regeneran en caliente con cada cambio de rutas.
+        command === 'serve' &&
+            wayfinder({
+                formVariants: true,
+            }),
     ],
     server: {
         watch: {
@@ -39,4 +44,4 @@ export default defineConfig({
             ],
         },
     },
-});
+}));

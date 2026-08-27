@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * `redes_sociales` existía vacía (0 filas) aunque `servicio_redes.fk_red` la
@@ -13,7 +14,9 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (DB::table('redes_sociales')->count() > 0) {
+        // `redes_sociales` es una tabla del dump externo; no existe en el sqlite
+        // de los tests.
+        if (! Schema::hasTable('redes_sociales') || DB::table('redes_sociales')->count() > 0) {
             return;
         }
 
@@ -28,6 +31,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (! Schema::hasTable('redes_sociales')) {
+            return;
+        }
+
         DB::table('redes_sociales')
             ->whereIn('nombre', ['Facebook', 'Instagram', 'TikTok', 'WhatsApp', 'YouTube'])
             ->delete();

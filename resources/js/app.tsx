@@ -18,6 +18,7 @@ createInertiaApp({
             case name === 'mi-cuenta':
             case name === 'mi-cuenta-direcciones':
             case name === 'mi-cuenta-detalles':
+            case name === 'mi-cuenta-seguridad':
             case name.startsWith('catalogo/'):
             case name.startsWith('carrito/'):
             case name.startsWith('servicios/'):
