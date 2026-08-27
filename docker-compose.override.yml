@@ -1,0 +1,15 @@
+# Este archivo se aplica automáticamente sobre docker-compose.yml (Docker Compose
+# lo detecta solo por su nombre, no hace falta -f). Es SOLO para desarrollo local:
+# monta tu carpeta del proyecto dentro del contenedor, así los cambios de código
+# se ven al instante sin necesidad de "docker compose up -d --build" cada vez.
+#
+# Sigue usando "docker compose up -d --build" cuando cambies el Dockerfile,
+# composer.json/composer.lock, o corras "npm run build" (assets nuevos).
+
+services:
+  app:
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+    volumes:
+      - .:/var/www/html
