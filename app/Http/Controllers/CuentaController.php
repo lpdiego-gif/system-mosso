@@ -7,6 +7,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Laravel\Fortify\Features;
 
 class CuentaController extends Controller
 {
@@ -23,6 +24,9 @@ class CuentaController extends Controller
             return redirect()->to($cuentaService->redirectPara($user));
         }
 
-        return Inertia::render('cuenta');
+        return Inertia::render('cuenta', [
+            'canResetPassword' => Features::enabled(Features::resetPasswords()),
+            'status' => $request->session()->get('status'),
+        ]);
     }
 }

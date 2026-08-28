@@ -15,7 +15,10 @@ createInertiaApp({
             case name === 'welcome':
             case name === 'libro-de-reclamaciones':
             case name === 'cuenta':
+            case name === 'auth/reset-password':
+            case name === 'auth/two-factor-challenge':
             // All mi-cuenta/* pages own their StorefrontLayout — never wrap with AppLayout.
+            // auth/reset-password & auth/two-factor-challenge above render their own too.
             case name.startsWith('mi-cuenta'):
             case name.startsWith('catalogo/'):
             case name.startsWith('carrito/'):

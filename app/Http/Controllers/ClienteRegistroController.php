@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -34,25 +35,43 @@ class ClienteRegistroController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique(User::class)],
+            'email' => ['required', 'string', 'email', 'max:255'],
             'password' => $this->passwordRules(),
         ]);
 
-        DB::transaction(function () use ($data) {
-            $user = User::create([
-                'name' => explode('@', $data['email'])[0],
-                'email' => $data['email'],
-                'password' => $data['password'],
-            ]);
+        $existente = User::where('email', $data['email'])->first();
 
-            DB::table('clientes')->insert([
-                'fk_persona' => null,
-                'fk_user' => $user->id,
-                'correo' => $data['email'],
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        });
+        if ($existente) {
+            $clienteSinVerificar = $existente->email_verified_at === null
+                && DB::table('clientes')->where('fk_user', $existente->id)->exists();
+
+            // Un correo ya verificado (o de un trabajador) no puede reregistrarse.
+            if (! $clienteSinVerificar) {
+                throw ValidationException::withMessages([
+                    'email' => 'Ese correo ya tiene una cuenta. Inicia sesión.',
+                ]);
+            }
+
+            // Reintento antes de verificar: solo actualizamos la contraseña y
+            // reenviamos el código, sin duplicar filas en users/clientes.
+            $existente->forceFill(['password' => $data['password']])->save();
+        } else {
+            DB::transaction(function () use ($data) {
+                $user = User::create([
+                    'name' => explode('@', $data['email'])[0],
+                    'email' => $data['email'],
+                    'password' => $data['password'],
+                ]);
+
+                DB::table('clientes')->insert([
+                    'fk_persona' => null,
+                    'fk_user' => $user->id,
+                    'correo' => $data['email'],
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            });
+        }
 
         $this->enviarCodigo($data['email']);
 
@@ -113,6 +132,16 @@ class ClienteRegistroController extends Controller
                 'created_at' => now(),
             ],
         );
+
+        // Mientras MAIL_MAILER=log (pre-producción) el correo completo —código
+        // incluido— ya queda en storage/logs/laravel.log; este apunte lo hace
+        // fácil de encontrar. Al pasar a Resend (MAIL_MAILER=resend) se corta.
+        if (config('mail.default') === 'log') {
+            Log::info('[registro cliente] código de verificación', [
+                'email' => $email,
+                'codigo' => $codigo,
+            ]);
+        }
 
         Mail::to($email)->send(new CodigoVerificacionMail($codigo, self::MINUTOS_VALIDEZ));
     }

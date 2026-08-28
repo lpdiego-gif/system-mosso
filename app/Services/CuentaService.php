@@ -27,6 +27,15 @@ class CuentaService
         return 'otro';
     }
 
+    /**
+     * ¿Este usuario tiene fila en `trabajadores`? Se usa para restringir a los
+     * trabajadores funciones que no aplican a clientes (p. ej. el 2FA).
+     */
+    public function esTrabajador(User $user): bool
+    {
+        return $this->tipoDe($user) === 'trabajador';
+    }
+
     public function redirectPara(User $user): string
     {
         return match ($this->tipoDe($user)) {

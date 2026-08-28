@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\PasswordUpdateRequest;
 use App\Http\Requests\Settings\TwoFactorAuthenticationRequest;
+use App\Services\CuentaService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
@@ -16,10 +17,14 @@ class SecurityController extends Controller
     /**
      * Show the user's security settings page.
      */
-    public function edit(TwoFactorAuthenticationRequest $request): Response
+    public function edit(TwoFactorAuthenticationRequest $request, CuentaService $cuentaService): Response
     {
+        // El 2FA es solo para trabajadores; un cliente ni siquiera ve la sección.
+        $canManageTwoFactor = Features::canManageTwoFactorAuthentication()
+            && $cuentaService->esTrabajador($request->user());
+
         $props = [
-            'canManageTwoFactor' => Features::canManageTwoFactorAuthentication(),
+            'canManageTwoFactor' => $canManageTwoFactor,
             'canManagePasskeys' => Features::canManagePasskeys(),
             'passkeys' => Features::canManagePasskeys()
                 ? $request->user()
@@ -40,7 +45,7 @@ class SecurityController extends Controller
             'passwordRules' => Password::defaults()->toPasswordRulesString(),
         ];
 
-        if (Features::canManageTwoFactorAuthentication()) {
+        if ($canManageTwoFactor) {
             $request->ensureStateIsValid();
 
             $props['twoFactorEnabled'] = $request->user()->hasEnabledTwoFactorAuthentication();
