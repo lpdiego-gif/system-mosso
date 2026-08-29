@@ -1,10 +1,16 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import type { InertiaLinkProps } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { destroy as sessionDestroy } from '@/actions/Laravel/Fortify/Http/Controllers/AuthenticatedSessionController';
 import MiCuentaShell from '@/components/MiCuentaShell';
 import StorefrontLayout from '@/layouts/storefront-layout';
 import type { MiCuentaProps } from '@/types/cuenta';
+import type { MenuCuentaItem } from '@/types/menu-cuenta';
+
+interface PageProps {
+  menuCuenta: MenuCuentaItem[];
+  [key: string]: unknown;
+}
 
 function toTitleCase(s: string) {
   return s.replace(/\b\w/g, (c) => c.toUpperCase());
@@ -69,6 +75,7 @@ function Acceso({
 
 /* ── Page ───────────────────────────────────────────────── */
 export default function MiCuenta({ user, resumen }: MiCuentaProps) {
+  const { menuCuenta } = usePage<PageProps>().props;
   const nombre = toTitleCase(user.name);
 
   return (
@@ -102,14 +109,19 @@ export default function MiCuenta({ user, resumen }: MiCuentaProps) {
           <StatCard label={resumen.cupones_activos === 1 ? 'Cupón disponible' : 'Cupones disponibles'} value={resumen.cupones_activos} href="/mi-cuenta/puntos" color="text-green-600" />
         </div>
 
-        {/* Quick access */}
+        {/* Quick access — construido desde menu_cuenta: si el admin desactiva
+            una sección o enlace, desaparece de aquí automáticamente. */}
         <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Accesos rápidos</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          <Acceso icono={<PedidosIcon />} titulo="Mis pedidos" desc="Historial y estado de compras" href="/mi-cuenta/pedidos" />
-          <Acceso icono={<DireccionesIcon />} titulo="Direcciones" desc="Envíos y facturación" href="/mi-cuenta/direcciones" />
-          <Acceso icono={<MascotasIcon />} titulo="Mis mascotas" desc="Perfiles y beneficios" href="/mi-cuenta/mascotas" />
-          <Acceso icono={<PuntosIcon />} titulo="Puntos y cupones" desc="Saldo y descuentos" href="/mi-cuenta/puntos" />
-          <Acceso icono={<DetallesIcon />} titulo="Detalles de la cuenta" desc="Datos personales y contraseña" href="/mi-cuenta/detalles" />
+          {menuCuenta.map((item) => (
+            <Acceso
+              key={item.id}
+              icono={iconoPorClave(item.clave)}
+              titulo={item.nombre}
+              desc={item.descripcion ?? ''}
+              href={item.href}
+            />
+          ))}
           <Acceso
             icono={<LogoutIcon />}
             titulo="Cerrar sesión"
@@ -123,7 +135,25 @@ export default function MiCuenta({ user, resumen }: MiCuentaProps) {
   );
 }
 
-/* ── Icons ──────────────────────────────────────────────── */
+/* ── Iconos por sección ─────────────────────────────────── */
+function iconoPorClave(clave: string | null): ReactNode {
+  switch (clave) {
+    case 'pedidos':
+      return <PedidosIcon />;
+    case 'direcciones':
+      return <DireccionesIcon />;
+    case 'mascotas':
+      return <MascotasIcon />;
+    case 'puntos_cupones':
+      return <PuntosIcon />;
+    case 'detalles':
+      return <DetallesIcon />;
+    default:
+      // Enlaces URL libres agregados desde el admin.
+      return <EnlaceIcon />;
+  }
+}
+
 function PedidosIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -172,6 +202,14 @@ function PuntosIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    </svg>
+  );
+}
+function EnlaceIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 0 0-7.07-7.07l-1.5 1.5" />
+      <path d="M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 0 0 7.07 7.07l1.5-1.5" />
     </svg>
   );
 }

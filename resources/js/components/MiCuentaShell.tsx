@@ -1,17 +1,28 @@
 import { Link, usePage } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { destroy as sessionDestroy } from '@/actions/Laravel/Fortify/Http/Controllers/AuthenticatedSessionController';
+import type { MenuCuentaItem } from '@/types/menu-cuenta';
 
 export type ItemMiCuenta = 'escritorio' | 'pedidos' | 'direcciones' | 'mascotas' | 'puntos' | 'detalles';
 
-const tabs: { label: string; href: string; clave: ItemMiCuenta }[] = [
-  { label: 'Escritorio',          href: '/mi-cuenta',            clave: 'escritorio' },
-  { label: 'Pedidos',             href: '/mi-cuenta/pedidos',    clave: 'pedidos'    },
-  { label: 'Direcciones',         href: '/mi-cuenta/direcciones',clave: 'direcciones'},
-  { label: 'Mis mascotas',        href: '/mi-cuenta/mascotas',   clave: 'mascotas'   },
-  { label: 'Puntos y cupones',    href: '/mi-cuenta/puntos',     clave: 'puntos'     },
-  { label: 'Detalles',            href: '/mi-cuenta/detalles',   clave: 'detalles'   },
-];
+interface PageProps {
+  menuCuenta: MenuCuentaItem[];
+  [key: string]: unknown;
+}
+
+/**
+ * La `clave` real en `menu_cuenta` no siempre coincide con la clave de
+ * pestaña que usan las páginas existentes (`puntos_cupones` en BD, pero la
+ * página/URL es `puntos`) — se traduce aquí para poder resaltar la pestaña
+ * activa.
+ */
+const CLAVE_A_TAB: Record<string, ItemMiCuenta> = {
+  pedidos: 'pedidos',
+  direcciones: 'direcciones',
+  mascotas: 'mascotas',
+  puntos_cupones: 'puntos',
+  detalles: 'detalles',
+};
 
 function toTitleCase(s: string) {
   return s.replace(/\b\w/g, (c) => c.toUpperCase());
@@ -21,9 +32,21 @@ function iniciales(s: string) {
 }
 
 export default function MiCuentaShell({ activo, children }: { activo: ItemMiCuenta; children: ReactNode }) {
-  const { auth } = usePage().props;
+  const { auth, menuCuenta } = usePage<PageProps>().props;
   const user = auth.user;
   const nombre = toTitleCase(user.name);
+
+  // "Escritorio" es fijo (no es un ítem configurable en menu_cuenta); el
+  // resto de pestañas sale de las secciones/enlaces activos del admin —
+  // si el admin desactiva una sección, desaparece de aquí automáticamente.
+  const tabs: { label: string; href: string; key: string }[] = [
+    { label: 'Escritorio', href: '/mi-cuenta', key: 'escritorio' },
+    ...menuCuenta.map((item) => ({
+      label: item.nombre,
+      href: item.href,
+      key: (item.clave && CLAVE_A_TAB[item.clave]) || `url-${item.id}`,
+    })),
+  ];
 
   return (
     <>
@@ -62,11 +85,11 @@ export default function MiCuentaShell({ activo, children }: { activo: ItemMiCuen
           <nav className="flex overflow-x-auto -mb-px" style={{ scrollbarWidth: 'none' }}>
             {tabs.map((tab) => (
               <Link
-                key={tab.clave}
+                key={tab.key}
                 href={tab.href}
                 className={[
                   'shrink-0 px-4 py-3.5 text-sm font-medium border-b-2 whitespace-nowrap transition-colors',
-                  activo === tab.clave
+                  activo === tab.key
                     ? 'border-mosso-yellow text-gray-900 font-semibold'
                     : 'border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300',
                 ].join(' ')}
