@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\CategoriaController;
 use App\Http\Controllers\Admin\ClienteController;
 use App\Http\Controllers\Admin\MarcaController;
 use App\Http\Controllers\Admin\MenuController;
+use App\Http\Controllers\Admin\MenuCuentaController;
 use App\Http\Controllers\Admin\ProductoController;
 use App\Http\Controllers\Admin\ServicioController as AdminServicioController;
 use App\Http\Controllers\Admin\SubCategoriaController;
@@ -289,6 +290,18 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::put('/menus/{menu}', [MenuController::class, 'update'])->whereNumber('menu')->name('menus.update');
     Route::delete('/menus/{menu}', [MenuController::class, 'destroy'])->whereNumber('menu')->name('menus.destroy');
     Route::patch('/menus/{menu}/estado', [MenuController::class, 'toggleStatus'])->whereNumber('menu')->name('menus.toggle-status');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Menu de "Mi Cuenta" (panel del cliente)
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/menu-cuenta', [MenuCuentaController::class, 'index'])->name('menu-cuenta.index');
+    Route::post('/menu-cuenta', [MenuCuentaController::class, 'store'])->name('menu-cuenta.store');
+    Route::put('/menu-cuenta/{menuCuenta}', [MenuCuentaController::class, 'update'])->whereNumber('menuCuenta')->name('menu-cuenta.update');
+    Route::delete('/menu-cuenta/{menuCuenta}', [MenuCuentaController::class, 'destroy'])->whereNumber('menuCuenta')->name('menu-cuenta.destroy');
+    Route::patch('/menu-cuenta/{menuCuenta}/estado', [MenuCuentaController::class, 'toggleStatus'])->whereNumber('menuCuenta')->name('menu-cuenta.toggle-status');
 });
 
 use App\Http\Controllers\DashboardController;

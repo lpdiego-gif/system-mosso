@@ -20,7 +20,7 @@ import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
     {
-        title: 'Panel de Control',
+        title: 'Panel de Controles',
         href: route('dashboard'),
         icon: LayoutGrid,
     },{
@@ -63,14 +63,19 @@ const mainNavItems: NavItem[] = [
                 title: 'Provincia',
                 href: '/distrito',
             },
-            {
-                title: 'Menu',
-                href: route('admin.menus.index'),
-            },
             
         ],
     },
-    
+    {
+        title: 'Menu Header',
+        href: route('admin.menus.index'),
+        icon: FolderGit2,
+    },
+    {
+        title: 'Menu Clientes',
+        href: route('admin.menu-cuenta.index'),
+        icon: FolderGit2,
+    }
 ];
 
 const footerNavItems: NavItem[] = [
