@@ -1,6 +1,9 @@
 import { Head, Link } from '@inertiajs/react';
+import { ArrowLeft, Scissors } from 'lucide-react';
 import { route } from 'ziggy-js';
 import ServicioForm from '@/components/servicios/servicio-form';
+import { ServicioPageHeader } from '@/components/servicios/servicio-page-header';
+import { Button } from '@/components/ui/button';
 import type { ServicioEditData, ServicioFormLookups } from '@/types/servicio';
 
 interface Props extends ServicioFormLookups {
@@ -12,22 +15,36 @@ export default function Edit({ servicio, ...lookups }: Props) {
         <>
             <Head title={`Editar ${servicio.nombre_servicio}`} />
 
-            <div className="mx-auto w-full max-w-5xl space-y-6 p-4 sm:p-6 lg:p-8">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <h1 className="text-2xl font-semibold tracking-tight">Editar servicio</h1>
-                        <p className="mt-1 text-sm text-muted-foreground">
-                            {servicio.nombre_negocio} — {servicio.nombre_servicio}
-                        </p>
-                    </div>
-
-                    <Link href={route('admin.servicios.index')} className="text-sm text-muted-foreground hover:text-foreground">
-                        ← Volver a servicios
-                    </Link>
-                </div>
+            <div className="mx-auto w-full space-y-6 p-4 sm:p-6 lg:p-8">
+                <ServicioPageHeader
+                    icon={Scissors}
+                    title="Editar servicio"
+                    description={
+                        <>
+                            <span className="font-medium text-foreground">
+                                {servicio.nombre_negocio}
+                            </span>{' '}
+                            · {servicio.nombre_servicio}
+                        </>
+                    }
+                    action={
+                        <Button asChild variant="outline" size="sm" className="gap-1.5">
+                            <Link href={route('admin.servicios.index')}>
+                                <ArrowLeft className="size-4" /> Volver
+                            </Link>
+                        </Button>
+                    }
+                />
 
                 <ServicioForm lookups={lookups} servicio={servicio} />
             </div>
         </>
     );
 }
+
+Edit.layout = {
+    breadcrumbs: [
+        { title: 'Servicios', href: '/admin/servicios' },
+        { title: 'Editar', href: '#' },
+    ],
+};

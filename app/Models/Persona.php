@@ -14,4 +14,8 @@ class Persona extends Model
         'fk_tipo_documento', 'num_documento', 'nombres',
         'apellido_paterno', 'apellido_materno', 'telefono', 'fecha_nacimiento',
     ];
+
+    protected $casts = [
+        'fecha_nacimiento' => 'date',
+    ];
 }

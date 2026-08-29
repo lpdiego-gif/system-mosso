@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\Admin\AnimalController;
 use App\Http\Controllers\Admin\CategoriaController;
+use App\Http\Controllers\Admin\ClienteController;
 use App\Http\Controllers\Admin\MarcaController;
+use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\ProductoController;
 use App\Http\Controllers\Admin\ServicioController as AdminServicioController;
 use App\Http\Controllers\Admin\SubCategoriaController;
@@ -119,8 +121,8 @@ Route::post('/cuenta/registro/reenviar', [ClienteRegistroController::class, 'ree
 |--------------------------------------------------------------------------
 */
 
-use App\Http\Controllers\MiCuentaPedidosController;
 use App\Http\Controllers\MiCuentaMascotaController;
+use App\Http\Controllers\MiCuentaPedidosController;
 use App\Http\Controllers\MiCuentaPuntosController;
 
 Route::middleware(['auth', 'cliente'])->group(function () {
@@ -236,6 +238,32 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::delete('/servicios/{servicio}', [AdminServicioController::class, 'destroy'])->whereNumber('servicio')->name('servicios.destroy');
 
     Route::post('/tipos-servicio', [TipoServicioController::class, 'store'])->name('tipos-servicio.store');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Clientes (admin)
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/clientes', [ClienteController::class, 'index'])->name('clientes.index');
+    Route::get('/clientes/create', [ClienteController::class, 'create'])->name('clientes.create');
+    Route::post('/clientes', [ClienteController::class, 'store'])->name('clientes.store');
+    Route::get('/clientes/{cliente}', [ClienteController::class, 'show'])->whereNumber('cliente')->name('clientes.show');
+    Route::get('/clientes/{cliente}/edit', [ClienteController::class, 'edit'])->whereNumber('cliente')->name('clientes.edit');
+    Route::put('/clientes/{cliente}', [ClienteController::class, 'update'])->whereNumber('cliente')->name('clientes.update');
+    Route::delete('/clientes/{cliente}', [ClienteController::class, 'destroy'])->whereNumber('cliente')->name('clientes.destroy');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Menús (mega menú del Portal Web)
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/menus', [MenuController::class, 'index'])->name('menus.index');
+    Route::post('/menus', [MenuController::class, 'store'])->name('menus.store');
+    Route::put('/menus/{menu}', [MenuController::class, 'update'])->whereNumber('menu')->name('menus.update');
+    Route::delete('/menus/{menu}', [MenuController::class, 'destroy'])->whereNumber('menu')->name('menus.destroy');
+    Route::patch('/menus/{menu}/estado', [MenuController::class, 'toggleStatus'])->whereNumber('menu')->name('menus.toggle-status');
 });
 
 use App\Http\Controllers\DashboardController;

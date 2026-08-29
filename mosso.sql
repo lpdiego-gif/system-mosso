@@ -1,13 +1,13 @@
--- MySQL dump 10.13  Distrib 8.0.46, for Win64 (x86_64)
+-- MariaDB dump 10.19  Distrib 10.4.34-MariaDB, for debian-linux-gnu (x86_64)
 --
--- Host: 127.0.0.1    Database: mosso2
+-- Host: localhost    Database: mosso2
 -- ------------------------------------------------------
--- Server version	5.5.5-10.4.34-MariaDB-1:10.4.34+maria~ubu2004
+-- Server version	10.4.34-MariaDB-1:10.4.34+maria~ubu2004
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!50503 SET NAMES utf8mb4 */;
+/*!40101 SET NAMES utf8mb4 */;
 /*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
 /*!40103 SET TIME_ZONE='+00:00' */;
 /*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
@@ -21,7 +21,7 @@
 
 DROP TABLE IF EXISTS `animales`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `animales` (
   `id_animal` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
@@ -38,7 +38,7 @@ CREATE TABLE `animales` (
 
 LOCK TABLES `animales` WRITE;
 /*!40000 ALTER TABLE `animales` DISABLE KEYS */;
-INSERT INTO `animales` VALUES (1,'Perro',1),(2,'Gato',1),(3,'Hámster',2),(4,'Avess',2),(5,'Peces',2),(6,'Conejo',2);
+INSERT INTO `animales` VALUES (1,'Perro',1),(2,'Gato',1),(3,'Hámster',2),(4,'Aves',2),(5,'Peces',2),(6,'Conejo',2);
 /*!40000 ALTER TABLE `animales` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -48,7 +48,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `cache`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `cache` (
   `key` varchar(255) NOT NULL,
   `value` mediumtext NOT NULL,
@@ -64,7 +64,7 @@ CREATE TABLE `cache` (
 
 LOCK TABLES `cache` WRITE;
 /*!40000 ALTER TABLE `cache` DISABLE KEYS */;
-INSERT INTO `cache` VALUES ('laravel-cache-0b4054a53774766efe60bf3f0fee01e0','i:2;',1787803982),('laravel-cache-0b4054a53774766efe60bf3f0fee01e0:timer','i:1787803982;',1787803982);
+INSERT INTO `cache` VALUES ('laravel-cache-c0809344f2d76e2879a6da2e9fbd12f1','i:1;',1787853455),('laravel-cache-c0809344f2d76e2879a6da2e9fbd12f1:timer','i:1787853455;',1787853455);
 /*!40000 ALTER TABLE `cache` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -74,7 +74,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `cache_locks`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `cache_locks` (
   `key` varchar(255) NOT NULL,
   `owner` varchar(255) NOT NULL,
@@ -99,7 +99,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `canjes_premio`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `canjes_premio` (
   `id_canje` int(11) NOT NULL AUTO_INCREMENT,
   `fk_cliente` int(11) NOT NULL,
@@ -123,7 +123,7 @@ CREATE TABLE `canjes_premio` (
 
 LOCK TABLES `canjes_premio` WRITE;
 /*!40000 ALTER TABLE `canjes_premio` DISABLE KEYS */;
-INSERT INTO `canjes_premio` VALUES (1,3,1,1,'2026-08-17 03:59:35','entregado'),(2,3,2,2,'2026-08-19 03:59:35','pendiente'),(3,3,3,3,'2026-08-22 03:59:35','entregado'),(4,3,4,4,'2026-08-25 03:59:35','cancelado');
+INSERT INTO `canjes_premio` VALUES (1,3,1,1,'2026-08-17 04:00:44','entregado'),(2,3,2,2,'2026-08-19 04:00:44','pendiente'),(3,3,3,3,'2026-08-22 04:00:44','entregado'),(4,3,4,4,'2026-08-25 04:00:44','cancelado');
 /*!40000 ALTER TABLE `canjes_premio` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -133,7 +133,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `carrito_detalle`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `carrito_detalle` (
   `id_carrito_detalle` int(11) NOT NULL AUTO_INCREMENT,
   `fk_carrito` int(11) NOT NULL,
@@ -146,7 +146,7 @@ CREATE TABLE `carrito_detalle` (
   KEY `fk_carrito_detalle_producto_idx` (`fk_producto`),
   CONSTRAINT `fk_carrito_detalle_carrito` FOREIGN KEY (`fk_carrito`) REFERENCES `carritos` (`id_carrito`) ON DELETE CASCADE,
   CONSTRAINT `fk_carrito_detalle_producto` FOREIGN KEY (`fk_producto`) REFERENCES `productos` (`id_producto`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -155,7 +155,7 @@ CREATE TABLE `carrito_detalle` (
 
 LOCK TABLES `carrito_detalle` WRITE;
 /*!40000 ALTER TABLE `carrito_detalle` DISABLE KEYS */;
-INSERT INTO `carrito_detalle` VALUES (1,1,104,1,179.90,'2026-08-26 01:05:39'),(2,1,105,1,89.90,'2026-08-26 01:05:44');
+INSERT INTO `carrito_detalle` VALUES (1,1,103,1,145.00,'2026-08-26 22:53:48'),(2,2,102,1,259.90,'2026-08-26 23:07:48'),(3,2,104,1,179.90,'2026-08-26 23:07:55'),(4,3,104,1,179.90,'2026-08-27 03:41:50'),(5,4,103,1,145.00,'2026-08-27 03:43:10');
 /*!40000 ALTER TABLE `carrito_detalle` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -165,7 +165,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `carritos`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `carritos` (
   `id_carrito` int(11) NOT NULL AUTO_INCREMENT,
   `fk_cliente` int(11) DEFAULT NULL,
@@ -176,7 +176,7 @@ CREATE TABLE `carritos` (
   KEY `fk_carritos_cliente_idx` (`fk_cliente`),
   KEY `carritos_token_invitado_idx` (`token_invitado`),
   CONSTRAINT `fk_carritos_cliente` FOREIGN KEY (`fk_cliente`) REFERENCES `clientes` (`id_cliente`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -185,7 +185,7 @@ CREATE TABLE `carritos` (
 
 LOCK TABLES `carritos` WRITE;
 /*!40000 ALTER TABLE `carritos` DISABLE KEYS */;
-INSERT INTO `carritos` VALUES (1,NULL,'2ba1db8a-a7c5-4d61-b464-5b635dc40a72','2026-08-26 01:05:39','2026-08-26 01:05:39');
+INSERT INTO `carritos` VALUES (1,NULL,'e60fff0f-ae76-4694-9cc0-345c55ae97d7','2026-08-26 22:53:48','2026-08-26 22:53:48'),(2,3,NULL,'2026-08-26 23:07:44','2026-08-26 23:07:44'),(3,NULL,'c2282639-c22a-4601-80b4-18a49e938f66','2026-08-27 03:41:50','2026-08-27 03:41:50'),(4,NULL,'196c32ea-5609-4e37-ab09-5a7169491a4a','2026-08-27 03:43:10','2026-08-27 03:43:10'),(5,NULL,'129c13fc-d835-4b73-846f-65ae30729fe4','2026-08-27 06:01:08','2026-08-27 06:01:08'),(6,NULL,'cafe2ec8-d897-4998-bbc4-75163ccdad0f','2026-08-27 11:49:17','2026-08-27 11:49:17'),(7,NULL,'eb39b0af-747a-4561-b7c1-b9c812308770','2026-08-27 12:43:10','2026-08-27 12:43:10'),(8,NULL,'9fd567ee-4289-4503-b2b8-f1313dc2ddd8','2026-08-27 13:17:38','2026-08-27 13:17:38');
 /*!40000 ALTER TABLE `carritos` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -195,7 +195,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `categorias`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `categorias` (
   `id_categoria` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
@@ -223,7 +223,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `cliente_direcciones`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `cliente_direcciones` (
   `id_cliente_direccion` int(11) NOT NULL AUTO_INCREMENT,
   `fk_cliente` int(11) NOT NULL,
@@ -235,7 +235,7 @@ CREATE TABLE `cliente_direcciones` (
   KEY `fk_cliente_direcciones_direccion_idx` (`fk_direccion`),
   CONSTRAINT `fk_cliente_direcciones_cliente` FOREIGN KEY (`fk_cliente`) REFERENCES `clientes` (`id_cliente`) ON DELETE CASCADE,
   CONSTRAINT `fk_cliente_direcciones_direccion` FOREIGN KEY (`fk_direccion`) REFERENCES `direcciones` (`id_direccion`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -244,6 +244,7 @@ CREATE TABLE `cliente_direcciones` (
 
 LOCK TABLES `cliente_direcciones` WRITE;
 /*!40000 ALTER TABLE `cliente_direcciones` DISABLE KEYS */;
+INSERT INTO `cliente_direcciones` VALUES (2,3,1,'dasasd',1);
 /*!40000 ALTER TABLE `cliente_direcciones` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -253,12 +254,14 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `clientes`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `clientes` (
   `id_cliente` int(11) NOT NULL AUTO_INCREMENT,
   `fk_persona` int(11) DEFAULT NULL,
   `fk_user` bigint(20) unsigned DEFAULT NULL,
   `correo` varchar(150) NOT NULL,
+  `razon_social` varchar(150) DEFAULT NULL,
+  `ruc` varchar(11) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id_cliente`),
@@ -276,7 +279,7 @@ CREATE TABLE `clientes` (
 
 LOCK TABLES `clientes` WRITE;
 /*!40000 ALTER TABLE `clientes` DISABLE KEYS */;
-INSERT INTO `clientes` VALUES (3,NULL,4,'lpdiego999@gmail.com','2026-08-25 06:22:15','2026-08-25 06:22:15');
+INSERT INTO `clientes` VALUES (3,2,4,'lpdiego999@gmail.com',NULL,NULL,'2026-08-25 06:22:15','2026-08-27 11:54:29');
 /*!40000 ALTER TABLE `clientes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -286,7 +289,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `codigos_verificacion`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `codigos_verificacion` (
   `email` varchar(255) NOT NULL,
   `codigo` varchar(6) NOT NULL,
@@ -313,7 +316,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `comprobantes`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `comprobantes` (
   `id_comprobante` int(11) NOT NULL AUTO_INCREMENT,
   `fk_pedido` int(11) NOT NULL,
@@ -343,12 +346,69 @@ LOCK TABLES `comprobantes` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `configuracion_delivery`
+--
+
+DROP TABLE IF EXISTS `configuracion_delivery`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `configuracion_delivery` (
+  `id_configuracion_delivery` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `activo` tinyint(1) NOT NULL DEFAULT 0,
+  `monto_minimo` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `fecha_inicio` datetime DEFAULT NULL,
+  `fecha_fin` datetime DEFAULT NULL,
+  `descripcion` varchar(120) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id_configuracion_delivery`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `configuracion_delivery`
+--
+
+LOCK TABLES `configuracion_delivery` WRITE;
+/*!40000 ALTER TABLE `configuracion_delivery` DISABLE KEYS */;
+INSERT INTO `configuracion_delivery` VALUES (1,0,0.00,NULL,NULL,'Configuración inicial de delivery gratis (inactiva)','2026-08-27 05:25:19','2026-08-27 05:25:19');
+/*!40000 ALTER TABLE `configuracion_delivery` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `configuracion_delivery_distritos`
+--
+
+DROP TABLE IF EXISTS `configuracion_delivery_distritos`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `configuracion_delivery_distritos` (
+  `id_configuracion_delivery_distrito` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `fk_configuracion_delivery` int(10) unsigned NOT NULL,
+  `fk_distrito` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`id_configuracion_delivery_distrito`),
+  UNIQUE KEY `config_delivery_distrito_unique` (`fk_configuracion_delivery`,`fk_distrito`),
+  KEY `fk_config_delivery_distrito_distrito_idx` (`fk_distrito`),
+  CONSTRAINT `fk_config_delivery_distrito_config` FOREIGN KEY (`fk_configuracion_delivery`) REFERENCES `configuracion_delivery` (`id_configuracion_delivery`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `configuracion_delivery_distritos`
+--
+
+LOCK TABLES `configuracion_delivery_distritos` WRITE;
+/*!40000 ALTER TABLE `configuracion_delivery_distritos` DISABLE KEYS */;
+/*!40000 ALTER TABLE `configuracion_delivery_distritos` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `cupones`
 --
 
 DROP TABLE IF EXISTS `cupones`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `cupones` (
   `id_cupon` int(11) NOT NULL AUTO_INCREMENT,
   `codigo` varchar(30) NOT NULL,
@@ -381,7 +441,7 @@ CREATE TABLE `cupones` (
 
 LOCK TABLES `cupones` WRITE;
 /*!40000 ALTER TABLE `cupones` DISABLE KEYS */;
-INSERT INTO `cupones` VALUES (1,'CUMPLE-FIRULAIS-2026',3,1,'cumpleanos_mascota','descuento_porcentaje',10.00,NULL,'2026-08-27 03:59:35','2026-09-26',0,NULL),(2,'CUMPLE-MICHI-2026',3,2,'cumpleanos_mascota','puntos_bonus',100.00,NULL,'2026-08-27 03:59:35','2026-09-26',0,NULL),(3,'BIENVENIDA-LPDIEGO',3,NULL,'bienvenida','descuento_monto',15.00,NULL,'2026-08-27 03:59:35','2026-10-26',0,NULL),(4,'PROMO-VERANO2026',NULL,NULL,'promocion_manual','descuento_porcentaje',20.00,NULL,'2026-08-27 03:59:35','2026-09-11',0,NULL);
+INSERT INTO `cupones` VALUES (1,'CUMPLE-FIRULAIS-2026',3,1,'cumpleanos_mascota','descuento_porcentaje',10.00,NULL,'2026-08-27 04:00:49','2026-09-26',0,NULL),(2,'CUMPLE-MICHI-2026',3,2,'cumpleanos_mascota','puntos_bonus',100.00,NULL,'2026-08-27 04:00:49','2026-09-26',0,NULL),(3,'BIENVENIDA-LPDIEGO',3,NULL,'bienvenida','descuento_monto',15.00,NULL,'2026-08-27 04:00:49','2026-10-26',0,NULL),(4,'PROMO-VERANO2026',NULL,NULL,'promocion_manual','descuento_porcentaje',20.00,NULL,'2026-08-27 04:00:49','2026-09-11',0,NULL);
 /*!40000 ALTER TABLE `cupones` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -391,7 +451,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `departamentos`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `departamentos` (
   `id_departamento` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
@@ -415,7 +475,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `descuentos`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `descuentos` (
   `id_descuento` int(11) NOT NULL AUTO_INCREMENT,
   `fk_producto` int(11) NOT NULL,
@@ -448,7 +508,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `direcciones`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `direcciones` (
   `id_direccion` int(11) NOT NULL AUTO_INCREMENT,
   `direccion` varchar(150) NOT NULL,
@@ -457,7 +517,7 @@ CREATE TABLE `direcciones` (
   PRIMARY KEY (`id_direccion`),
   KEY `fk_direcciones_distritos_idx` (`fk_distrito`),
   CONSTRAINT `fk_direcciones_distritos` FOREIGN KEY (`fk_distrito`) REFERENCES `distritos` (`id_distrito`) ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -466,6 +526,7 @@ CREATE TABLE `direcciones` (
 
 LOCK TABLES `direcciones` WRITE;
 /*!40000 ALTER TABLE `direcciones` DISABLE KEYS */;
+INSERT INTO `direcciones` VALUES (1,'asdasdas','adasasd',10);
 /*!40000 ALTER TABLE `direcciones` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -475,7 +536,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `distritos`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `distritos` (
   `id_distrito` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
@@ -503,7 +564,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `empresa`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `empresa` (
   `id_empresa` int(11) NOT NULL AUTO_INCREMENT,
   `ruc` varchar(11) NOT NULL,
@@ -534,7 +595,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `empresa_redes`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `empresa_redes` (
   `id_empresa_red` int(11) NOT NULL AUTO_INCREMENT,
   `fk_empresa` int(11) NOT NULL,
@@ -563,12 +624,12 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `estados_pedido`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `estados_pedido` (
   `id_estado_pedido` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
   PRIMARY KEY (`id_estado_pedido`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -577,6 +638,7 @@ CREATE TABLE `estados_pedido` (
 
 LOCK TABLES `estados_pedido` WRITE;
 /*!40000 ALTER TABLE `estados_pedido` DISABLE KEYS */;
+INSERT INTO `estados_pedido` VALUES (1,'Pendiente de pago'),(2,'Pagado'),(3,'En preparación'),(4,'Enviado'),(5,'Entregado'),(6,'Cancelado');
 /*!40000 ALTER TABLE `estados_pedido` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -586,7 +648,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `estados_producto`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `estados_producto` (
   `id_estado_producto` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
@@ -610,7 +672,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `etapas_vida`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `etapas_vida` (
   `id_etapa_vida` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
@@ -639,7 +701,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `failed_jobs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `failed_jobs` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `uuid` varchar(255) NOT NULL,
@@ -669,12 +731,12 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `forma_pagos`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `forma_pagos` (
   `id_forma_pago` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
   PRIMARY KEY (`id_forma_pago`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -683,6 +745,7 @@ CREATE TABLE `forma_pagos` (
 
 LOCK TABLES `forma_pagos` WRITE;
 /*!40000 ALTER TABLE `forma_pagos` DISABLE KEYS */;
+INSERT INTO `forma_pagos` VALUES (1,'Tarjeta (Culqi)');
 /*!40000 ALTER TABLE `forma_pagos` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -692,7 +755,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `job_batches`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `job_batches` (
   `id` varchar(255) NOT NULL,
   `name` varchar(255) NOT NULL,
@@ -723,7 +786,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `jobs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `jobs` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `queue` varchar(255) NOT NULL,
@@ -752,7 +815,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `marcas`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `marcas` (
   `id_marca` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
@@ -767,7 +830,7 @@ CREATE TABLE `marcas` (
 
 LOCK TABLES `marcas` WRITE;
 /*!40000 ALTER TABLE `marcas` DISABLE KEYS */;
-INSERT INTO `marcas` VALUES (1,'Royal Canin','royal-canin.png'),(2,'Purina Pro Plan','pro-plan.png'),(3,'Hill\'s Science Diet','Hill\'s Science Diet.png'),(4,'Eukanuba','eukanuba.png'),(5,'Iams','iams.png'),(6,'Pedigree','pedigree.png'),(7,'Whiskas','Whiskas.png'),(8,'Friskies','Friskies.png'),(9,'Sheba','Sheba.png'),(10,'Vitakraft',NULL),(11,'Beaphar',NULL),(12,'Seresto',NULL),(13,'Bravecto','bravecto.png'),(14,'NexGard',NULL),(15,'Simparica',NULL);
+INSERT INTO `marcas` VALUES (1,'Royal Canin','royal-canin.png'),(2,'Purina Pro Plan','pro-plan.png'),(3,'Hill\'s Science Diet','hills.png'),(4,'Eukanuba','eukanuba.png'),(5,'Iams','iams.png'),(6,'Pedigree','pedigree.png'),(7,'Whiskas','whiskas.png'),(8,'Friskies','friskies.png'),(9,'Sheba',NULL),(10,'Vitakraft',NULL),(11,'Beaphar',NULL),(12,'Seresto',NULL),(13,'Bravecto','bravecto.png'),(14,'NexGard',NULL),(15,'Simparica',NULL);
 /*!40000 ALTER TABLE `marcas` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -777,7 +840,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `mascotas`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `mascotas` (
   `id_mascota` int(11) NOT NULL AUTO_INCREMENT,
   `fk_cliente` int(11) NOT NULL,
@@ -801,7 +864,7 @@ CREATE TABLE `mascotas` (
 
 LOCK TABLES `mascotas` WRITE;
 /*!40000 ALTER TABLE `mascotas` DISABLE KEYS */;
-INSERT INTO `mascotas` VALUES (1,3,'Firulais',1,'2023-05-14',NULL,'2026-08-27 03:59:35','2026-08-27 03:59:35'),(2,3,'Michi',2,'2024-02-10',NULL,'2026-08-27 03:59:35','2026-08-27 03:59:35'),(3,3,'Rocky',1,'2019-11-02',NULL,'2026-08-27 03:59:35','2026-08-27 03:59:35'),(4,3,'Nala',2,'2025-01-20',NULL,'2026-08-27 03:59:35','2026-08-27 03:59:35');
+INSERT INTO `mascotas` VALUES (1,3,'Firulais',1,'2023-05-14',NULL,'2026-08-27 04:00:44','2026-08-27 04:00:44'),(2,3,'Michi',2,'2024-02-10',NULL,'2026-08-27 04:00:44','2026-08-27 04:00:44'),(3,3,'Rocky',1,'2019-11-02',NULL,'2026-08-27 04:00:44','2026-08-27 04:00:44'),(4,3,'Nala',2,'2025-01-20',NULL,'2026-08-27 04:00:44','2026-08-27 04:00:44');
 /*!40000 ALTER TABLE `mascotas` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -811,7 +874,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `menus`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `menus` (
   `id_menu` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(50) NOT NULL,
@@ -849,13 +912,13 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `migrations`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `migrations` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `migration` varchar(255) NOT NULL,
   `batch` int(11) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -864,8 +927,46 @@ CREATE TABLE `migrations` (
 
 LOCK TABLES `migrations` WRITE;
 /*!40000 ALTER TABLE `migrations` DISABLE KEYS */;
-INSERT INTO `migrations` VALUES (1,'2026_08_25_003439_create_reclamos_table',1),(2,'2026_08_25_040000_make_clientes_fk_persona_nullable',2),(3,'2026_08_25_040001_create_codigos_verificacion_table',2),(4,'2026_08_25_060000_seed_tipo_documento',3),(5,'0001_01_01_000000_create_users_table',1),(6,'0001_01_01_000001_create_cache_table',1),(7,'0001_01_01_000002_create_jobs_table',1),(8,'2024_01_01_000000_create_passkeys_table',1),(9,'2025_08_14_170933_add_two_factor_columns_to_users_table',1),(10,'2026_08_25_070000_seed_redes_sociales',4);
+INSERT INTO `migrations` VALUES (1,'2026_08_25_003439_create_reclamos_table',1),(2,'2026_08_25_040000_make_clientes_fk_persona_nullable',2),(3,'2026_08_25_040001_create_codigos_verificacion_table',2),(4,'2026_08_25_060000_seed_tipo_documento',3),(5,'2026_08_27_100000_seed_checkout_catalogos',4),(6,'2026_08_27_100001_create_pagos_table',5),(7,'2026_08_27_100002_create_configuracion_delivery_table',6),(8,'2026_08_27_100003_create_configuracion_delivery_distritos_table',7);
 /*!40000 ALTER TABLE `migrations` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `pagos`
+--
+
+DROP TABLE IF EXISTS `pagos`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `pagos` (
+  `id_pago` int(11) NOT NULL AUTO_INCREMENT,
+  `fk_pedido` int(11) NOT NULL,
+  `fk_forma_pago` int(11) NOT NULL,
+  `monto` decimal(10,2) NOT NULL,
+  `moneda` char(3) NOT NULL DEFAULT 'PEN',
+  `estado` enum('pendiente','autorizado','pagado','fallido','reembolsado') NOT NULL DEFAULT 'pendiente',
+  `id_transaccion_culqi` varchar(60) DEFAULT NULL,
+  `referencia` varchar(100) DEFAULT NULL,
+  `fecha_pago` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id_pago`),
+  UNIQUE KEY `pagos_id_transaccion_culqi_unique` (`id_transaccion_culqi`),
+  KEY `fk_pagos_pedido_idx` (`fk_pedido`),
+  KEY `fk_pagos_forma_pago_idx` (`fk_forma_pago`),
+  CONSTRAINT `fk_pagos_forma_pago` FOREIGN KEY (`fk_forma_pago`) REFERENCES `forma_pagos` (`id_forma_pago`),
+  CONSTRAINT `fk_pagos_pedido` FOREIGN KEY (`fk_pedido`) REFERENCES `pedidos` (`id_pedido`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `pagos`
+--
+
+LOCK TABLES `pagos` WRITE;
+/*!40000 ALTER TABLE `pagos` DISABLE KEYS */;
+INSERT INTO `pagos` VALUES (8,8,1,432.82,'PEN','pendiente',NULL,'ea29c91a-e36e-4df8-b3b1-0e9762f22fd0',NULL,'2026-08-27 13:20:55','2026-08-27 13:20:55');
+/*!40000 ALTER TABLE `pagos` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -874,7 +975,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `passkeys`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `passkeys` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `user_id` bigint(20) unsigned NOT NULL,
@@ -906,7 +1007,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `password_reset_tokens`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `password_reset_tokens` (
   `email` varchar(255) NOT NULL,
   `token` varchar(255) NOT NULL,
@@ -930,7 +1031,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `pedido_detalle`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `pedido_detalle` (
   `id_pedido_detalle` int(11) NOT NULL AUTO_INCREMENT,
   `fk_pedido` int(11) NOT NULL,
@@ -944,7 +1045,7 @@ CREATE TABLE `pedido_detalle` (
   KEY `fk_pedido_detalle_producto_idx` (`fk_producto`),
   CONSTRAINT `fk_pedido_detalle_pedido` FOREIGN KEY (`fk_pedido`) REFERENCES `pedidos` (`id_pedido`) ON DELETE CASCADE,
   CONSTRAINT `fk_pedido_detalle_producto` FOREIGN KEY (`fk_producto`) REFERENCES `productos` (`id_producto`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -953,6 +1054,7 @@ CREATE TABLE `pedido_detalle` (
 
 LOCK TABLES `pedido_detalle` WRITE;
 /*!40000 ALTER TABLE `pedido_detalle` DISABLE KEYS */;
+INSERT INTO `pedido_detalle` VALUES (15,8,102,1,259.90,0.00,259.90),(16,8,104,1,179.90,35.98,143.92);
 /*!40000 ALTER TABLE `pedido_detalle` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -962,7 +1064,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `pedido_recojo_terceros`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `pedido_recojo_terceros` (
   `id_pedido_recojo_tercero` int(11) NOT NULL AUTO_INCREMENT,
   `fk_pedido` int(11) NOT NULL,
@@ -995,7 +1097,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `pedidos`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `pedidos` (
   `id_pedido` int(11) NOT NULL AUTO_INCREMENT,
   `fk_cliente` int(11) NOT NULL,
@@ -1021,7 +1123,7 @@ CREATE TABLE `pedidos` (
   CONSTRAINT `fk_pedidos_estado_pedido` FOREIGN KEY (`fk_estado_pedido`) REFERENCES `estados_pedido` (`id_estado_pedido`),
   CONSTRAINT `fk_pedidos_forma_pago` FOREIGN KEY (`fk_forma_pago`) REFERENCES `forma_pagos` (`id_forma_pago`),
   CONSTRAINT `fk_pedidos_tipo_entrega` FOREIGN KEY (`fk_tipo_entrega`) REFERENCES `tipo_entregas` (`id_tipo_entrega`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1030,6 +1132,7 @@ CREATE TABLE `pedidos` (
 
 LOCK TABLES `pedidos` WRITE;
 /*!40000 ALTER TABLE `pedidos` DISABLE KEYS */;
+INSERT INTO `pedidos` VALUES (8,3,1,1,1,1,439.80,35.98,61.60,432.82,'2026-08-27 13:20:55','2026-08-27 13:20:55','2026-08-27 13:20:55');
 /*!40000 ALTER TABLE `pedidos` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1039,7 +1142,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `permisos`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `permisos` (
   `id_permiso` int(11) NOT NULL AUTO_INCREMENT,
   `clave` varchar(80) NOT NULL,
@@ -1064,7 +1167,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `personas`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `personas` (
   `id_persona` int(11) NOT NULL AUTO_INCREMENT,
   `fk_tipo_documento` int(11) NOT NULL,
@@ -1080,7 +1183,7 @@ CREATE TABLE `personas` (
   UNIQUE KEY `personas_num_documento_unique` (`num_documento`),
   KEY `fk_personas_tipo_documento_idx` (`fk_tipo_documento`),
   CONSTRAINT `fk_personas_tipo_documento` FOREIGN KEY (`fk_tipo_documento`) REFERENCES `tipo_documento` (`id_tipo_documento`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1089,7 +1192,7 @@ CREATE TABLE `personas` (
 
 LOCK TABLES `personas` WRITE;
 /*!40000 ALTER TABLE `personas` DISABLE KEYS */;
-INSERT INTO `personas` VALUES (1,1,'00000001','Diego','Pendiente',NULL,'000000000',NULL,'2026-08-25 07:10:36','2026-08-25 07:10:36');
+INSERT INTO `personas` VALUES (1,1,'00000001','Diego','Pendiente',NULL,'000000000',NULL,'2026-08-25 07:10:36','2026-08-25 07:10:36'),(2,1,'72713825','Diego','Lazaro','Perez','987654321',NULL,'2026-08-27 11:54:29','2026-08-27 11:54:29');
 /*!40000 ALTER TABLE `personas` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1099,7 +1202,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `premios`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `premios` (
   `id_premio` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(150) NOT NULL,
@@ -1123,7 +1226,7 @@ CREATE TABLE `premios` (
 
 LOCK TABLES `premios` WRITE;
 /*!40000 ALTER TABLE `premios` DISABLE KEYS */;
-INSERT INTO `premios` VALUES (1,'Snack de regalo','Snack pequeño para perro o gato',NULL,NULL,500,100,1,'2026-08-27 03:59:35','2026-08-27 03:59:35'),(2,'Pelota de juguete','Pelota de goma resistente de regalo',106,NULL,800,40,1,'2026-08-27 03:59:35','2026-08-27 03:59:35'),(3,'Bolsa de premios sorpresa','Mix de golosinas para mascota',NULL,NULL,300,60,1,'2026-08-27 03:59:35','2026-08-27 03:59:35'),(4,'Shampoo de regalo','Shampoo de cuidado básico',NULL,NULL,650,25,1,'2026-08-27 03:59:35','2026-08-27 03:59:35');
+INSERT INTO `premios` VALUES (1,'Snack de regalo','Snack pequeño para perro o gato',NULL,NULL,500,100,1,'2026-08-27 04:00:44','2026-08-27 04:00:44'),(2,'Pelota de juguete','Pelota de goma resistente de regalo',106,NULL,800,40,1,'2026-08-27 04:00:44','2026-08-27 04:00:44'),(3,'Bolsa de premios sorpresa','Mix de golosinas para mascota',NULL,NULL,300,60,1,'2026-08-27 04:00:44','2026-08-27 04:00:44'),(4,'Shampoo de regalo','Shampoo de cuidado básico',NULL,NULL,650,25,1,'2026-08-27 04:00:44','2026-08-27 04:00:44');
 /*!40000 ALTER TABLE `premios` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1133,7 +1236,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `producto_imagenes`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `producto_imagenes` (
   `id_producto_imagen` int(11) NOT NULL AUTO_INCREMENT,
   `fk_producto` int(11) NOT NULL,
@@ -1160,7 +1263,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `productos`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `productos` (
   `id_producto` int(11) NOT NULL AUTO_INCREMENT,
   `sku` varchar(50) NOT NULL,
@@ -1209,7 +1312,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `provincias`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `provincias` (
   `id_provincia` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
@@ -1236,7 +1339,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `puntos_cliente`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `puntos_cliente` (
   `id_punto` int(11) NOT NULL AUTO_INCREMENT,
   `fk_cliente` int(11) NOT NULL,
@@ -1261,7 +1364,7 @@ CREATE TABLE `puntos_cliente` (
 
 LOCK TABLES `puntos_cliente` WRITE;
 /*!40000 ALTER TABLE `puntos_cliente` DISABLE KEYS */;
-INSERT INTO `puntos_cliente` VALUES (1,3,NULL,'canje_producto',-500,'2026-08-17 03:59:35',NULL,'Canje por Snack de regalo'),(2,3,NULL,'canje_producto',-800,'2026-08-19 03:59:35',NULL,'Canje por Pelota de juguete'),(3,3,NULL,'canje_producto',-300,'2026-08-22 03:59:35',NULL,'Canje por Bolsa de premios sorpresa'),(4,3,NULL,'canje_producto',-650,'2026-08-25 03:59:35',NULL,'Canje por Shampoo de regalo');
+INSERT INTO `puntos_cliente` VALUES (1,3,NULL,'canje_producto',-500,'2026-08-17 04:00:44',NULL,'Canje por Snack de regalo'),(2,3,NULL,'canje_producto',-800,'2026-08-19 04:00:44',NULL,'Canje por Pelota de juguete'),(3,3,NULL,'canje_producto',-300,'2026-08-22 04:00:44',NULL,'Canje por Bolsa de premios sorpresa'),(4,3,NULL,'canje_producto',-650,'2026-08-25 04:00:44',NULL,'Canje por Shampoo de regalo');
 /*!40000 ALTER TABLE `puntos_cliente` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1271,7 +1374,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `reclamos`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `reclamos` (
   `id_reclamo` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `tipo_documento` enum('DNI','CE','Pasaporte') NOT NULL,
@@ -1318,7 +1421,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `redes_sociales`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `redes_sociales` (
   `id_red_social` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
@@ -1341,7 +1444,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `rol_permisos`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `rol_permisos` (
   `fk_rol` int(11) NOT NULL,
   `fk_permiso` int(11) NOT NULL,
@@ -1367,7 +1470,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `roles`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `roles` (
   `id_rol` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(50) NOT NULL,
@@ -1393,7 +1496,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `servicio_beneficios`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `servicio_beneficios` (
   `id_servicio_beneficio` int(11) NOT NULL AUTO_INCREMENT,
   `fk_servicio` int(11) NOT NULL,
@@ -1421,7 +1524,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `servicio_horarios`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `servicio_horarios` (
   `id_servicio_horario` int(11) NOT NULL AUTO_INCREMENT,
   `fk_servicio` int(11) NOT NULL,
@@ -1449,7 +1552,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `servicio_imagenes`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `servicio_imagenes` (
   `id_servicio_imagen` int(11) NOT NULL AUTO_INCREMENT,
   `fk_servicio` int(11) NOT NULL,
@@ -1476,7 +1579,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `servicio_redes`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `servicio_redes` (
   `id_servicio_red` int(11) NOT NULL AUTO_INCREMENT,
   `fk_servicio` int(11) NOT NULL,
@@ -1505,7 +1608,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `servicios`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `servicios` (
   `id_servicio` int(11) NOT NULL AUTO_INCREMENT,
   `fk_tipo_servicio` int(11) NOT NULL,
@@ -1543,7 +1646,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `sessions`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `sessions` (
   `id` varchar(255) NOT NULL,
   `user_id` bigint(20) unsigned DEFAULT NULL,
@@ -1563,7 +1666,7 @@ CREATE TABLE `sessions` (
 
 LOCK TABLES `sessions` WRITE;
 /*!40000 ALTER TABLE `sessions` DISABLE KEYS */;
-INSERT INTO `sessions` VALUES ('19eLHL3pNdSFMaQvUZkKBrTeeTVNkApZRq81cV3U',2,'172.18.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36','eyJfdG9rZW4iOiJlVnlqdjRoNkdueUVRcU1YZUlFUnVSaDRUOEJ2WkkwWU9MSXNkejRVIiwiX3ByZXZpb3VzIjp7InVybCI6Imh0dHA6XC9cL2xvY2FsaG9zdDo4MDAwXC9taS1jdWVudGEiLCJyb3V0ZSI6Im1pLWN1ZW50YSJ9LCJfZmxhc2giOnsib2xkIjpbXSwibmV3IjpbXX0sImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjoyfQ==',1787804273),('DDKXNrHqAgfDpiMzT5gTTcPO6QwqbWkQ4p1dHXe6',NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36','eyJfdG9rZW4iOiJsY3BXemxFZXJTckVFSkZQSVdXQ3lHRWhXeUNlNUhPSERVdTRwVTlhIiwiX2ZsYXNoIjp7Im9sZCI6W10sIm5ldyI6W119fQ==',1787641186),('k16kABSOt6vYkJ8JzKghZQWXuoMWkVbpTTKmmG7u',NULL,'127.0.0.1','curl/8.19.0','eyJfdG9rZW4iOiJhWDdpRDlFUUtyMWhiTkQxdFg3ZXNzS051SnBucUwyN2RIMWRXZGw5IiwiX3ByZXZpb3VzIjp7InVybCI6Imh0dHA6XC9cL2xvY2FsaG9zdDo4MDAwIiwicm91dGUiOiJob21lIn0sIl9mbGFzaCI6eyJvbGQiOltdLCJuZXciOltdfX0=',1787641885),('nydyqWuahBmLy0aFCGzVYOgYOviz5Wi5uQVUjzr2',NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36','eyJfdG9rZW4iOiJraWZzbXVaQmUwcTJXTlhVZlVoeGh2NUw1U2VMUjY5WkpvejVMMzY2IiwiX2ZsYXNoIjp7Im9sZCI6W10sIm5ldyI6W119fQ==',1787639361),('Qq3O9RUGczn3mtSvp1yNLPYmkdeH0ClthtYiCpik',NULL,'172.18.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36','eyJfdG9rZW4iOiJOa1puZHBOcEVUNnN3b1F4UU4wMUlSZ29GVVlTZkZjZ1RzS0xCd0t2IiwiX3ByZXZpb3VzIjp7InVybCI6Imh0dHA6XC9cL2xvY2FsaG9zdDo4MDAwIiwicm91dGUiOiJob21lIn0sIl9mbGFzaCI6eyJvbGQiOltdLCJuZXciOltdfSwiY2FydF90b2tlbiI6IjJiYTFkYjhhLWE3YzUtNGQ2MS1iNDY0LTViNjM1ZGM0MGE3MiIsInVybCI6eyJpbnRlbmRlZCI6Imh0dHA6XC9cL2xvY2FsaG9zdDo4MDAwXC9kYXNoYm9hcmQifX0=',1787725544),('Tc6ZXp8TrkRKWXzOiy1S32tCOmM0wofHr7xXIobC',NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36','eyJfdG9rZW4iOiJ0RTgwbWN1YU55bU5MYXpwSVo5UnhEb2NLTUZYUUdBOTFtRnVyR0JZIiwiX2ZsYXNoIjp7Im9sZCI6W10sIm5ldyI6W119fQ==',1787641695);
+INSERT INTO `sessions` VALUES ('2anSmyWnRIXDVl1Uio43a1wDCugZwkYUH02wOfVU',4,'127.0.0.1','Symfony','eyJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI6NCwiX3Rva2VuIjoiTTlaN2FjeUxZUGRyTUFZam9IbzBBeldEV3hNNHpoNGhFTndESW0yNCIsIl9mbGFzaCI6eyJvbGQiOltdLCJuZXciOltdfX0=',1787850965),('2d27VrotzRHyIFsVRwjLe6bQGvRnDjnCCdJGy8Za',NULL,'172.18.0.1','curl/8.19.0','eyJfdG9rZW4iOiJhaEVodlA2dDN1elVncGdoWlJsdGZYYW4yWmUyZWZlWEtia3lESUZYIiwidXJsIjp7ImludGVuZGVkIjoiaHR0cDpcL1wvbG9jYWxob3N0OjgwMDBcL2NoZWNrb3V0In0sIl9wcmV2aW91cyI6eyJ1cmwiOiJodHRwOlwvXC9sb2NhbGhvc3Q6ODAwMFwvY2hlY2tvdXQiLCJyb3V0ZSI6ImNoZWNrb3V0LnNob3cifSwiX2ZsYXNoIjp7Im9sZCI6W10sIm5ldyI6W119fQ==',1787854658),('65lAJYqq2s9Eq5ZeZWzI2gvFkdUKi7qLjufqvFe2',4,'172.18.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36','eyJfdG9rZW4iOiJJd1M1MXdOUE1uSG5vTVB3WXpFSWJIRGxkOXh2S3BVTnR5TzdjTGhQIiwiX2ZsYXNoIjp7Im9sZCI6W10sIm5ldyI6W119LCJjYXJ0X3Rva2VuIjoiMTk2YzMyZWEtNTYwOS00ZTM3LWFiMDktNWE3MTY5NDkxYTRhIiwibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiOjQsIl9wcmV2aW91cyI6eyJ1cmwiOiJodHRwOlwvXC9sb2NhbGhvc3Q6ODAwMFwvY2hlY2tvdXRcL2VudmlvXC8xMCIsInJvdXRlIjoiY2hlY2tvdXQuZW52aW8ifX0=',1787828883),('bRcWpKeheefwu002tGbIbGQzEWaejs5UqMCAc3oH',NULL,'172.18.0.1','curl/8.19.0','eyJfdG9rZW4iOiJhQzhaMEJTeTREYWppc1JvQU5BbXRubGl1d0p6akVBM05jUURlTnRWIiwidXJsIjp7ImludGVuZGVkIjoiaHR0cDpcL1wvbG9jYWxob3N0OjgwMDBcL2NoZWNrb3V0In0sIl9wcmV2aW91cyI6eyJ1cmwiOiJodHRwOlwvXC9sb2NhbGhvc3Q6ODAwMFwvY2hlY2tvdXQiLCJyb3V0ZSI6ImNoZWNrb3V0LnNob3cifSwiX2ZsYXNoIjp7Im9sZCI6W10sIm5ldyI6W119fQ==',1787852277),('eoHzaxi1ECSlZuT0eDmiuywwcerplhNSPVT0H3j7',NULL,'172.18.0.1','curl/8.19.0','eyJfdG9rZW4iOiJOdnpZR1l2MHFEUnNTcVV5RXR3ekhJeGpXckJzMlVBQkJkRGhtMHhzIiwiY2FydF90b2tlbiI6IjEyOWMxM2ZjLWQ4MzUtNGI3My04NDZmLTY1YWUzMDcyOWZlNCIsIl9wcmV2aW91cyI6eyJ1cmwiOiJodHRwOlwvXC9sb2NhbGhvc3Q6ODAwMFwvY2Fycml0byIsInJvdXRlIjoiY2Fycml0by5pbmRleCJ9LCJfZmxhc2giOnsib2xkIjpbXSwibmV3IjpbXX19',1787828469),('F1wnJwQeYogphiXNznIfp4sDBxlvtBW3llv713ua',NULL,'172.18.0.1','curl/8.19.0','eyJfdG9rZW4iOiJ1WGxCc0tkVXltcW5IVFllVDRpMGd0NEdrVXdQZGZvSE1yQlFSSjAwIiwidXJsIjp7ImludGVuZGVkIjoiaHR0cDpcL1wvbG9jYWxob3N0OjgwMDBcL2NoZWNrb3V0In0sIl9wcmV2aW91cyI6eyJ1cmwiOiJodHRwOlwvXC9sb2NhbGhvc3Q6ODAwMFwvY2hlY2tvdXQiLCJyb3V0ZSI6ImNoZWNrb3V0LnNob3cifSwiX2ZsYXNoIjp7Im9sZCI6W10sIm5ldyI6W119fQ==',1787828467),('IsbgiKYCl3BRMMPd5OsfKFRXzjw6FES9I8nuOnxr',NULL,'172.18.0.1','curl/8.19.0','eyJfdG9rZW4iOiI1YWFpUGlWd0g4MlU4MjNLU3BBb3Vubmx3cEZYWHVPamdpMUFiaTNoIiwiX3ByZXZpb3VzIjp7InVybCI6Imh0dHA6XC9cL2xvY2FsaG9zdDo4MDAwIiwicm91dGUiOiJob21lIn0sIl9mbGFzaCI6eyJvbGQiOltdLCJuZXciOltdfX0=',1787852591),('KKbBAymyztHG5AgWbM4EmiWbNxeh0EAmBzY2hJWv',NULL,'172.18.0.1','curl/8.19.0','eyJfdG9rZW4iOiJPQjFlWEpwVllvY0hKdG5EVkVEZWNSNUtTblF4cEt3T2dxdzMwMWFMIiwidXJsIjp7ImludGVuZGVkIjoiaHR0cDpcL1wvbG9jYWxob3N0OjgwMDBcL2NoZWNrb3V0In0sIl9wcmV2aW91cyI6eyJ1cmwiOiJodHRwOlwvXC9sb2NhbGhvc3Q6ODAwMFwvY2hlY2tvdXQiLCJyb3V0ZSI6ImNoZWNrb3V0LnNob3cifSwiX2ZsYXNoIjp7Im9sZCI6W10sIm5ldyI6W119fQ==',1787828787),('kNWLUHcDyitlQbc6hxLp1C4knL3kGEUynzADveTx',NULL,'172.18.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36','eyJfdG9rZW4iOiI1MGRPd2ZXWHlPVXE0cXV6Wmk0T0JHRlp3ekJ4cEtVc29QcjlrSVl3IiwiX2ZsYXNoIjp7Im9sZCI6W10sIm5ldyI6W119LCJ1cmwiOnsiaW50ZW5kZWQiOiJodHRwOlwvXC9sb2NhbGhvc3Q6ODAwMFwvYWRtaW5cL3NlcnZpY2lvcyJ9LCJfcHJldmlvdXMiOnsidXJsIjoiaHR0cDpcL1wvbG9jYWxob3N0OjgwMDBcL2xvZ2luIiwicm91dGUiOiJsb2dpbiJ9fQ==',1787806464),('MOYFDOSmFd9qQ7BeKUZ0JO800luvvQVyphLRFSrt',4,'172.18.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36','eyJfdG9rZW4iOiJLQWc5NEVuZ09OOHRDNWZ1ZlhCeWRqekdiRnJuTGh3ZThPd0NGOUpQIiwiX2ZsYXNoIjp7Im9sZCI6W10sIm5ldyI6W119LCJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI6NCwiX3ByZXZpb3VzIjp7InVybCI6Imh0dHA6XC9cL2xvY2FsaG9zdDo4MDAwXC9jaGVja291dFwvZW52aW9cLzEwIiwicm91dGUiOiJjaGVja291dC5lbnZpbyJ9fQ==',1787854855),('qo4JlhwEL6WTcsg8hyXn1QHZsco5AacuU7C6JxEg',NULL,'172.18.0.1','curl/8.19.0','eyJfdG9rZW4iOiJVc0NUc2lEMzVtSktKMkU4OU9ySnZCTHZNeEV1ZkNPTWxRTHNibDRIIiwiY2FydF90b2tlbiI6IjlmZDU2N2VlLTQyODktNDUwMy1iMmI4LWYxMzEzZGMyZGRkOCIsIl9wcmV2aW91cyI6eyJ1cmwiOiJodHRwOlwvXC9sb2NhbGhvc3Q6ODAwMFwvY2Fycml0byIsInJvdXRlIjoiY2Fycml0by5pbmRleCJ9LCJfZmxhc2giOnsib2xkIjpbXSwibmV3IjpbXX19',1787854659),('XlRVSf0oERdedhDJO2GcdbSWrarY1mDivkcbdPpZ',NULL,'172.18.0.1','curl/8.19.0','eyJfdG9rZW4iOiJWZUg3MnVvb1FzVXoyaHZyUGJ0QUY5dzlvZ096dmQ1ekJtdXZMMGhnIiwiX3ByZXZpb3VzIjp7InVybCI6Imh0dHA6XC9cL2xvY2FsaG9zdDo4MDAwXC9jdWVudGEiLCJyb3V0ZSI6ImN1ZW50YSJ9LCJfZmxhc2giOnsib2xkIjpbXSwibmV3IjpbXX19',1787850935),('ZkbwOdNqJrozlq8ViipbZXBRt4utkmW6G4JoUxHd',NULL,'172.18.0.1','curl/8.19.0','eyJfdG9rZW4iOiJFZHZxRkJZa201Z0dxTGt3Q1BGd2hIS1kxMm9tYmRCY0NjRXZUS3dGIiwidXJsIjp7ImludGVuZGVkIjoiaHR0cDpcL1wvbG9jYWxob3N0OjgwMDBcL2NoZWNrb3V0In0sIl9wcmV2aW91cyI6eyJ1cmwiOiJodHRwOlwvXC9sb2NhbGhvc3Q6ODAwMFwvY2hlY2tvdXQiLCJyb3V0ZSI6ImNoZWNrb3V0LnNob3cifSwiX2ZsYXNoIjp7Im9sZCI6W10sIm5ldyI6W119fQ==',1787852590),('ZLjdevtA4xvlRGExbhvMGLdXUApW9lwgPCiSrNVL',NULL,'172.18.0.1','curl/8.19.0','eyJfdG9rZW4iOiJMS2FRMG8zb3d5MlBnZlAzaTJoSGFodXM4NndzeDF1U0p6cTBuYXExIiwiY2FydF90b2tlbiI6ImViMzliMGFmLTc0N2EtNDU2MS1iN2MxLWI5YzgxMjMwODc3MCIsIl9wcmV2aW91cyI6eyJ1cmwiOiJodHRwOlwvXC9sb2NhbGhvc3Q6ODAwMFwvY2Fycml0byIsInJvdXRlIjoiY2Fycml0by5pbmRleCJ9LCJfZmxhc2giOnsib2xkIjpbXSwibmV3IjpbXX19',1787852591);
 /*!40000 ALTER TABLE `sessions` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1573,7 +1676,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `sub_categorias`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `sub_categorias` (
   `id_subcategorias` int(11) NOT NULL AUTO_INCREMENT,
   `nom_sub_categoria` varchar(105) DEFAULT NULL,
@@ -1600,7 +1703,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `tipo_animales`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `tipo_animales` (
   `id_tipo_animal` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(100) NOT NULL,
@@ -1625,12 +1728,12 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `tipo_comprobante`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `tipo_comprobante` (
   `id_tipo_comprobante` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
   PRIMARY KEY (`id_tipo_comprobante`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1639,6 +1742,7 @@ CREATE TABLE `tipo_comprobante` (
 
 LOCK TABLES `tipo_comprobante` WRITE;
 /*!40000 ALTER TABLE `tipo_comprobante` DISABLE KEYS */;
+INSERT INTO `tipo_comprobante` VALUES (1,'Boleta'),(2,'Factura');
 /*!40000 ALTER TABLE `tipo_comprobante` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1648,7 +1752,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `tipo_documento`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `tipo_documento` (
   `id_tipo_documento` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
@@ -1672,13 +1776,13 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `tipo_entregas`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `tipo_entregas` (
   `id_tipo_entrega` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
   `requiere_direccion` tinyint(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id_tipo_entrega`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1687,6 +1791,7 @@ CREATE TABLE `tipo_entregas` (
 
 LOCK TABLES `tipo_entregas` WRITE;
 /*!40000 ALTER TABLE `tipo_entregas` DISABLE KEYS */;
+INSERT INTO `tipo_entregas` VALUES (1,'Envío a domicilio',1),(2,'Retiro en tienda',0);
 /*!40000 ALTER TABLE `tipo_entregas` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1696,7 +1801,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `tipos_servicio`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `tipos_servicio` (
   `id_tipo_servicio` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(60) NOT NULL,
@@ -1710,7 +1815,7 @@ CREATE TABLE `tipos_servicio` (
 
 LOCK TABLES `tipos_servicio` WRITE;
 /*!40000 ALTER TABLE `tipos_servicio` DISABLE KEYS */;
-INSERT INTO `tipos_servicio` VALUES (1,'Grooming'),(2,'Veterinaria');
+INSERT INTO `tipos_servicio` VALUES (1,'Groomer'),(2,'Veterinaria');
 /*!40000 ALTER TABLE `tipos_servicio` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1720,7 +1825,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `trabajadores`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `trabajadores` (
   `id_trabajador` int(11) NOT NULL AUTO_INCREMENT,
   `fk_persona` int(11) NOT NULL,
@@ -1759,7 +1864,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `unidades_medida`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `unidades_medida` (
   `id_unidad_medida` int(11) NOT NULL AUTO_INCREMENT,
   `nombre` varchar(45) NOT NULL,
@@ -1784,7 +1889,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `users`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `users` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
@@ -1808,9 +1913,17 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (2,'mili','jonceano26cristian@gmail.com',NULL,'$2y$12$O7xkFKqSccWzhFanFV1DkuB991QAxnJyXfpko7W62GaNa2aDh.cCm',NULL,NULL,NULL,NULL,'2026-08-24 20:20:10','2026-08-24 20:20:10'),(4,'lpdiego999','lpdiego999@gmail.com',NULL,'$2y$12$2gWeN2knFltKWcRPJxwMbeJJsCjnid2GatmJvGoBUgKK44T5KPuRS',NULL,NULL,NULL,NULL,'2026-08-25 06:22:15','2026-08-25 06:22:15'),(5,'Diego','diego@mosso.com','2026-08-25 07:10:36','$2y$12$5kDBlvHIC7MOkd/AD2Nqc.QJFNvun/KA.osw2Driy8brVz5NcI/PK',NULL,NULL,NULL,NULL,'2026-08-25 07:10:36','2026-08-25 07:10:36');
+INSERT INTO `users` VALUES (2,'mili','jonceano26cristian@gmail.com',NULL,'$2y$12$O7xkFKqSccWzhFanFV1DkuB991QAxnJyXfpko7W62GaNa2aDh.cCm',NULL,NULL,NULL,NULL,'2026-08-24 20:20:10','2026-08-24 20:20:10'),(4,'Diego Lazaro','lpdiego999@gmail.com',NULL,'$2y$12$WySZWnOeiSX370hKAjYxuuNKITyvaANrUrXCfUaZmcgMSHaAWRfse',NULL,NULL,NULL,NULL,'2026-08-25 06:22:15','2026-08-27 12:15:22'),(5,'Diego','diego@mosso.com','2026-08-25 07:10:36','$2y$12$5kDBlvHIC7MOkd/AD2Nqc.QJFNvun/KA.osw2Driy8brVz5NcI/PK',NULL,NULL,NULL,NULL,'2026-08-25 07:10:36','2026-08-25 07:10:36');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Dumping events for database 'mosso2'
+--
+
+--
+-- Dumping routines for database 'mosso2'
+--
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -1821,4 +1934,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-08-26 23:26:39
+-- Dump completed on 2026-08-27 20:48:36

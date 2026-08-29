@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "gray-on-color",
+        "value": "*",
+        "files": [
+          "resources/js/pages/Admin/Menus/Index.tsx"
+        ],
+        "createdAt": "2026-08-28T09:08:59.621Z",
+        "reason": "model: false positive — icon buttons swap hover:text-* in the same hover: group as hover:bg-*, so gray text never renders on the colored (hover) background"
+      }
+    ]
+  }
+}

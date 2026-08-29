@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, Building2, Package, FolderGit2, LayoutGrid, Scissors } from 'lucide-react';
+import { BookOpen, Building2, Package, FolderGit2, LayoutGrid, Scissors, Users } from 'lucide-react';
 import { route } from 'ziggy-js';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
@@ -25,8 +25,8 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },{
         title: 'Clientes',
-        href: '/client',
-        icon: FolderGit2,
+        href: route('admin.clientes.index'),
+        icon: Users,
     },
 
     {
@@ -61,11 +61,11 @@ const mainNavItems: NavItem[] = [
         items: [
             {
                 title: 'Provincia',
-                href: '/provincia',
+                href: '/distrito',
             },
             {
-                title: 'Distrito',
-                href: '/distrito',
+                title: 'Menu',
+                href: route('admin.menus.index'),
             },
             
         ],

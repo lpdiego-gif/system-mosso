@@ -15,6 +15,10 @@ class Mascota extends Model
         'fk_cliente', 'nombre', 'fk_animal', 'fecha_nacimiento',
     ];
 
+    protected $casts = [
+        'fecha_nacimiento' => 'date',
+    ];
+
     public function cliente(): BelongsTo
     {
         return $this->belongsTo(Cliente::class, 'fk_cliente', 'id_cliente');
