@@ -12,14 +12,30 @@ class MenuService
     /** Máximo de miniaturas de producto a mostrar por subcategoría en el menú. */
     private const MAX_PRODUCTOS_PREVIEW = 10;
 
+    public function __construct(private readonly FuncionService $funciones) {}
+
     public function build(): array
     {
         return Menu::where('activo', true)
             ->orderBy('orden')
             ->get()
+            ->filter(fn (Menu $item) => $this->visible($item))
             ->map(fn (Menu $item) => $this->resolveItem($item))
             ->values()
             ->toArray();
+    }
+
+    /**
+     * Los ítems de tipo `tipo_servicio` (el nav "Servicios") además dependen
+     * del feature flag `servicios` en `funciones` -- entrega por fases.
+     */
+    private function visible(Menu $item): bool
+    {
+        if ($item->tipo_enlace === 'tipo_servicio') {
+            return $this->funciones->activa('servicios');
+        }
+
+        return true;
     }
 
     private function resolveItem(Menu $item): array

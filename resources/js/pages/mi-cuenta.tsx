@@ -9,6 +9,7 @@ import type { MenuCuentaItem } from '@/types/menu-cuenta';
 
 interface PageProps {
   menuCuenta: MenuCuentaItem[];
+  funciones: Record<string, boolean>;
   [key: string]: unknown;
 }
 
@@ -75,8 +76,12 @@ function Acceso({
 
 /* ── Page ───────────────────────────────────────────────── */
 export default function MiCuenta({ user, resumen }: MiCuentaProps) {
-  const { menuCuenta } = usePage<PageProps>().props;
+  const { menuCuenta, funciones } = usePage<PageProps>().props;
   const nombre = toTitleCase(user.name);
+  // Igual que en funciones.mascotas: si no hay fila para la clave, se
+  // considera habilitada (ver FuncionService::activa en el backend).
+  const mascotasActivas = funciones.mascotas ?? true;
+  const puntosActivos = funciones.puntos_cupones ?? true;
 
   return (
     <StorefrontLayout>
@@ -101,12 +106,18 @@ export default function MiCuenta({ user, resumen }: MiCuentaProps) {
           </p>
         </div>
 
-        {/* Stats */}
+        {/* Stats — Mascotas/Puntos/Cupones dependen de sus feature flags */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-10">
           <StatCard label="Pedidos" value={resumen.total_pedidos} href="/mi-cuenta/pedidos" color="text-gray-900" />
-          <StatCard label="Mascotas" value={resumen.total_mascotas} href="/mi-cuenta/mascotas" color="text-gray-900" />
-          <StatCard label="Puntos" value={resumen.total_puntos.toLocaleString('es-PE')} href="/mi-cuenta/puntos" color="text-mosso-yellow" />
-          <StatCard label={resumen.cupones_activos === 1 ? 'Cupón disponible' : 'Cupones disponibles'} value={resumen.cupones_activos} href="/mi-cuenta/puntos" color="text-green-600" />
+          {mascotasActivas && (
+            <StatCard label="Mascotas" value={resumen.total_mascotas} href="/mi-cuenta/mascotas" color="text-gray-900" />
+          )}
+          {puntosActivos && (
+            <>
+              <StatCard label="Puntos" value={resumen.total_puntos.toLocaleString('es-PE')} href="/mi-cuenta/puntos" color="text-mosso-yellow" />
+              <StatCard label={resumen.cupones_activos === 1 ? 'Cupón disponible' : 'Cupones disponibles'} value={resumen.cupones_activos} href="/mi-cuenta/puntos" color="text-green-600" />
+            </>
+          )}
         </div>
 
         {/* Quick access — construido desde menu_cuenta: si el admin desactiva

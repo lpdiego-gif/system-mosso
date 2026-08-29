@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\CategoriaController;
 use App\Http\Controllers\Admin\ClienteController;
 use App\Http\Controllers\Admin\MarcaController;
 use App\Http\Controllers\Admin\MenuController;
+use App\Http\Controllers\Admin\FuncionController;
 use App\Http\Controllers\Admin\MenuCuentaController;
 use App\Http\Controllers\Admin\ProductoController;
 use App\Http\Controllers\Admin\ServicioController as AdminServicioController;
@@ -44,9 +45,11 @@ Route::get('/marcas/{marca}', MarcaCatalogoController::class)->whereNumber('marc
 | (detalle) que ya usa CatalogoController.
 */
 
-Route::get('/servicios', [ServicioController::class, 'index'])->name('servicios.index');
-Route::get('/servicios/{tipo}', [ServicioController::class, 'porTipo'])->whereNumber('tipo')->name('servicios.tipo');
-Route::get('/servicio/{slug}', [ServicioController::class, 'show'])->name('servicio.show');
+Route::middleware('feature:servicios,/')->group(function () {
+    Route::get('/servicios', [ServicioController::class, 'index'])->name('servicios.index');
+    Route::get('/servicios/{tipo}', [ServicioController::class, 'porTipo'])->whereNumber('tipo')->name('servicios.tipo');
+    Route::get('/servicio/{slug}', [ServicioController::class, 'show'])->name('servicio.show');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -150,13 +153,13 @@ Route::middleware(['auth', 'cliente'])->group(function () {
         Route::put('/mi-cuenta/detalles', [MiCuentaDetallesController::class, 'update'])->name('mi-cuenta.detalles.update');
     });
 
-    Route::middleware('menu.cuenta:mascotas')->prefix('mi-cuenta/mascotas')->name('mi-cuenta.mascotas.')->group(function () {
+    Route::middleware(['menu.cuenta:mascotas', 'feature:mascotas,/mi-cuenta'])->prefix('mi-cuenta/mascotas')->name('mi-cuenta.mascotas.')->group(function () {
         Route::get('/', [MiCuentaMascotaController::class, 'index'])->name('index');
         Route::post('/', [MiCuentaMascotaController::class, 'store'])->name('store');
         Route::delete('/{mascota}', [MiCuentaMascotaController::class, 'destroy'])->whereNumber('mascota')->name('destroy');
     });
 
-    Route::middleware('menu.cuenta:puntos_cupones')->group(function () {
+    Route::middleware(['menu.cuenta:puntos_cupones', 'feature:puntos_cupones,/mi-cuenta'])->group(function () {
         Route::get('/mi-cuenta/puntos', [MiCuentaPuntosController::class, 'index'])->name('mi-cuenta.puntos');
     });
 });
@@ -311,6 +314,18 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::put('/menu-cuenta/{menuCuenta}', [MenuCuentaController::class, 'update'])->whereNumber('menuCuenta')->name('menu-cuenta.update');
     Route::delete('/menu-cuenta/{menuCuenta}', [MenuCuentaController::class, 'destroy'])->whereNumber('menuCuenta')->name('menu-cuenta.destroy');
     Route::patch('/menu-cuenta/{menuCuenta}/estado', [MenuCuentaController::class, 'toggleStatus'])->whereNumber('menuCuenta')->name('menu-cuenta.toggle-status');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Funciones (feature flags de la entrega por fases)
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/funciones', [FuncionController::class, 'index'])->name('funciones.index');
+    Route::post('/funciones', [FuncionController::class, 'store'])->name('funciones.store');
+    Route::put('/funciones/{funcion}', [FuncionController::class, 'update'])->whereNumber('funcion')->name('funciones.update');
+    Route::delete('/funciones/{funcion}', [FuncionController::class, 'destroy'])->whereNumber('funcion')->name('funciones.destroy');
+    Route::patch('/funciones/{funcion}/estado', [FuncionController::class, 'toggleStatus'])->whereNumber('funcion')->name('funciones.toggle-status');
 });
 
 use App\Http\Controllers\DashboardController;

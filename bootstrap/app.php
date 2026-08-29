@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureEsCliente;
+use App\Http\Middleware\EnsureFuncionActiva;
 use App\Http\Middleware\EnsureMenuAnimalActivo;
 use App\Http\Middleware\EnsureMenuCuentaActivo;
 use App\Http\Middleware\HandleAppearance;
@@ -30,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'cliente' => EnsureEsCliente::class,
             'menu.cuenta' => EnsureMenuCuentaActivo::class,
             'menu.animal' => EnsureMenuAnimalActivo::class,
+            'feature' => EnsureFuncionActiva::class,
         ]);
 
         // El checkout es parte del storefront: el invitado va al login público
