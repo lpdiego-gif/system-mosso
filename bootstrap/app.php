@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Middleware\EnsureEsCliente;
+use App\Http\Middleware\EnsureMenuAnimalActivo;
+use App\Http\Middleware\EnsureMenuCuentaActivo;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
@@ -26,6 +28,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'cliente' => EnsureEsCliente::class,
+            'menu.cuenta' => EnsureMenuCuentaActivo::class,
+            'menu.animal' => EnsureMenuAnimalActivo::class,
         ]);
 
         // El checkout es parte del storefront: el invitado va al login público

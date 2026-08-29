@@ -84,14 +84,17 @@ Route::middleware(['auth', 'cliente'])->prefix('checkout')->name('checkout.')->g
 
 Route::get('/catalogo/subcategoria/{subcategoria}', [CatalogoController::class, 'porSubcategoria'])
     ->whereNumber('subcategoria')
+    ->middleware('menu.animal:subcategoria')
     ->name('catalogo.subcategoria');
 
 Route::get('/catalogo/categoria/{categoria}', [CatalogoController::class, 'porCategoria'])
     ->whereNumber('categoria')
+    ->middleware('menu.animal:categoria')
     ->name('catalogo.categoria');
 
 Route::get('/catalogo/animal/{animal}', [CatalogoController::class, 'porAnimal'])
     ->whereNumber('animal')
+    ->middleware('menu.animal:animal')
     ->name('catalogo.animal');
 
 /*
@@ -129,9 +132,11 @@ use App\Http\Controllers\MiCuentaPuntosController;
 Route::middleware(['auth', 'cliente'])->group(function () {
     Route::get('/mi-cuenta', [MiCuentaController::class, 'index'])->name('mi-cuenta');
 
-    Route::get('/mi-cuenta/pedidos', [MiCuentaPedidosController::class, 'index'])->name('mi-cuenta.pedidos');
+    Route::middleware('menu.cuenta:pedidos')->group(function () {
+        Route::get('/mi-cuenta/pedidos', [MiCuentaPedidosController::class, 'index'])->name('mi-cuenta.pedidos');
+    });
 
-    Route::prefix('mi-cuenta/direcciones')->name('mi-cuenta.direcciones.')->group(function () {
+    Route::middleware('menu.cuenta:direcciones')->prefix('mi-cuenta/direcciones')->name('mi-cuenta.direcciones.')->group(function () {
         Route::get('/', [MiCuentaDireccionController::class, 'index'])->name('index');
         Route::post('/', [MiCuentaDireccionController::class, 'store'])->name('store');
         Route::patch('/{direccion}/principal', [MiCuentaDireccionController::class, 'marcarPrincipal'])
@@ -140,16 +145,20 @@ Route::middleware(['auth', 'cliente'])->group(function () {
             ->whereNumber('direccion')->name('destroy');
     });
 
-    Route::get('/mi-cuenta/detalles', [MiCuentaDetallesController::class, 'index'])->name('mi-cuenta.detalles');
-    Route::put('/mi-cuenta/detalles', [MiCuentaDetallesController::class, 'update'])->name('mi-cuenta.detalles.update');
+    Route::middleware('menu.cuenta:detalles')->group(function () {
+        Route::get('/mi-cuenta/detalles', [MiCuentaDetallesController::class, 'index'])->name('mi-cuenta.detalles');
+        Route::put('/mi-cuenta/detalles', [MiCuentaDetallesController::class, 'update'])->name('mi-cuenta.detalles.update');
+    });
 
-    Route::prefix('mi-cuenta/mascotas')->name('mi-cuenta.mascotas.')->group(function () {
+    Route::middleware('menu.cuenta:mascotas')->prefix('mi-cuenta/mascotas')->name('mi-cuenta.mascotas.')->group(function () {
         Route::get('/', [MiCuentaMascotaController::class, 'index'])->name('index');
         Route::post('/', [MiCuentaMascotaController::class, 'store'])->name('store');
         Route::delete('/{mascota}', [MiCuentaMascotaController::class, 'destroy'])->whereNumber('mascota')->name('destroy');
     });
 
-    Route::get('/mi-cuenta/puntos', [MiCuentaPuntosController::class, 'index'])->name('mi-cuenta.puntos');
+    Route::middleware('menu.cuenta:puntos_cupones')->group(function () {
+        Route::get('/mi-cuenta/puntos', [MiCuentaPuntosController::class, 'index'])->name('mi-cuenta.puntos');
+    });
 });
 
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
