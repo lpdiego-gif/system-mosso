@@ -2,12 +2,41 @@ import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, Package } from 'lucide-react';
 import { route } from 'ziggy-js';
 import ProductoForm from '@/components/productos/producto-form';
-import type { ProductoFormLookups } from '@/types/producto';
+import type {
+    CategoriaOption,
+    EstadoOption,
+    EtapaOption,
+    ProductoEditData,
+    SubCategoriaOption,
+    AnimalOption,
+    MarcaOption,
+    UnidadOption,
+} from '@/types/producto';
 
-export default function Create(props: ProductoFormLookups) {
+interface Props {
+    animales: AnimalOption[];
+    marcas: MarcaOption[];
+    unidades: UnidadOption[];
+    estados: EstadoOption[];
+    categorias: CategoriaOption[];
+    subcategorias: SubCategoriaOption[];
+    etapas: EtapaOption[];
+    producto: ProductoEditData;
+}
+
+export default function Edit({
+    animales,
+    marcas,
+    unidades,
+    estados,
+    categorias,
+    subcategorias,
+    etapas,
+    producto,
+}: Props) {
     return (
         <>
-            <Head title="Nuevo producto" />
+            <Head title={`Editar · ${producto.nombre}`} />
 
             <div className="mx-auto w-full max-w-6xl space-y-6 p-4 sm:p-6 lg:p-8">
                 <div className="flex flex-col gap-4 rounded-xl border bg-card p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
@@ -16,12 +45,15 @@ export default function Create(props: ProductoFormLookups) {
                             <Package className="size-5" />
                         </span>
                         <div className="space-y-1">
-                            <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-                                Nuevo producto
+                            <h1 className="text-xl font-semibold tracking-tight text-balance text-foreground sm:text-2xl">
+                                Editar producto
                             </h1>
                             <p className="max-w-prose text-sm text-pretty text-muted-foreground">
-                                Registra un producto en el catálogo e inventario
-                                de MOSSO.
+                                Actualiza los datos de{' '}
+                                <span className="font-medium text-foreground">
+                                    {producto.nombre}
+                                </span>
+                                .
                             </p>
                         </div>
                     </div>
@@ -33,15 +65,21 @@ export default function Create(props: ProductoFormLookups) {
                     </Link>
                 </div>
 
-                <ProductoForm lookups={props} />
+                <ProductoForm
+                    lookups={{ animales, marcas, unidades, estados }}
+                    producto={producto}
+                    categorias={categorias}
+                    subcategorias={subcategorias}
+                    etapas={etapas}
+                />
             </div>
         </>
     );
 }
 
-Create.layout = {
+Edit.layout = {
     breadcrumbs: [
         { title: 'Productos', href: '/admin/productos' },
-        { title: 'Nuevo', href: '/admin/productos/create' },
+        { title: 'Editar', href: '#' },
     ],
 };

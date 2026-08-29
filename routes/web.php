@@ -182,6 +182,9 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         [ProductoController::class, 'store']
     )->name('productos.store');
 
+    Route::post('/productos/buscar-codigo', [ProductoController::class, 'buscarCodigo'])
+        ->name('productos.buscar-codigo');
+
     /*
     |--------------------------------------------------------------------------
     | Dependencias
@@ -191,12 +194,34 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::get(
         '/productos/categorias/{animal}',
         [ProductoController::class, 'categorias']
-    )->name('productos.categorias');
+    )->whereNumber('animal')->name('productos.categorias');
 
     Route::get(
         '/productos/subcategorias/{categoria}',
         [ProductoController::class, 'subcategorias']
-    )->name('productos.subcategorias');
+    )->whereNumber('categoria')->name('productos.subcategorias');
+
+    Route::get('/productos/etapas/{animal}', [ProductoController::class, 'etapas'])
+        ->whereNumber('animal')->name('productos.etapas');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Producto individual
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/productos/{producto}', [ProductoController::class, 'show'])
+        ->whereNumber('producto')->name('productos.show');
+    Route::get('/productos/{producto}/edit', [ProductoController::class, 'edit'])
+        ->whereNumber('producto')->name('productos.edit');
+    Route::post('/productos/{producto}', [ProductoController::class, 'update'])
+        ->whereNumber('producto')->name('productos.update');
+    Route::delete('/productos/{producto}', [ProductoController::class, 'destroy'])
+        ->whereNumber('producto')->name('productos.destroy');
+    Route::patch('/productos/{producto}/estado', [ProductoController::class, 'toggleEstado'])
+        ->whereNumber('producto')->name('productos.estado');
+    Route::patch('/productos/{producto}/stock', [ProductoController::class, 'ajustarStock'])
+        ->whereNumber('producto')->name('productos.stock');
 
     /*
     |--------------------------------------------------------------------------
