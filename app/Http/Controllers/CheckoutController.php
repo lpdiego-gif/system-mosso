@@ -6,6 +6,7 @@ use App\Http\Requests\Checkout\IniciarCheckoutRequest;
 use App\Models\Cliente;
 use App\Models\Pago;
 use App\Models\Pedido;
+use App\Models\Producto;
 use App\Services\CheckoutService;
 use App\Services\CuentaService;
 use App\Services\CulqiService;
@@ -16,7 +17,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -267,7 +267,7 @@ class CheckoutController extends Controller
                 'items' => $pedido->detalles->map(fn ($d) => [
                     'nombre' => $d->producto?->nombre,
                     'marca' => $d->producto?->marca?->nombre,
-                    'imagen' => $d->producto?->imagen_principal ? Storage::url($d->producto->imagen_principal) : null,
+                    'imagen' => Producto::urlImagen($d->producto?->imagen_principal),
                     'cantidad' => $d->cantidad,
                     'precio_final' => (float) $d->precio_unitario - (float) $d->descuento_unitario,
                     'subtotal' => (float) $d->subtotal,

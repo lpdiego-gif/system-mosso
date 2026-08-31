@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Producto;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class BusquedaController extends Controller
@@ -14,7 +13,7 @@ class BusquedaController extends Controller
         $q = trim((string) $request->query('q', ''));
 
         $productos = Producto::activos()
-            ->with(['marca', 'descuentoActivo'])
+            ->with(['marca', 'descuentoActivo', 'subcategoria.categoria.animal'])
             ->when($q !== '', fn ($query) => $query->where('nombre', 'like', "%{$q}%"))
             ->orderBy('nombre')
             ->limit(40)
@@ -47,9 +46,8 @@ class BusquedaController extends Controller
             'id'            => $p->id_producto,
             'nombre'        => $p->nombre,
             'marca'         => $p->marca?->nombre,
-            'imagen'        => $p->imagen_principal
-                                ? Storage::url($p->imagen_principal)
-                                : null,
+            'imagen'        => Producto::urlImagen($p->imagen_principal),
+            'tipo_animal'   => $p->subcategoria?->categoria?->animal?->nombre,
             'precio'        => (float) $p->precio,
             'precioFinal'   => round($precioFinal, 2),
             'porcentajeOff' => $porcentajeOff,

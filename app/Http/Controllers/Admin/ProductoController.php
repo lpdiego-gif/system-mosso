@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Producto;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -219,7 +220,7 @@ class ProductoController extends Controller
                 'fk_estado' => (string) $fila->fk_estado,
                 'precio' => (string) $fila->precio,
                 'stock' => (string) $fila->stock,
-                'imagen_url' => $fila->imagen_principal ? Storage::url($fila->imagen_principal) : null,
+                'imagen_url' => Producto::urlImagen($fila->imagen_principal),
             ],
         ]);
     }
@@ -534,7 +535,7 @@ class ProductoController extends Controller
             'stock_bajo' => (int) $p->stock > 0 && (int) $p->stock <= self::UMBRAL_STOCK_BAJO,
             'activo' => (int) $p->fk_estado === 1,
             'estado_nombre' => $p->estado_nombre,
-            'imagen_url' => $p->imagen_principal ? Storage::url($p->imagen_principal) : null,
+            'imagen_url' => Producto::urlImagen($p->imagen_principal),
             'creado_en' => $p->created_at,
         ];
     }

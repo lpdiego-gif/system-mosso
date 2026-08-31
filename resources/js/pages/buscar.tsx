@@ -2,6 +2,7 @@ import { useAgregarAlCarrito } from '@/hooks/use-agregar-al-carrito';
 import StorefrontLayout from '@/layouts/storefront-layout';
 import { useFavoritos } from '@/hooks/use-favoritos';
 import type { ProductoCard } from '@/types/producto';
+import { imagenProducto, onImagenError } from '@/types/producto';
 import { Link } from '@inertiajs/react';
 
 interface Props {
@@ -79,10 +80,7 @@ function TarjetaProducto({ producto }: { producto: ProductoCard }) {
 
             <Link href={producto.href} className="block flex-1">
                 <div className="h-40 flex items-center justify-center mb-3 bg-gray-50 rounded-lg overflow-hidden">
-                    {producto.imagen
-                        ? <img src={producto.imagen} alt={producto.nombre} className="max-h-full max-w-full object-contain" />
-                        : <SinImagenIcon />
-                    }
+                    <img src={imagenProducto(producto)} alt={producto.nombre} className="max-h-full max-w-full object-contain" onError={onImagenError} />
                 </div>
                 <p className="text-sm font-medium text-gray-900 line-clamp-2 min-h-[2.5rem]">{producto.nombre}</p>
                 {producto.marca && <p className="text-xs text-gray-400 uppercase mt-0.5 tracking-wide">{producto.marca}</p>}

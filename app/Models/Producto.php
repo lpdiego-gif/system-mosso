@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\SubCategoria;
 
 class Producto extends Model
 {
@@ -12,6 +13,11 @@ class Producto extends Model
         'sku', 'codigo_barras', 'nombre', 'descripcion', 'fk_marca', 'fk_unidad_medida',
         'fk_id_subcategorias', 'fk_etapa_vida', 'precio', 'stock', 'imagen_principal', 'fk_estado',
     ];
+
+    public function subcategoria()
+    {
+        return $this->belongsTo(SubCategoria::class, 'fk_id_subcategorias', 'id_subcategorias');
+    }
 
     public function marca()
     {
@@ -59,5 +65,20 @@ class Producto extends Model
     public function scopeActivos($query)
     {
         return $query->where('fk_estado', 1); // 1 = 'Activo' en estados_producto
+    }
+
+    public static function urlImagen(?string $path): ?string
+    {
+        if (! $path) {
+            return null;
+        }
+
+        $encoded = implode('/', array_map('rawurlencode', explode('/', $path)));
+
+        if (str_starts_with($path, 'productos/')) {
+            return "/storage/{$encoded}";
+        }
+
+        return "/image/Productos/{$encoded}";
     }
 }

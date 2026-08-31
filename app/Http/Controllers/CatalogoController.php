@@ -6,7 +6,6 @@ use App\Models\Animal;
 use App\Models\Categoria;
 use App\Models\Producto;
 use App\Models\SubCategoria;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -17,7 +16,7 @@ class CatalogoController extends Controller
         $subcategoria->load(['categoria.animal']);
 
         $productos = Producto::activos()
-            ->with(['marca', 'descuentoActivo'])
+            ->with(['marca', 'descuentoActivo', 'subcategoria.categoria.animal'])
             ->where('fk_id_subcategorias', $subcategoria->id_subcategorias)
             ->latest('created_at')
             ->get()
@@ -50,7 +49,7 @@ class CatalogoController extends Controller
         $ids = $categoria->subcategorias->pluck('id_subcategorias');
 
         $productos = Producto::activos()
-            ->with(['marca', 'descuentoActivo'])
+            ->with(['marca', 'descuentoActivo', 'subcategoria.categoria.animal'])
             ->whereIn('fk_id_subcategorias', $ids)
             ->latest('created_at')
             ->get()
@@ -81,7 +80,7 @@ class CatalogoController extends Controller
         );
 
         $productos = Producto::activos()
-            ->with(['marca', 'descuentoActivo'])
+            ->with(['marca', 'descuentoActivo', 'subcategoria.categoria.animal'])
             ->whereIn('fk_id_subcategorias', $ids)
             ->latest('created_at')
             ->get()
@@ -119,9 +118,8 @@ class CatalogoController extends Controller
             'id'            => $p->id_producto,
             'nombre'        => $p->nombre,
             'marca'         => $p->marca?->nombre,
-            'imagen'        => $p->imagen_principal
-                                ? Storage::url($p->imagen_principal)
-                                : null,
+            'imagen'        => Producto::urlImagen($p->imagen_principal),
+            'tipo_animal'   => $p->subcategoria?->categoria?->animal?->nombre,
             'precio'        => (float) $p->precio,
             'precioFinal'   => round($precioFinal, 2),
             'porcentajeOff' => $porcentajeOff,

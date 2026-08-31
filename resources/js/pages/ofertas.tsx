@@ -3,6 +3,7 @@ import { useFavoritos } from '@/hooks/use-favoritos';
 import StorefrontLayout from '@/layouts/storefront-layout';
 import { Link } from '@inertiajs/react';
 import type { ProductoCard } from '@/types/producto';
+import { imagenProducto, onImagenError } from '@/types/producto';
 
 interface Props {
     productos: ProductoCard[];
@@ -94,10 +95,7 @@ function TarjetaOferta({ producto }: { producto: ProductoCard }) {
 
             <Link href={producto.href} className="block flex-1">
                 <div className="h-40 flex items-center justify-center mb-3 bg-gray-50 rounded-lg overflow-hidden">
-                    {producto.imagen
-                        ? <img src={producto.imagen} alt={producto.nombre} className="max-h-full max-w-full object-contain" />
-                        : <SinImagenIcon />
-                    }
+                    <img src={imagenProducto(producto)} alt={producto.nombre} className="max-h-full max-w-full object-contain" onError={onImagenError} />
                 </div>
 
                 <p className="text-sm font-medium text-gray-900 line-clamp-2 min-h-[2.5rem]">{producto.nombre}</p>

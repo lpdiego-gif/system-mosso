@@ -413,10 +413,11 @@ function MenuLinkItem({
 
                             <img
                               key={producto.id}
-                              src={`/storage/${producto.imagen}`}
+                              src={producto.imagen ?? '/image/paw-icon.png'}
                               alt={producto.nombre}
                               title={producto.nombre}
                               className="aspect-square w-full rounded-lg border border-gray-200 bg-gray-50 object-cover transition-colors hover:border-mosso-yellow"
+                              onError={(e) => { e.currentTarget.src = '/image/paw-icon.png'; e.currentTarget.onerror = null; }}
                             />
 
                           )

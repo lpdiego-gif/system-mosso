@@ -3,6 +3,7 @@ import { useFavoritos } from '@/hooks/use-favoritos';
 import { Link } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import type { ProductoCard as ProductoCardType, MarcaCard } from '@/types/producto';
+import { imagenProducto, onImagenError } from '@/types/producto';
 
 /* ============================== BENEFICIOS ============================== */
 
@@ -168,11 +169,7 @@ function ProductoCardItem({ producto }: { producto: ProductoCardType }) {
 
       <Link href={producto.href} className="block">
         <div className="h-40 flex items-center justify-center mb-3">
-          {producto.imagen ? (
-            <img src={producto.imagen} alt={producto.nombre} className="max-h-full max-w-full object-contain" />
-          ) : (
-            <div className="w-full h-full bg-gray-50 rounded-lg" />
-          )}
+          <img src={imagenProducto(producto)} alt={producto.nombre} className="max-h-full max-w-full object-contain" onError={onImagenError} />
         </div>
 
         <p className="text-sm font-medium text-gray-900 line-clamp-2 min-h-[2.5rem]">

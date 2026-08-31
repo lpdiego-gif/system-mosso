@@ -8,7 +8,6 @@ use App\Models\Cliente;
 use App\Models\Producto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class CarritoService
@@ -87,9 +86,7 @@ class CarritoService
                 'producto_id'    => $d->fk_producto,
                 'nombre'         => $d->producto->nombre,
                 'marca'          => $d->producto->marca?->nombre,
-                'imagen'         => $d->producto->imagen_principal
-                                    ? Storage::url($d->producto->imagen_principal)
-                                    : null,
+                'imagen'         => Producto::urlImagen($d->producto->imagen_principal),
                 'precio_unitario' => (float) $d->precio_unitario,
                 'cantidad'       => $d->cantidad,
                 'subtotal'       => round($d->precio_unitario * $d->cantidad, 2),

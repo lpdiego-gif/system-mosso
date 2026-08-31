@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Marca;
 use App\Models\Producto;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -49,9 +48,7 @@ class MarcaCatalogoController extends Controller
             'id'            => $p->id_producto,
             'nombre'        => $p->nombre,
             'marca'         => $p->marca?->nombre,
-            'imagen'        => $p->imagen_principal
-                                ? Storage::url($p->imagen_principal)
-                                : null,
+            'imagen'        => Producto::urlImagen($p->imagen_principal),
             'precio'        => (float) $p->precio,
             'precioFinal'   => round($precioFinal, 2),
             'porcentajeOff' => $porcentajeOff,

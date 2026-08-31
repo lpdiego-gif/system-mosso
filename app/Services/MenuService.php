@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Animal;
 use App\Models\Marca;
 use App\Models\Menu;
+use App\Models\Producto;
 use App\Models\TipoServicio;
 
 class MenuService
@@ -106,7 +107,7 @@ class MenuService
                             'productos' => $productos->take(self::MAX_PRODUCTOS_PREVIEW)->map(fn ($p) => [
                                 'id' => $p->id_producto,
                                 'nombre' => $p->nombre,
-                                'imagen' => $p->imagen_principal,
+                                'imagen' => Producto::urlImagen($p->imagen_principal),
                             ])->values(),
                             'totalProductos' => $productos->count(),
                         ];
@@ -139,16 +140,15 @@ class MenuService
         return [
             [
                 'titulo' => null,
-                'items' => Marca::orderBy('nombre')->get()->map(fn ($m) => [
-                    'id' => $m->id_marca,
-                    'nombre' => $m->nombre,
-                    'href' => "/marcas/{$m->id_marca}",
-                    // Asume que guardas solo el nombre de archivo y las imágenes
-                    // viven en public/image/marcas/ (mismo patrón que pets-duo.png).
-                    // Si guardas la ruta completa en la BD, cambia esto a: $m->logo
-                    'logo' => $m->logo ? "/image/marcas/{$m->logo}" : null,
-                    'hijos' => [],
-                ]),
+                'items' => Marca::orderBy('nombre')->get()
+                    ->filter(fn ($m) => $m->logo && file_exists(public_path("image/marcas/{$m->logo}")))
+                    ->map(fn ($m) => [
+                        'id' => $m->id_marca,
+                        'nombre' => $m->nombre,
+                        'href' => "/marcas/{$m->id_marca}",
+                        'logo' => "/image/marcas/{$m->logo}",
+                        'hijos' => [],
+                    ])->values(),
             ],
         ];
     }

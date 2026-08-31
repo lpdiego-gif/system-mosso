@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Carrito;
 use App\Models\CarritoDetalle;
 use App\Models\Cliente;
+use App\Models\Producto;
 use App\Models\Comprobante;
 use App\Models\Pago;
 use App\Models\Pedido;
@@ -14,7 +15,6 @@ use App\Models\Producto;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -85,7 +85,7 @@ class CheckoutService
                 'id_producto' => $producto->id_producto,
                 'nombre' => $producto->nombre,
                 'marca' => $producto->marca?->nombre,
-                'imagen' => $producto->imagen_principal ? Storage::url($producto->imagen_principal) : null,
+                'imagen' => Producto::urlImagen($producto->imagen_principal),
                 'cantidad' => $cantidad,
                 'precio_unitario' => $precioLista,
                 'descuento_unitario' => $descUnit,

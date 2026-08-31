@@ -9,6 +9,17 @@ export interface ProductoCard {
     href: string;
 }
 
+const PLACEHOLDER_PRODUCTO = '/image/paw-icon.png';
+
+export function imagenProducto(p: Pick<ProductoCard, 'imagen'>): string {
+    return p.imagen ?? PLACEHOLDER_PRODUCTO;
+}
+
+export function onImagenError(e: React.SyntheticEvent<HTMLImageElement>): void {
+    e.currentTarget.src = PLACEHOLDER_PRODUCTO;
+    e.currentTarget.onerror = null;
+}
+
 export interface MarcaCard {
     id: number;
     nombre: string;

@@ -17,7 +17,7 @@ class HomeService
     public function productosDestacados(int $limite = 12): Collection
     {
         return Producto::activos()
-            ->with(['marca', 'descuentoActivo'])
+            ->with(['marca', 'descuentoActivo', 'subcategoria.categoria.animal'])
             ->latest('created_at')
             ->limit($limite)
             ->get()
@@ -28,7 +28,7 @@ class HomeService
     public function productosEnOferta(int $limite = 12): Collection
     {
         return Producto::activos()
-            ->with(['marca', 'descuentoActivo'])
+            ->with(['marca', 'descuentoActivo', 'subcategoria.categoria.animal'])
             ->whereHas('descuentoActivo')
             ->latest('created_at')
             ->limit($limite)
@@ -41,14 +41,16 @@ class HomeService
     {
         return Marca::whereNotNull('logo')
             ->orderBy('nombre')
-            ->limit($limite)
             ->get()
+            ->filter(fn (Marca $m) => file_exists(public_path("image/marcas/{$m->logo}")))
+            ->take($limite)
             ->map(fn (Marca $m) => [
                 'id' => $m->id_marca,
                 'nombre' => $m->nombre,
                 'logo' => "/image/marcas/{$m->logo}",
                 'href' => "/marcas/{$m->id_marca}",
-            ]);
+            ])
+            ->values();
     }
 
     private function transformarProducto(Producto $p): array
@@ -71,7 +73,8 @@ class HomeService
             'id' => $p->id_producto,
             'nombre' => $p->nombre,
             'marca' => $p->marca?->nombre,
-            'imagen' => $p->imagen_principal ? "/image/productos/{$p->imagen_principal}" : null,
+            'imagen' => Producto::urlImagen($p->imagen_principal),
+            'tipo_animal' => $p->subcategoria?->categoria?->animal?->nombre,
             'precio' => (float) $p->precio,
             'precioFinal' => round($precioFinal, 2),
             'porcentajeOff' => $porcentajeOff,
