@@ -5,6 +5,16 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="google" content="notranslate" />
         <meta name="csrf-token" content="{{ csrf_token() }}">
+
+        {{-- Open Graph para WhatsApp/redes sociales (bots no ejecutan JS) --}}
+        @if(request()->is('catalogo'))
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="{{ url('/catalogo') }}" />
+        <meta property="og:title" content="Catálogo de Productos — {{ config('app.name') }}" />
+        <meta property="og:description" content="Encuentra todos nuestros productos para mascotas: alimento, accesorios y más." />
+        <meta property="og:image" content="{{ url('/image/logo-full.png') }}" />
+        <meta name="twitter:card" content="summary_large_image" />
+        @endif
         {{-- Inline script to detect system dark mode preference and apply it immediately --}}
         <script>
             (function() {

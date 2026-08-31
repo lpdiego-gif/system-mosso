@@ -1,6 +1,7 @@
 import StorefrontLayout from '@/layouts/storefront-layout';
 import { BeneficiosBar, ProductoCarrusel, MarcaCarrusel } from '@/components/HomeSections';
 import type { ProductoCard, MarcaCard } from '@/types/producto';
+import { Link } from '@inertiajs/react';
 
 interface WelcomeProps {
   productosDestacados: ProductoCard[];
@@ -28,9 +29,12 @@ export default function Welcome({
               directo a tu hogar.
             </p>
             <div className="mt-6 flex gap-3">
-              <button className="bg-mosso-yellow hover:bg-mosso-yellow/85 text-gray-900 font-bold px-6 py-3 rounded-xl transition-colors shadow-sm">
+              <Link
+                href="/catalogo"
+                className="bg-mosso-yellow hover:bg-mosso-yellow/85 text-gray-900 font-bold px-6 py-3 rounded-xl transition-colors shadow-sm"
+              >
                 Ver catálogo
-              </button>
+              </Link>
               <button className="border-2 border-gray-900 text-gray-900 font-bold px-6 py-3 rounded-xl hover:bg-gray-900 hover:text-white transition-colors">
                 Ver ofertas
               </button>

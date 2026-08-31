@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\TipoServicioController;
 use App\Http\Controllers\BusquedaController;
 use App\Http\Controllers\CarritoController;
 use App\Http\Controllers\CatalogoController;
+use App\Http\Controllers\CatalogoPublicoController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ClienteRegistroController;
 use App\Http\Controllers\CuentaController;
@@ -78,6 +79,15 @@ Route::middleware(['auth', 'cliente'])->prefix('checkout')->name('checkout.')->g
     Route::post('/{pedido}/pagar', [CheckoutController::class, 'pagar'])->whereNumber('pedido')->name('pagar');
     Route::get('/confirmacion/{pedido}', [CheckoutController::class, 'confirmacion'])->whereNumber('pedido')->name('confirmacion');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Catálogo público — página completa con filtros y descarga PDF
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/catalogo', [CatalogoPublicoController::class, 'index'])->name('catalogo.publico');
+Route::get('/catalogo/pdf', [CatalogoPublicoController::class, 'pdf'])->name('catalogo.pdf');
 
 /*
 |--------------------------------------------------------------------------
