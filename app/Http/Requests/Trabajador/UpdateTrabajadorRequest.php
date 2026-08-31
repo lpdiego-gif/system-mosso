@@ -11,8 +11,7 @@ class UpdateTrabajadorRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        // return $this->user()->can('trabajadores.editar');
-        return true;
+        return (bool) $this->user()?->can('permiso', 'trabajadores.editar');
     }
 
     public function prepareForValidation(): void

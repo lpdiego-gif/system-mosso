@@ -60,10 +60,7 @@ class CheckoutTest extends TestCase
             $t->timestamps();
         });
 
-        Schema::create('trabajadores', function (Blueprint $t) {
-            $t->id('id_trabajador');
-            $t->unsignedBigInteger('fk_user')->nullable();
-        });
+        // `trabajadores` ya la crea la migración `2026_08_31_080003_create_trabajadores_table.php`.
 
         Schema::create('clientes', function (Blueprint $t) {
             $t->id('id_cliente');

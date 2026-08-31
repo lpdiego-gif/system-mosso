@@ -10,9 +10,7 @@ class StoreTrabajadorRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        // Ajusta según tu sistema de permisos (Gate/Policy), p. ej.:
-        // return $this->user()->can('trabajadores.crear');
-        return true;
+        return (bool) $this->user()?->can('permiso', 'trabajadores.crear');
     }
 
     public function prepareForValidation(): void

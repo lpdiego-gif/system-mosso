@@ -1,3 +1,5 @@
+// Must stay the first import — see resources/js/bootstrap-ziggy.ts for why.
+import './bootstrap-ziggy';
 import { createInertiaApp } from '@inertiajs/react';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';

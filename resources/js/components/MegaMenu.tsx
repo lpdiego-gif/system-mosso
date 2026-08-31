@@ -192,7 +192,7 @@ function MenuLinkItem({
           }`}
         >
 
-          <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-2xl shadow-gray-900/10 ring-1 ring-black/[0.02]">
+          <div className="max-w-[calc(100vw-2rem)] overflow-x-auto overflow-y-hidden rounded-2xl border border-gray-100 bg-white shadow-2xl shadow-gray-900/10 ring-1 ring-black/[0.02] [scrollbar-width:thin]">
 
             {/* =====================================================
                 MARCAS
