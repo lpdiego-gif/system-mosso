@@ -1,5 +1,6 @@
-import { Link } from '@inertiajs/react';
-import { BookOpen, Building2, Package, FolderGit2, LayoutGrid, Scissors, Settings2, Users } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import { BookOpen, Building2, Package, FolderGit2, LayoutGrid, Scissors, Settings2, ShieldCheck, Users } from 'lucide-react';
+import { useMemo } from 'react';
 import { route } from 'ziggy-js';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
@@ -17,55 +18,76 @@ import {
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 
+/**
+ * Cada ítem operativo se asocia a la clave de permiso (`modulo.accion`,
+ * tabla `permisos`) que lo habilita — ver `Admin/Roles/Index.tsx`. Los
+ * ítems de `SUPER_ADMIN_NAV_ITEMS` no tienen permiso asociado porque no son
+ * delegables: solo se muestran cuando `esSuperAdmin` es verdadero (ver
+ * `EnsureSuperAdmin`, el middleware que protege sus rutas en el backend).
+ */
+interface NavItemConPermiso extends NavItem {
+    permiso: string;
+}
 
-const mainNavItems: NavItem[] = [
+const OPERATIVE_NAV_ITEMS: NavItemConPermiso[] = [
     {
         title: 'Panel de Controles',
         href: route('dashboard'),
         icon: LayoutGrid,
-    },{
+        permiso: 'dashboard.ver',
+    },
+    {
         title: 'Clientes',
         href: route('admin.clientes.index'),
         icon: Users,
+        permiso: 'clientes.ver',
     },
-
     {
         title: 'Productos',
         href: route('admin.productos.index'),
         icon: Package,
+        permiso: 'productos.ver',
     },
     {
         title: 'Empresa',
         href: route('empresa.index'),
         icon: Building2,
+        permiso: 'empresa.ver',
     },
     {
         title: 'Servicios',
         href: route('admin.servicios.index'),
         icon: Scissors,
+        permiso: 'servicios.ver',
     },
     {
         title: 'Trabajadores',
         href: '/trabajador',
         icon: FolderGit2,
+        permiso: 'trabajadores.ver',
         items: [
             {
                 title: 'Trabajadores',
                 href: '/trabajador',
             },
         ],
-    },{
+    },
+    {
         title: 'Departamento',
         href: '/distrito',
         icon: FolderGit2,
+        permiso: 'distritos.ver',
         items: [
             {
                 title: 'Provincia',
                 href: '/distrito',
             },
-            
         ],
     },
+];
+
+/** Exclusivos del Super Administrador — ver EnsureSuperAdmin. */
+const SUPER_ADMIN_NAV_ITEMS: NavItem[] = [
     {
         title: 'Menu Header',
         href: route('admin.menus.index'),
@@ -80,8 +102,20 @@ const mainNavItems: NavItem[] = [
         title: 'Funciones',
         href: route('admin.funciones.index'),
         icon: Settings2,
-    }
+    },
 ];
+
+/**
+ * No es ni operativo (no depende de una clave en `misPermisos`, ya que
+ * `roles.*` dejó de ser un permiso delegable) ni exclusivo del Super
+ * Administrador: también lo ve «Administrador», con alcance acotado a su
+ * equipo — ver `PermisoService::puedeGestionarRoles()`.
+ */
+const ROLES_NAV_ITEM: NavItem = {
+    title: 'Roles y Permisos',
+    href: route('admin.roles.index'),
+    icon: ShieldCheck,
+};
 
 const footerNavItems: NavItem[] = [
     {
@@ -96,7 +130,20 @@ const footerNavItems: NavItem[] = [
     },
 ];
 
+function useNavItemsVisibles(): NavItem[] {
+    const { misPermisos } = usePage().props;
+
+    return useMemo(() => {
+        const set = new Set(misPermisos ?? []);
+
+        return OPERATIVE_NAV_ITEMS.filter((item) => set.has(item.permiso));
+    }, [misPermisos]);
+}
+
 export function AppSidebar() {
+    const mainNavItems = useNavItemsVisibles();
+    const { esSuperAdmin, puedeGestionarRoles } = usePage().props;
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -113,6 +160,8 @@ export function AppSidebar() {
 
             <SidebarContent>
                 <NavMain items={mainNavItems} />
+                {puedeGestionarRoles && <NavMain items={[ROLES_NAV_ITEM]} label="Equipo" />}
+                {esSuperAdmin && <NavMain items={SUPER_ADMIN_NAV_ITEMS} label="Super Admin" />}
             </SidebarContent>
 
             <SidebarFooter>

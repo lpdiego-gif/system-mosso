@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
@@ -17,16 +18,12 @@ class DashboardTest extends TestCase
      * trabajadores, pedidos, etc.), que se gestionan fuera de las migraciones de
      * Laravel (ver `base de datos/mosso.sql`). Para poder probar la ruta contra la
      * base de datos sqlite en memoria de los tests, se crean aquí versiones mínimas
-     * de esas tablas.
+     * de esas tablas. `roles` y `trabajadores` ya las crean las migraciones
+     * (`2026_08_31_08000{0,3}_create_*_table.php`), así que no se recrean aquí.
      */
     protected function setUp(): void
     {
         parent::setUp();
-
-        Schema::create('roles', function (Blueprint $table) {
-            $table->id('id_rol');
-            $table->string('nombre');
-        });
 
         Schema::create('personas', function (Blueprint $table) {
             $table->id('id_persona');
@@ -37,12 +34,6 @@ class DashboardTest extends TestCase
         Schema::create('clientes', function (Blueprint $table) {
             $table->id('id_cliente');
             $table->unsignedBigInteger('fk_persona')->nullable();
-        });
-
-        Schema::create('trabajadores', function (Blueprint $table) {
-            $table->id('id_trabajador');
-            $table->unsignedBigInteger('fk_rol');
-            $table->boolean('activo')->default(true);
         });
 
         Schema::create('animales', function (Blueprint $table) {
@@ -124,6 +115,20 @@ class DashboardTest extends TestCase
     public function test_authenticated_users_can_visit_the_dashboard()
     {
         $user = User::factory()->create();
+
+        // Solo un trabajador con permiso `dashboard.ver` puede ver el panel
+        // (ver PermisoService) — un simple usuario autenticado, sin fila en
+        // `trabajadores`, ya no basta. «Super Administrador» tiene bypass
+        // total sin necesitar filas en `rol_permisos`.
+        $idRol = DB::table('roles')->insertGetId(['nombre' => 'Super Administrador']);
+        DB::table('trabajadores')->insert([
+            'fk_persona' => 1,
+            'fk_user' => $user->id,
+            'fk_rol' => $idRol,
+            'fecha_ingreso' => now()->toDateString(),
+            'activo' => true,
+        ]);
+
         $this->actingAs($user);
 
         $response = $this->get(route('dashboard'));

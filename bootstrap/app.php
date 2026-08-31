@@ -2,8 +2,11 @@
 
 use App\Http\Middleware\EnsureEsCliente;
 use App\Http\Middleware\EnsureFuncionActiva;
+use App\Http\Middleware\EnsureGestionaRoles;
 use App\Http\Middleware\EnsureMenuAnimalActivo;
 use App\Http\Middleware\EnsureMenuCuentaActivo;
+use App\Http\Middleware\EnsurePermiso;
+use App\Http\Middleware\EnsureSuperAdmin;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
@@ -32,6 +35,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'menu.cuenta' => EnsureMenuCuentaActivo::class,
             'menu.animal' => EnsureMenuAnimalActivo::class,
             'feature' => EnsureFuncionActiva::class,
+            'permiso' => EnsurePermiso::class,
+            'super_admin' => EnsureSuperAdmin::class,
+            'gestiona.roles' => EnsureGestionaRoles::class,
         ]);
 
         // El checkout es parte del storefront: el invitado va al login público
