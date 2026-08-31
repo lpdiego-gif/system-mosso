@@ -14,6 +14,9 @@ declare module '@inertiajs/core' {
             auth: Auth;
             sidebarOpen: boolean;
             carrito: { cantidad: number };
+            misPermisos: string[];
+            esSuperAdmin: boolean;
+            puedeGestionarRoles: boolean;
             [key: string]: unknown;
         };
     }

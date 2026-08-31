@@ -6,6 +6,7 @@ use App\Services\CarritoService;
 use App\Services\FuncionService;
 use App\Services\MenuCuentaService;
 use App\Services\MenuService;
+use App\Services\PermisoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Middleware;
@@ -47,6 +48,22 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+
+            // Claves de permiso (`modulo.accion`) del usuario autenticado — el sidebar
+            // admin las usa para no mostrar secciones a las que no tiene acceso.
+            // OJO: se llama "misPermisos" (no "permisos") a propósito — la pantalla
+            // de Roles y Permisos ya usa "permisos" para su propio catálogo
+            // (Admin/Roles/Index), y Inertia sobreescribe un prop compartido con
+            // uno de página que tenga el mismo nombre.
+            'misPermisos' => fn () => $request->user()
+                ? app(PermisoService::class)->clavesDe($request->user())
+                : [],
+            'esSuperAdmin' => fn () => $request->user()
+                ? app(PermisoService::class)->esSuperAdmin($request->user())
+                : false,
+            'puedeGestionarRoles' => fn () => $request->user()
+                ? app(PermisoService::class)->puedeGestionarRoles($request->user())
+                : false,
 
             // Menú del header/mega menu, disponible en todas las páginas
             'menu' => fn () => app(MenuService::class)->build(),
