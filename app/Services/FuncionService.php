@@ -3,9 +3,21 @@
 namespace App\Services;
 
 use App\Models\Funcion;
+use Illuminate\Support\Facades\Cache;
 
 class FuncionService
 {
+    /**
+     * `funciones` se lee en cada request (es un prop compartido de Inertia,
+     * ver HandleInertiaRequests) para decidir qué se muestra en el menú y
+     * qué rutas se bloquean — se cachea un rato para no pagar esa consulta
+     * en cada navegación. Se invalida sola al guardar/borrar un Funcion
+     * (ver Funcion::booted()), así que el techo de 5 min es solo un resguardo.
+     */
+    private const CACHE_KEY = 'shared.funciones.estados';
+
+    private const CACHE_TTL = 300;
+
     /**
      * Si la clave no tiene fila en `funciones`, se considera habilitada por
      * defecto — solo los módulos que explícitamente se agregaron a la tabla
@@ -14,9 +26,7 @@ class FuncionService
      */
     public function activa(string $clave): bool
     {
-        $funcion = Funcion::where('clave', $clave)->first();
-
-        return $funcion === null || $funcion->activo;
+        return $this->estados()[$clave] ?? true;
     }
 
     /**
@@ -24,9 +34,16 @@ class FuncionService
      */
     public function estados(): array
     {
-        return Funcion::query()
-            ->pluck('activo', 'clave')
-            ->map(fn ($activo) => (bool) $activo)
-            ->all();
+        return Cache::remember(self::CACHE_KEY, self::CACHE_TTL, function () {
+            return Funcion::query()
+                ->pluck('activo', 'clave')
+                ->map(fn ($activo) => (bool) $activo)
+                ->all();
+        });
+    }
+
+    public static function limpiarCache(): void
+    {
+        Cache::forget(self::CACHE_KEY);
     }
 }

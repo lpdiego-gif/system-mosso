@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\MenuCuenta;
+use Illuminate\Support\Facades\Cache;
 
 class MenuCuentaService
 {
@@ -37,15 +38,31 @@ class MenuCuentaService
 
     public function __construct(private readonly FuncionService $funciones) {}
 
+    public const CACHE_KEY = 'shared.menu_cuenta';
+
+    private const CACHE_TTL = 300;
+
+    /**
+     * Prop compartido de Inertia (se lee en cada request); se cachea un rato
+     * y se invalida sola al guardar/borrar un MenuCuenta (ver
+     * MenuCuenta::booted()).
+     */
     public function build(): array
     {
-        return MenuCuenta::where('activo', true)
-            ->orderBy('orden')
-            ->get()
-            ->filter(fn (MenuCuenta $item) => $this->visible($item))
-            ->map(fn (MenuCuenta $item) => $this->resolveItem($item))
-            ->values()
-            ->toArray();
+        return Cache::remember(self::CACHE_KEY, self::CACHE_TTL, function () {
+            return MenuCuenta::where('activo', true)
+                ->orderBy('orden')
+                ->get()
+                ->filter(fn (MenuCuenta $item) => $this->visible($item))
+                ->map(fn (MenuCuenta $item) => $this->resolveItem($item))
+                ->values()
+                ->toArray();
+        });
+    }
+
+    public static function limpiarCache(): void
+    {
+        Cache::forget(self::CACHE_KEY);
     }
 
     private function visible(MenuCuenta $item): bool

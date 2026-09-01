@@ -7,6 +7,7 @@ use App\Models\Marca;
 use App\Models\Menu;
 use App\Models\Producto;
 use App\Models\TipoServicio;
+use Illuminate\Support\Facades\Cache;
 
 class MenuService
 {
@@ -15,15 +16,33 @@ class MenuService
 
     public function __construct(private readonly FuncionService $funciones) {}
 
+    public const CACHE_KEY = 'shared.menu';
+
+    private const CACHE_TTL = 300;
+
+    /**
+     * Se recalcula el mega menú completo (categorías, subcategorías,
+     * miniaturas de producto, marcas, servicios...) en cada visita porque es
+     * un prop compartido de Inertia -- se cachea un rato ya que son varias
+     * consultas por request. Se invalida sola al guardar/borrar un Menu (ver
+     * Menu::booted()).
+     */
     public function build(): array
     {
-        return Menu::where('activo', true)
-            ->orderBy('orden')
-            ->get()
-            ->filter(fn (Menu $item) => $this->visible($item))
-            ->map(fn (Menu $item) => $this->resolveItem($item))
-            ->values()
-            ->toArray();
+        return Cache::remember(self::CACHE_KEY, self::CACHE_TTL, function () {
+            return Menu::where('activo', true)
+                ->orderBy('orden')
+                ->get()
+                ->filter(fn (Menu $item) => $this->visible($item))
+                ->map(fn (Menu $item) => $this->resolveItem($item))
+                ->values()
+                ->toArray();
+        });
+    }
+
+    public static function limpiarCache(): void
+    {
+        Cache::forget(self::CACHE_KEY);
     }
 
     /**

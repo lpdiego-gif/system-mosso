@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Requests\Empresa\UpdateEmpresaRequest;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -128,6 +130,11 @@ class EmpresaController extends Controller
         if ($logoAnterior && ($logoNuevo || $request->boolean('eliminar_logo')) && $logoAnterior !== $empresa->logo) {
             Storage::disk('public')->delete($logoAnterior);
         }
+
+        // Los datos de la empresa se comparten cacheados en cada request
+        // (ver HandleInertiaRequests) -- se limpian al guardar para que el
+        // header/footer reflejen el cambio de inmediato.
+        Cache::forget(HandleInertiaRequests::EMPRESA_CACHE_KEY);
 
         return response()->json([
             'message' => 'Datos de la empresa guardados correctamente.',

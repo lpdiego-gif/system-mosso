@@ -18,7 +18,7 @@ const enlacesTienda = [
 const enlacesAyuda = [
   { label: 'Delivery', href: '#' },
   { label: 'Métodos de pago', href: '#' },
-  { label: 'Cambios y devoluciones', href: '#' },
+  { label: 'Cambios y devoluciones', href: '/cambios-y-devoluciones' },
   { label: 'Preguntas frecuentes', href: '#' },
   { label: 'Términos y condiciones', href: '#' },
   { label: 'Libro de reclamaciones', href: '/libro-de-reclamaciones' },

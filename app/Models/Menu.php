@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\MenuService;
 use Illuminate\Database\Eloquent\Model;
 
 class Menu extends Model
@@ -17,6 +18,14 @@ class Menu extends Model
         'destacado' => 'boolean',
         'activo' => 'boolean',
     ];
+
+    protected static function booted(): void
+    {
+        // El mega menú se cachea (ver MenuService); cualquier cambio desde
+        // /admin/menus debe reflejarse de inmediato.
+        static::saved(fn () => MenuService::limpiarCache());
+        static::deleted(fn () => MenuService::limpiarCache());
+    }
 
     public function animal()
     {

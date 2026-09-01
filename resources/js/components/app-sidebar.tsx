@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Building2, Package, FolderGit2, LayoutGrid, Scissors, Settings2, ShieldCheck, Users } from 'lucide-react';
+import { BookOpen, Building2, FileWarning, Package, FolderGit2, LayoutGrid, RotateCcw, Scissors, Settings2, ShieldCheck, ShoppingBag, Users } from 'lucide-react';
 import { useMemo } from 'react';
 import { route } from 'ziggy-js';
 import AppLogo from '@/components/app-logo';
@@ -59,6 +59,24 @@ const OPERATIVE_NAV_ITEMS: NavItemConPermiso[] = [
         href: route('admin.servicios.index'),
         icon: Scissors,
         permiso: 'servicios.ver',
+    },
+    {
+        title: 'Pedidos',
+        href: route('admin.pedidos.index'),
+        icon: ShoppingBag,
+        permiso: 'pedidos.ver',
+    },
+    {
+        title: 'Cambios y devoluciones',
+        href: route('admin.devoluciones.index'),
+        icon: RotateCcw,
+        permiso: 'devoluciones.ver',
+    },
+    {
+        title: 'Libro de reclamaciones',
+        href: route('admin.reclamos.index'),
+        icon: FileWarning,
+        permiso: 'reclamos.ver',
     },
     {
         title: 'Trabajadores',

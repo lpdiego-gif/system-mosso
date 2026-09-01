@@ -3,6 +3,10 @@
 use App\Http\Controllers\Admin\AnimalController;
 use App\Http\Controllers\Admin\CategoriaController;
 use App\Http\Controllers\Admin\ClienteController;
+use App\Http\Controllers\Admin\DevolucionController as AdminDevolucionController;
+use App\Http\Controllers\Admin\PedidoController as AdminPedidoController;
+use App\Http\Controllers\Admin\ReclamoController as AdminReclamoController;
+use App\Http\Controllers\DevolucionController;
 use App\Http\Controllers\Admin\MarcaController;
 use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\FuncionController;
@@ -175,6 +179,20 @@ Route::middleware(['auth', 'cliente'])->group(function () {
     });
 });
 
+/*
+|--------------------------------------------------------------------------
+| Cambios y devoluciones (cliente autenticado)
+|--------------------------------------------------------------------------
+| Enlazada desde el footer del Portal Web. Si el visitante no tiene sesión,
+| el middleware `auth` lo manda a /login y Laravel lo trae de vuelta aquí
+| apenas inicia sesión (intended URL).
+*/
+
+Route::middleware(['auth', 'cliente'])->group(function () {
+    Route::get('/cambios-y-devoluciones', [DevolucionController::class, 'create'])->name('devoluciones.create');
+    Route::post('/cambios-y-devoluciones', [DevolucionController::class, 'store'])->name('devoluciones.store');
+});
+
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
 
     /*
@@ -279,6 +297,51 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 
     Route::middleware('permiso:clientes.eliminar')->group(function () {
         Route::delete('/clientes/{cliente}', [ClienteController::class, 'destroy'])->whereNumber('cliente')->name('clientes.destroy');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Pedidos (admin)
+    |--------------------------------------------------------------------------
+    */
+
+    Route::middleware('permiso:pedidos.ver')->group(function () {
+        Route::get('/pedidos', [AdminPedidoController::class, 'index'])->name('pedidos.index');
+        Route::get('/pedidos/{pedido}', [AdminPedidoController::class, 'show'])->whereNumber('pedido')->name('pedidos.show');
+    });
+
+    Route::middleware('permiso:pedidos.gestionar')->group(function () {
+        Route::patch('/pedidos/{pedido}/estado', [AdminPedidoController::class, 'actualizarEstado'])->whereNumber('pedido')->name('pedidos.estado');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cambios y devoluciones (admin)
+    |--------------------------------------------------------------------------
+    */
+
+    Route::middleware('permiso:devoluciones.ver')->group(function () {
+        Route::get('/devoluciones', [AdminDevolucionController::class, 'index'])->name('devoluciones.index');
+        Route::get('/devoluciones/{devolucion}', [AdminDevolucionController::class, 'show'])->whereNumber('devolucion')->name('devoluciones.show');
+    });
+
+    Route::middleware('permiso:devoluciones.gestionar')->group(function () {
+        Route::patch('/devoluciones/{devolucion}/estado', [AdminDevolucionController::class, 'actualizarEstado'])->whereNumber('devolucion')->name('devoluciones.estado');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Libro de reclamaciones (admin)
+    |--------------------------------------------------------------------------
+    */
+
+    Route::middleware('permiso:reclamos.ver')->group(function () {
+        Route::get('/reclamos', [AdminReclamoController::class, 'index'])->name('reclamos.index');
+        Route::get('/reclamos/{reclamo}', [AdminReclamoController::class, 'show'])->whereNumber('reclamo')->name('reclamos.show');
+    });
+
+    Route::middleware('permiso:reclamos.gestionar')->group(function () {
+        Route::patch('/reclamos/{reclamo}/estado', [AdminReclamoController::class, 'actualizarEstado'])->whereNumber('reclamo')->name('reclamos.estado');
     });
 
     /*

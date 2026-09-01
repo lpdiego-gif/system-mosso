@@ -29,7 +29,18 @@ class MiCuentaPedidosController extends Controller
                 'p.fecha_pedido',
             )
             ->orderByDesc('p.fecha_pedido')
-            ->get();
+            ->get()
+            // DB::table() no aplica los casts del modelo Pedido: los decimales
+            // llegan como string desde MySQL y el frontend hace .toFixed()
+            // sobre ellos, lo que rompía el render (pantalla en blanco).
+            ->map(function ($p) {
+                $p->subtotal = (float) $p->subtotal;
+                $p->descuento_total = (float) $p->descuento_total;
+                $p->igv = (float) $p->igv;
+                $p->total = (float) $p->total;
+
+                return $p;
+            });
 
         return Inertia::render('mi-cuenta-pedidos', [
             'pedidos' => $pedidos,

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\MenuCuentaService;
 use Illuminate\Database\Eloquent\Model;
 
 class MenuCuenta extends Model
@@ -17,4 +18,12 @@ class MenuCuenta extends Model
     protected $casts = [
         'activo' => 'boolean',
     ];
+
+    protected static function booted(): void
+    {
+        // El menú de "Mi cuenta" se cachea (ver MenuCuentaService); cualquier
+        // cambio desde /admin/menu-cuenta debe reflejarse de inmediato.
+        static::saved(fn () => MenuCuentaService::limpiarCache());
+        static::deleted(fn () => MenuCuentaService::limpiarCache());
+    }
 }

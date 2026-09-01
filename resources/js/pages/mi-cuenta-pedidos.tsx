@@ -4,11 +4,12 @@ import StorefrontLayout from '@/layouts/storefront-layout';
 import type { MiCuentaPedidosProps, Pedido } from '@/types/cuenta';
 
 const ESTADO: Record<string, { label: string; cls: string }> = {
-  pendiente:  { label: 'Pendiente',  cls: 'bg-yellow-50  text-yellow-800  border-yellow-200'  },
-  confirmado: { label: 'Confirmado', cls: 'bg-blue-50    text-blue-800    border-blue-200'    },
-  enviado:    { label: 'Enviado',    cls: 'bg-purple-50  text-purple-800  border-purple-200'  },
-  entregado:  { label: 'Entregado', cls: 'bg-green-50   text-green-800   border-green-200'   },
-  cancelado:  { label: 'Cancelado', cls: 'bg-red-50     text-red-700     border-red-200'     },
+  'pendiente de pago': { label: 'Pendiente de pago', cls: 'bg-yellow-50  text-yellow-800  border-yellow-200' },
+  pagado:              { label: 'Pagado',            cls: 'bg-sky-50     text-sky-800     border-sky-200'    },
+  'en preparación':    { label: 'En preparación',    cls: 'bg-purple-50  text-purple-800  border-purple-200' },
+  enviado:             { label: 'Enviado',            cls: 'bg-indigo-50  text-indigo-800  border-indigo-200' },
+  entregado:           { label: 'Entregado',          cls: 'bg-green-50   text-green-800   border-green-200'  },
+  cancelado:           { label: 'Cancelado',          cls: 'bg-red-50     text-red-700     border-red-200'    },
 };
 
 function EstadoBadge({ estado }: { estado: string }) {
@@ -64,9 +65,17 @@ export default function MiCuentaPedidos({ pedidos }: MiCuentaPedidosProps) {
       <Head title="Mis pedidos" />
 
       <MiCuentaShell activo="pedidos">
-        <div className="mb-6">
-          <h1 className="text-xl font-black text-gray-900">Mis pedidos</h1>
-          <p className="mt-1 text-sm text-gray-500">Historial completo de tus compras en MOSSO.</p>
+        <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-xl font-black text-gray-900">Mis pedidos</h1>
+            <p className="mt-1 text-sm text-gray-500">Historial completo de tus compras en MOSSO.</p>
+          </div>
+          <a
+            href="/cambios-y-devoluciones"
+            className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-gray-200 px-4 py-2 text-xs font-semibold text-gray-700 hover:border-gray-300"
+          >
+            Solicitar cambio o devolución
+          </a>
         </div>
 
         {pedidos.length > 0 ? (

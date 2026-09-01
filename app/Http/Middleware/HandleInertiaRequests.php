@@ -8,11 +8,14 @@ use App\Services\MenuCuentaService;
 use App\Services\MenuService;
 use App\Services\PermisoService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
 {
+    public const EMPRESA_CACHE_KEY = 'shared.empresa';
+
     /**
      * The root template that's loaded on the first page visit.
      *
@@ -79,15 +82,17 @@ class HandleInertiaRequests extends Middleware
                 'cantidad' => app(CarritoService::class)->contarItems($request),
             ],
 
-            // Datos públicos de la empresa (logo, contacto, dirección) para el header/footer.
-            'empresa' => fn () => DB::table('empresa as e')
+            // Datos públicos de la empresa (logo, contacto, dirección) para el
+            // header/footer. Se cachea (se consulta en cada request); se
+            // invalida sola al guardar desde /empresa (ver EmpresaController).
+            'empresa' => fn () => Cache::remember(self::EMPRESA_CACHE_KEY, 300, fn () => DB::table('empresa as e')
                 ->leftJoin('direcciones as d', 'd.id_direccion', '=', 'e.fk_direccion')
                 ->leftJoin('distritos as dist', 'dist.id_distrito', '=', 'd.fk_distrito')
                 ->select([
                     'e.nombre_comercial', 'e.logo', 'e.correo', 'e.telefono',
                     'd.direccion', 'dist.nombre as distrito',
                 ])
-                ->first(),
+                ->first()),
         ];
     }
 }
