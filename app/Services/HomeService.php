@@ -42,7 +42,7 @@ class HomeService
         return Marca::whereNotNull('logo')
             ->orderBy('nombre')
             ->get()
-            ->filter(fn (Marca $m) => file_exists(public_path("image/marcas/{$m->logo}")))
+            ->filter(fn (Marca $m) => Marca::logoValido($m->logo))
             ->take($limite)
             ->map(fn (Marca $m) => [
                 'id' => $m->id_marca,

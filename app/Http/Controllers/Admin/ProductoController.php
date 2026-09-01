@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Producto;
+use App\Support\CatalogoCache;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -145,6 +146,7 @@ class ProductoController extends Controller
                 'updated_at' => now(),
             ]);
 
+            CatalogoCache::flush();
             Inertia::flash('toast', ['type' => 'success', 'message' => 'El producto ya existía: se sumó el stock ingresado.']);
 
             return redirect()->route('admin.productos.index');
@@ -171,6 +173,7 @@ class ProductoController extends Controller
             'updated_at' => now(),
         ]);
 
+        CatalogoCache::flush();
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Producto registrado correctamente.']);
 
         return redirect()->route('admin.productos.index');
@@ -276,6 +279,7 @@ class ProductoController extends Controller
             'updated_at' => now(),
         ]);
 
+        CatalogoCache::flush();
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Producto actualizado correctamente.']);
 
         return redirect()->route('admin.productos.index');
@@ -306,6 +310,7 @@ class ProductoController extends Controller
         // ON DELETE CASCADE limpia descuentos, carrito_detalle y producto_imagenes.
         DB::table('productos')->where('id_producto', $producto)->delete();
 
+        CatalogoCache::flush();
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Producto eliminado correctamente.']);
 
         return back();
@@ -324,6 +329,7 @@ class ProductoController extends Controller
             'updated_at' => now(),
         ]);
 
+        CatalogoCache::flush();
         Inertia::flash('toast', [
             'type' => 'success',
             'message' => $nuevo === 1 ? 'Producto activado.' : 'Producto desactivado.',
@@ -354,6 +360,7 @@ class ProductoController extends Controller
             'updated_at' => now(),
         ]);
 
+        CatalogoCache::flush();
         Inertia::flash('toast', ['type' => 'success', 'message' => "Stock actualizado a {$nuevo}."]);
 
         return back();

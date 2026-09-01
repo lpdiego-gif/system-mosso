@@ -164,7 +164,7 @@ class MenuService
             [
                 'titulo' => null,
                 'items' => Marca::orderBy('nombre')->get()
-                    ->filter(fn ($m) => $m->logo && file_exists(public_path("image/marcas/{$m->logo}")))
+                    ->filter(fn ($m) => Marca::logoValido($m->logo))
                     ->map(fn ($m) => [
                         'id' => $m->id_marca,
                         'nombre' => $m->nombre,

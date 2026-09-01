@@ -6,6 +6,7 @@ use App\Models\Animal;
 use App\Models\Categoria;
 use App\Models\Producto;
 use App\Models\SubCategoria;
+use App\Support\CatalogoCache;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -16,32 +17,36 @@ class CatalogoPublicoController extends Controller
 {
     public function index(): Response
     {
-        $animales = Animal::with(['categorias.subcategorias'])
-            ->orderBy('nombre')
-            ->get()
-            ->map(fn ($a) => [
-                'id'         => $a->id_animal,
-                'nombre'     => $a->nombre,
-                'categorias' => $a->categorias->map(fn ($c) => [
-                    'id'            => $c->id_categoria,
-                    'nombre'        => $c->nombre,
-                    'subcategorias' => $c->subcategorias->map(fn ($s) => [
-                        'id'     => $s->id_subcategorias,
-                        'nombre' => $s->nom_sub_categoria,
+        // Esta página vuelca TODO el catálogo activo (~2000 productos, ~1 MB
+        // de JSON) en cada visita. Se cachea el payload ya transformado; se
+        // invalida al editar productos (ver CatalogoCache::flush()).
+        $datos = CatalogoCache::remember('publico', function () {
+            $animales = Animal::with(['categorias.subcategorias'])
+                ->orderBy('nombre')
+                ->get()
+                ->map(fn ($a) => [
+                    'id' => $a->id_animal,
+                    'nombre' => $a->nombre,
+                    'categorias' => $a->categorias->map(fn ($c) => [
+                        'id' => $c->id_categoria,
+                        'nombre' => $c->nombre,
+                        'subcategorias' => $c->subcategorias->map(fn ($s) => [
+                            'id' => $s->id_subcategorias,
+                            'nombre' => $s->nom_sub_categoria,
+                        ])->values(),
                     ])->values(),
-                ])->values(),
-            ]);
+                ]);
 
-        $productos = Producto::activos()
-            ->with(['marca', 'descuentoActivo', 'subcategoria.categoria.animal'])
-            ->latest('created_at')
-            ->get()
-            ->map(fn (Producto $p) => $this->formato($p));
+            $productos = Producto::activos()
+                ->with(['marca', 'descuentoActivo', 'subcategoria.categoria.animal'])
+                ->latest('created_at')
+                ->get()
+                ->map(fn (Producto $p) => $this->formato($p));
 
-        return Inertia::render('catalogo/publico', [
-            'animales'  => $animales,
-            'productos' => $productos,
-        ]);
+            return ['animales' => $animales, 'productos' => $productos];
+        });
+
+        return Inertia::render('catalogo/publico', $datos);
     }
 
     public function pdf(Request $request)
@@ -70,7 +75,7 @@ class CatalogoPublicoController extends Controller
         }
 
         if ($request->filled('q')) {
-            $q = '%' . $request->string('q') . '%';
+            $q = '%'.$request->string('q').'%';
             $query->where('nombre', 'like', $q);
         }
 
@@ -85,46 +90,46 @@ class CatalogoPublicoController extends Controller
 
         $pdf = Pdf::loadView('pdf.catalogo', [
             'productos' => collect($productos),
-            'titulo'    => $this->tituloFiltro($request),
-            'fecha'     => now()->format('d/m/Y H:i'),
+            'titulo' => $this->tituloFiltro($request),
+            'fecha' => now()->format('d/m/Y H:i'),
         ])
-        ->setOptions(['isLocalFileSystemAllowed' => true])
-        ->setPaper('a4', 'portrait');
+            ->setOptions(['isLocalFileSystemAllowed' => true])
+            ->setPaper('a4', 'portrait');
 
         return $pdf->download('catalogo-mosso.pdf');
     }
 
     private function formato(Producto $p): array
     {
-        $descuento     = $p->descuentoActivo;
-        $precioFinal   = (float) $p->precio;
+        $descuento = $p->descuentoActivo;
+        $precioFinal = (float) $p->precio;
         $porcentajeOff = null;
 
         if ($descuento) {
             if ($descuento->tipo === 'porcentaje') {
-                $precioFinal   = $p->precio - ($p->precio * $descuento->valor / 100);
+                $precioFinal = $p->precio - ($p->precio * $descuento->valor / 100);
                 $porcentajeOff = (int) round($descuento->valor);
             } else {
-                $precioFinal   = max(0, $p->precio - $descuento->valor);
+                $precioFinal = max(0, $p->precio - $descuento->valor);
                 $porcentajeOff = (int) round((1 - $precioFinal / $p->precio) * 100);
             }
         }
 
         return [
-            'id'              => $p->id_producto,
-            'nombre'          => $p->nombre,
-            'marca'           => $p->marca?->nombre,
-            'imagen'          => Producto::urlImagen($p->imagen_principal),
-            'precio'          => (float) $p->precio,
-            'precioFinal'     => round($precioFinal, 2),
-            'porcentajeOff'   => $porcentajeOff,
-            'animal'          => $p->subcategoria?->categoria?->animal?->nombre,
-            'animal_id'       => $p->subcategoria?->categoria?->animal?->id_animal,
-            'categoria'       => $p->subcategoria?->categoria?->nombre,
-            'categoria_id'    => $p->subcategoria?->categoria?->id_categoria,
-            'subcategoria'    => $p->subcategoria?->nom_sub_categoria,
+            'id' => $p->id_producto,
+            'nombre' => $p->nombre,
+            'marca' => $p->marca?->nombre,
+            'imagen' => Producto::urlImagen($p->imagen_principal),
+            'precio' => (float) $p->precio,
+            'precioFinal' => round($precioFinal, 2),
+            'porcentajeOff' => $porcentajeOff,
+            'animal' => $p->subcategoria?->categoria?->animal?->nombre,
+            'animal_id' => $p->subcategoria?->categoria?->animal?->id_animal,
+            'categoria' => $p->subcategoria?->categoria?->nombre,
+            'categoria_id' => $p->subcategoria?->categoria?->id_categoria,
+            'subcategoria' => $p->subcategoria?->nom_sub_categoria,
             'subcategoria_id' => $p->fk_id_subcategorias,
-            'href'            => "/producto/{$p->id_producto}",
+            'href' => "/producto/{$p->id_producto}",
         ];
     }
 
@@ -159,12 +164,12 @@ class CatalogoPublicoController extends Controller
         if ($logCount < 5) {
             $logCount++;
             Log::info("PDF imagen [{$logCount}]", [
-                'path'   => $path,
-                'full'   => $full,
+                'path' => $path,
+                'full' => $full,
                 'exists' => file_exists($full),
-                'bytes'  => file_exists($full) ? filesize($full) : null,
-                'ext'    => strtolower(pathinfo($full, PATHINFO_EXTENSION)),
-                'gd'     => extension_loaded('gd'),
+                'bytes' => file_exists($full) ? filesize($full) : null,
+                'ext' => strtolower(pathinfo($full, PATHINFO_EXTENSION)),
+                'gd' => extension_loaded('gd'),
             ]);
         }
 
@@ -190,10 +195,10 @@ class CatalogoPublicoController extends Controller
 
         $src = match ($info[2]) {
             IMAGETYPE_JPEG => @imagecreatefromjpeg($full),
-            IMAGETYPE_PNG  => @imagecreatefrompng($full),
-            IMAGETYPE_GIF  => @imagecreatefromgif($full),
+            IMAGETYPE_PNG => @imagecreatefrompng($full),
+            IMAGETYPE_GIF => @imagecreatefromgif($full),
             IMAGETYPE_WEBP => function_exists('imagecreatefromwebp') ? @imagecreatefromwebp($full) : null,
-            default        => null,
+            default => null,
         };
 
         if (! $src) {
@@ -203,8 +208,8 @@ class CatalogoPublicoController extends Controller
 
         $origW = imagesx($src);
         $origH = imagesy($src);
-        $newW  = min($origW, 120);
-        $newH  = $origH > 0 ? (int) round($newW * $origH / $origW) : $newW;
+        $newW = min($origW, 120);
+        $newH = $origH > 0 ? (int) round($newW * $origH / $origW) : $newW;
 
         $dst = imagecreatetruecolor($newW, $newH);
         if (! $dst) {
@@ -234,7 +239,7 @@ class CatalogoPublicoController extends Controller
         @unlink($tmp);
 
         return ($data !== false && $data !== '')
-            ? 'data:image/jpeg;base64,' . base64_encode($data)
+            ? 'data:image/jpeg;base64,'.base64_encode($data)
             : null;
     }
 
@@ -246,7 +251,7 @@ class CatalogoPublicoController extends Controller
     {
         // Normaliza separadores y construye file:/// con segmentos codificados.
         $normalized = str_replace('\\', '/', $full);
-        $parts      = explode('/', $normalized);
+        $parts = explode('/', $normalized);
 
         $encoded = implode('/', array_map(function (string $segment): string {
             // No codificar letras de unidad Windows (ej. "C:")
@@ -255,7 +260,7 @@ class CatalogoPublicoController extends Controller
                 : rawurlencode($segment);
         }, $parts));
 
-        return 'file:///' . ltrim($encoded, '/');
+        return 'file:///'.ltrim($encoded, '/');
     }
 
     private function tituloFiltro(Request $request): string

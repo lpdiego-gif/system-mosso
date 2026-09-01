@@ -6,6 +6,7 @@ use App\Models\Animal;
 use App\Models\Categoria;
 use App\Models\Producto;
 use App\Models\SubCategoria;
+use App\Support\CatalogoCache;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -15,27 +16,28 @@ class CatalogoController extends Controller
     {
         $subcategoria->load(['categoria.animal']);
 
-        $productos = Producto::activos()
+        $productos = CatalogoCache::remember("subcategoria:{$subcategoria->id_subcategorias}", fn () => Producto::activos()
             ->with(['marca', 'descuentoActivo', 'subcategoria.categoria.animal'])
             ->where('fk_id_subcategorias', $subcategoria->id_subcategorias)
             ->latest('created_at')
             ->get()
-            ->map(fn (Producto $p) => $this->formato($p));
+            ->map(fn (Producto $p) => $this->formato($p))
+            ->values());
 
         return Inertia::render('catalogo/index', [
             'titulo' => $subcategoria->nom_sub_categoria,
             'breadcrumbs' => [
                 [
                     'label' => $subcategoria->categoria->animal->nombre,
-                    'href'  => "/catalogo/animal/{$subcategoria->categoria->animal->id_animal}",
+                    'href' => "/catalogo/animal/{$subcategoria->categoria->animal->id_animal}",
                 ],
                 [
                     'label' => $subcategoria->categoria->nombre,
-                    'href'  => "/catalogo/categoria/{$subcategoria->categoria->id_categoria}",
+                    'href' => "/catalogo/categoria/{$subcategoria->categoria->id_categoria}",
                 ],
                 [
                     'label' => $subcategoria->nom_sub_categoria,
-                    'href'  => null,
+                    'href' => null,
                 ],
             ],
             'productos' => $productos,
@@ -48,23 +50,24 @@ class CatalogoController extends Controller
 
         $ids = $categoria->subcategorias->pluck('id_subcategorias');
 
-        $productos = Producto::activos()
+        $productos = CatalogoCache::remember("categoria:{$categoria->id_categoria}", fn () => Producto::activos()
             ->with(['marca', 'descuentoActivo', 'subcategoria.categoria.animal'])
             ->whereIn('fk_id_subcategorias', $ids)
             ->latest('created_at')
             ->get()
-            ->map(fn (Producto $p) => $this->formato($p));
+            ->map(fn (Producto $p) => $this->formato($p))
+            ->values());
 
         return Inertia::render('catalogo/index', [
             'titulo' => $categoria->nombre,
             'breadcrumbs' => [
                 [
                     'label' => $categoria->animal->nombre,
-                    'href'  => "/catalogo/animal/{$categoria->animal->id_animal}",
+                    'href' => "/catalogo/animal/{$categoria->animal->id_animal}",
                 ],
                 [
                     'label' => $categoria->nombre,
-                    'href'  => null,
+                    'href' => null,
                 ],
             ],
             'productos' => $productos,
@@ -79,19 +82,20 @@ class CatalogoController extends Controller
             fn ($c) => $c->subcategorias->pluck('id_subcategorias')
         );
 
-        $productos = Producto::activos()
+        $productos = CatalogoCache::remember("animal:{$animal->id_animal}", fn () => Producto::activos()
             ->with(['marca', 'descuentoActivo', 'subcategoria.categoria.animal'])
             ->whereIn('fk_id_subcategorias', $ids)
             ->latest('created_at')
             ->get()
-            ->map(fn (Producto $p) => $this->formato($p));
+            ->map(fn (Producto $p) => $this->formato($p))
+            ->values());
 
         return Inertia::render('catalogo/index', [
             'titulo' => $animal->nombre,
             'breadcrumbs' => [
                 [
                     'label' => $animal->nombre,
-                    'href'  => null,
+                    'href' => null,
                 ],
             ],
             'productos' => $productos,
@@ -100,30 +104,30 @@ class CatalogoController extends Controller
 
     private function formato(Producto $p): array
     {
-        $descuento    = $p->descuentoActivo;
-        $precioFinal  = (float) $p->precio;
+        $descuento = $p->descuentoActivo;
+        $precioFinal = (float) $p->precio;
         $porcentajeOff = null;
 
         if ($descuento) {
             if ($descuento->tipo === 'porcentaje') {
-                $precioFinal   = $p->precio - ($p->precio * $descuento->valor / 100);
+                $precioFinal = $p->precio - ($p->precio * $descuento->valor / 100);
                 $porcentajeOff = (int) round($descuento->valor);
             } else {
-                $precioFinal   = max(0, $p->precio - $descuento->valor);
+                $precioFinal = max(0, $p->precio - $descuento->valor);
                 $porcentajeOff = (int) round((1 - $precioFinal / $p->precio) * 100);
             }
         }
 
         return [
-            'id'            => $p->id_producto,
-            'nombre'        => $p->nombre,
-            'marca'         => $p->marca?->nombre,
-            'imagen'        => Producto::urlImagen($p->imagen_principal),
-            'tipo_animal'   => $p->subcategoria?->categoria?->animal?->nombre,
-            'precio'        => (float) $p->precio,
-            'precioFinal'   => round($precioFinal, 2),
+            'id' => $p->id_producto,
+            'nombre' => $p->nombre,
+            'marca' => $p->marca?->nombre,
+            'imagen' => Producto::urlImagen($p->imagen_principal),
+            'tipo_animal' => $p->subcategoria?->categoria?->animal?->nombre,
+            'precio' => (float) $p->precio,
+            'precioFinal' => round($precioFinal, 2),
             'porcentajeOff' => $porcentajeOff,
-            'href'          => "/producto/{$p->id_producto}",
+            'href' => "/producto/{$p->id_producto}",
         ];
     }
 }

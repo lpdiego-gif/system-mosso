@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Marca;
+use App\Support\CatalogoCache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -21,6 +22,8 @@ class MarcaController extends Controller
         ]);
 
         $marca = Marca::create($validated);
+
+        CatalogoCache::flush();
 
         return response()->json([
             'message' => 'Marca creada correctamente.',
