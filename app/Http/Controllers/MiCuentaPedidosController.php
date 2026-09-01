@@ -77,7 +77,18 @@ class MiCuentaPedidosController extends Controller
             return back();
         }
 
-        $pedido->delete();
+        // Se borran primero pago/comprobante/detalle/receptor a mano, sin
+        // asumir que la FK en BD tenga ON DELETE CASCADE (las tablas del
+        // dump original no pasan por migraciones de Laravel, así que no
+        // hay garantía) -- así $pedido->delete() nunca falla por una
+        // restricción de llave foránea.
+        DB::transaction(function () use ($pedido) {
+            $pedido->pago?->delete();
+            $pedido->comprobante?->delete();
+            $pedido->recojoTercero?->delete();
+            $pedido->detalles()->delete();
+            $pedido->delete();
+        });
 
         Inertia::flash('toast', [
             'type' => 'success',
@@ -108,6 +119,19 @@ class MiCuentaPedidosController extends Controller
             Inertia::flash('toast', ['type' => 'info', 'message' => 'Este pedido ya fue pagado.']);
 
             return redirect()->route('checkout.confirmacion', $pedido->id_pedido);
+        }
+
+        // Guarda: un pedido sin líneas (dato corrupto/de prueba, o uno creado
+        // antes de que crearPedidoPendiente() envolviera todo en una
+        // transacción) no debe vaciar el carrito del cliente para luego no
+        // poner nada en su lugar -- se avisa y no se toca el carrito.
+        if ($pedido->detalles()->doesntExist()) {
+            Inertia::flash('toast', [
+                'type' => 'error',
+                'message' => 'Este pedido no tiene productos asociados y no se puede pagar. Elimínalo y vuelve a comprar, o contáctanos.',
+            ]);
+
+            return redirect()->route('mi-cuenta.pedidos');
         }
 
         $carrito = $carritoService->resolverCarrito($request);

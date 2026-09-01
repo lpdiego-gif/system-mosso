@@ -16,6 +16,7 @@ createInertiaApp({
         switch (true) {
             case name === 'welcome':
             case name === 'libro-de-reclamaciones':
+            case name === 'cambios-y-devoluciones':
             case name === 'cuenta':
             case name === 'auth/reset-password':
             case name === 'auth/two-factor-challenge':
@@ -26,6 +27,7 @@ createInertiaApp({
             case name.startsWith('carrito/'):
             case name.startsWith('checkout/'):
             case name.startsWith('servicios/'):
+            case name.startsWith('marcas/'):
             case name === 'buscar':
             case name === 'favoritos':
             case name === 'ofertas':
