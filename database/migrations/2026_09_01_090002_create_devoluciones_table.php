@@ -11,10 +11,12 @@ use Illuminate\Support\Facades\Schema;
  * detalle y un dato de contacto para coordinar. No hay un modelo previo de
  * referencia en el proyecto — tabla creada de cero.
  *
- * Usa `increments()`/`unsignedInteger()` (en vez de `id()`/`foreignId()`,
- * que generan BIGINT) porque las tablas del esquema de negocio (`clientes`,
- * `pedidos`, `pedido_detalle`) usan INT UNSIGNED — mismo criterio que
- * `mascotas`/`puntos_cliente`/`pagos`.
+ * `fk_cliente`/`fk_pedido`/`fk_pedido_detalle` van como `integer()` (con
+ * signo, sin "unsigned") porque así están definidas `clientes.id_cliente`,
+ * `pedidos.id_pedido` y `pedido_detalle.id_pedido_detalle` en el esquema de
+ * negocio (confirmado con `SHOW CREATE TABLE clientes` — `int(11)` sin
+ * `unsigned`, igual que usa `mascotas.fk_cliente`) — una FK debe tener
+ * exactamente el mismo tipo que la columna referenciada.
  */
 return new class extends Migration
 {
@@ -23,8 +25,8 @@ return new class extends Migration
         if (! Schema::hasTable('devoluciones')) {
             Schema::create('devoluciones', function (Blueprint $table) {
                 $table->increments('id_devolucion');
-                $table->unsignedInteger('fk_cliente');
-                $table->unsignedInteger('fk_pedido');
+                $table->integer('fk_cliente');
+                $table->integer('fk_pedido');
 
                 $table->enum('tipo', ['cambio', 'devolucion']);
                 $table->enum('motivo', [
@@ -60,7 +62,7 @@ return new class extends Migration
             Schema::create('devolucion_detalle', function (Blueprint $table) {
                 $table->increments('id_devolucion_detalle');
                 $table->unsignedInteger('fk_devolucion');
-                $table->unsignedInteger('fk_pedido_detalle');
+                $table->integer('fk_pedido_detalle');
                 $table->unsignedInteger('cantidad');
 
                 $table->foreign('fk_devolucion')->references('id_devolucion')->on('devoluciones')->onDelete('cascade');
