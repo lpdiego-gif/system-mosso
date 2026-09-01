@@ -144,14 +144,16 @@ function Encabezado({
     descripcion,
 }: {
     titulo: string;
-    descripcion: string;
+    descripcion?: string;
 }) {
     return (
         <div className="text-center">
             <h1 className="text-2xl font-black text-gray-900">{titulo}</h1>
-            <p className="mx-auto mt-1.5 max-w-xs text-sm text-gray-500">
-                {descripcion}
-            </p>
+            {descripcion && (
+                <p className="mx-auto mt-1.5 max-w-xs text-sm text-gray-500">
+                    {descripcion}
+                </p>
+            )}
         </div>
     );
 }
@@ -214,10 +216,7 @@ function FormularioLogin({
 }) {
     return (
         <div>
-            <Encabezado
-                titulo="Bienvenido de vuelta"
-                descripcion="Entra como cliente o como trabajador de MOSSO con la misma cuenta."
-            />
+            <Encabezado titulo="Bienvenido de vuelta" />
 
             <div className="mt-6">
                 <PasskeyVerify
@@ -297,11 +296,6 @@ function FormularioLogin({
                     </>
                 )}
             </Form>
-
-            <p className="mt-6 text-center text-xs text-gray-400">
-                ¿Eres trabajador de MOSSO? Tu cuenta ya fue creada por el
-                administrador; solo inicia sesión aquí.
-            </p>
         </div>
     );
 }
