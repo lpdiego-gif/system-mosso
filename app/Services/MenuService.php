@@ -112,6 +112,10 @@ class MenuService
         return [
             [
                 'titulo' => 'Categorías',
+                // ->values()->all() en cada nivel: nos aseguramos de que sea un array
+                // plano y reindexado (no una Collection) para que sobreviva intacto
+                // al pasar por Cache::remember() (serialize/unserialize) y siempre
+                // se serialice como array JSON `[]`, nunca como objeto `{}`.
                 'items' => $categorias->map(fn ($cat) => [
                     'id' => $cat->id_categoria,
                     'nombre' => $cat->nombre,
@@ -127,11 +131,11 @@ class MenuService
                                 'id' => $p->id_producto,
                                 'nombre' => $p->nombre,
                                 'imagen' => Producto::urlImagen($p->imagen_principal),
-                            ])->values(),
+                            ])->values()->all(),
                             'totalProductos' => $productos->count(),
                         ];
-                    }),
-                ]),
+                    })->values()->all(),
+                ])->values()->all(),
             ],
         ];
     }
@@ -149,7 +153,7 @@ class MenuService
                     'nombre' => $a->nombre,
                     'href' => "/catalogo/animal/{$a->id_animal}",
                     'hijos' => [],
-                ]),
+                ])->values()->all(),
             ],
         ];
     }
@@ -167,7 +171,7 @@ class MenuService
                         'href' => "/marcas/{$m->id_marca}",
                         'logo' => "/image/marcas/{$m->logo}",
                         'hijos' => [],
-                    ])->values(),
+                    ])->values()->all(),
             ],
         ];
     }
@@ -182,7 +186,7 @@ class MenuService
                     'nombre' => $t->nombre,
                     'href' => "/servicios/{$t->id_tipo_servicio}",
                     'hijos' => [],
-                ]),
+                ])->values()->all(),
             ],
         ];
     }
