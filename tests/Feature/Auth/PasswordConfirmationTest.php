@@ -28,6 +28,8 @@ class PasswordConfirmationTest extends TestCase
     {
         $response = $this->get(route('password.confirm'));
 
-        $response->assertRedirect(route('login'));
+        // Login único del proyecto: los invitados van a /cuenta (Portal Web),
+        // no a la página /login de Fortify (ver bootstrap/app.php).
+        $response->assertRedirect(route('cuenta'));
     }
 }

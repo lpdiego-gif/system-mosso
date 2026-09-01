@@ -52,6 +52,29 @@
 >     en `MenuService`, `HomeService` y `MarcaCatalogoController`. Refréscalo con
 >     `php artisan cache:clear` si agregas logos a mano.
 >
+> **GOTCHA de caché (Laravel 13): `config/cache.php` trae `serializable_classes
+> => false`** — la caché NO deserializa NINGÚN objeto (defensa contra gadget
+> chains si se filtra el `APP_KEY`). Un objeto guardado en caché vuelve como
+> `__PHP_Incomplete_Class` al leerlo, y en el frontend eso es
+> `{"__PHP_Incomplete_Class_Name": "..."}` en vez de un array → `a.map is not a
+> function`. **Nunca cachees Collections, modelos Eloquent ni `stdClass`** —
+> solo arrays planos. `CatalogoCache::remember()` fuerza esto con un round-trip
+> `json_decode(json_encode(...))` en el closure. Ya se sabía para `MenuService`
+> (comentario "->values()->all() ... para que sobreviva a Cache::remember").
+> **Pendiente:** el prop compartido `empresa` de `HandleInertiaRequests` cachea
+> `DB::table('empresa')->first()` (un `stdClass`) — hoy en `mosso2` la tabla
+> está vacía y devuelve `null`, así que no truena, pero en cuanto exista una
+> fila de empresa el header/footer/Libro de Reclamaciones se romperán igual;
+> hay que cachear `(array) ...->first()`.
+
+> **Login único (2026-09-01):** `bootstrap/app.php` `redirectGuestsTo` ahora
+> manda a `route('cuenta')` a CUALQUIER invitado (antes: storefront → `/cuenta`,
+> resto → `/login` de Fortify). `/cuenta` sirve para trabajador y cliente
+> (ambos POSTean a `login.store`, `LoginResponse` decide el destino por tipo de
+> cuenta + URL intended). La página `/login` (`auth/login.tsx`) sigue existiendo
+> pero ya no se llega por redirección. Tests actualizados:
+> `PasswordConfirmationTest` y `DashboardTest` ahora esperan `route('cuenta')`.
+>
 > **Config del contenedor (vía override, no toca `.env`):** `APP_ENV=local`,
 > `APP_DEBUG=true` los pone el override (dev). En prod real irían a `production`
 > / `false` + `php artisan optimize` (config/route/view/event cache) — hoy el

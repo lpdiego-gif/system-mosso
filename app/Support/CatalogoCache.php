@@ -38,13 +38,22 @@ class CatalogoCache
     }
 
     /**
-     * @template T
+     * El callback normalmente devuelve Collections (de `->map()`, `->get()`).
+     * `config/cache.php` tiene `serializable_classes => false` (default de
+     * Laravel 13, defensa contra gadget chains si se filtra el APP_KEY), así
+     * que la caché NO deserializa objetos: una Collection cacheada vuelve como
+     * `__PHP_Incomplete_Class` y el frontend revienta con "a.map is not a
+     * function". El round-trip por JSON garantiza que solo se guarden arrays
+     * planos; corre una vez por miss (~5 min).
      *
-     * @param  Closure(): T  $callback
-     * @return T
+     * @return array<mixed>
      */
-    public static function remember(string $key, Closure $callback): mixed
+    public static function remember(string $key, Closure $callback): array
     {
-        return Cache::remember("catalogo:{$key}:v".self::version(), self::TTL, $callback);
+        return Cache::remember(
+            "catalogo:{$key}:v".self::version(),
+            self::TTL,
+            static fn () => json_decode(json_encode($callback(), JSON_THROW_ON_ERROR), true, flags: JSON_THROW_ON_ERROR),
+        );
     }
 }

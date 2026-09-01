@@ -40,16 +40,14 @@ return Application::configure(basePath: dirname(__DIR__))
             'gestiona.roles' => EnsureGestionaRoles::class,
         ]);
 
-        // El checkout y "Cambios y devoluciones" son parte del storefront: el
-        // invitado va al login público (/cuenta), no al login por defecto de
-        // Fortify (/login).
-        $middleware->redirectGuestsTo(function (Request $request) {
-            if ($request->routeIs('checkout.*') || $request->routeIs('devoluciones.*')) {
-                return route('cuenta');
-            }
-
-            return route('login');
-        });
+        // Login único del proyecto: cualquier invitado que caiga en una ruta
+        // protegida (storefront o panel admin) va a /cuenta, el formulario del
+        // Portal Web. Sirve para trabajador y cliente por igual — ambos POSTean
+        // a `login.store` de Fortify y `LoginResponse` decide el destino según
+        // el tipo de cuenta y la URL "intended". La página /login de Fortify
+        // (auth/login.tsx) sigue existiendo pero ya no se llega a ella por
+        // redirección.
+        $middleware->redirectGuestsTo(fn () => route('cuenta'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
