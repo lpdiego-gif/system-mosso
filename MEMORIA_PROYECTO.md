@@ -12,6 +12,54 @@
 
 ---
 
+> ## Rendimiento (2026-09-01) — LEER si la app va lenta
+>
+> **Causa #1 de lentitud, ya resuelta: el bind mount de Docker en Windows.**
+> `docker-compose.override.yml` montaba TODO el proyecto (`- .:/var/www/html`),
+> incluido `vendor/` (~15 000 archivos), desde el disco de Windows hacia la VM
+> de Docker Desktop. Cada lectura/`stat` de archivo cuesta ~1-3 ms (vs ~0.05 ms
+> nativo). Laravel toca cientos de archivos por request → **cada página tardaba
+> 5-14 s** (incluso `/up`). Medido: 200 lecturas desde el bind mount = 329 ms;
+> desde disco del contenedor = 9 ms (36×).
+> **Fix:** el override ahora deja el código de la app montado (edición en vivo)
+> pero pone `vendor`, `node_modules`, `storage/framework` y `bootstrap/cache` en
+> **volúmenes de Docker** (disco rápido de Linux, sembrados desde la imagen), y
+> fuerza `CACHE_STORE=file` + `SESSION_DRIVER=file` para el contenedor. Resultado:
+> páginas de tienda de 5-14 s → **~0.4 s**. Si cambias `composer.json` y
+> reconstruyes la imagen, refresca el volumen: `docker compose up -d --build
+> --renew-anon-volumes` (o `docker volume rm system_mosso_vendor`).
+> Latencia residual (~0.35 s + picos de ~0.8 s): son los archivos de `app/`,
+> `config/`, `routes/` que siguen en el bind mount + revalidación de opcache.
+> Para exprimir más (opcional, cambia el flujo de "editar y ver"):
+> `opcache.validate_timestamps=0` + `docker compose restart app` tras editar, o
+> pasar a `docker compose watch` (sync) en vez del bind mount. También ayuda
+> excluir la carpeta del proyecto de Windows Defender.
+>
+> **Causa #2: páginas de catálogo que rehidratan ~2000 modelos Eloquent por
+> visita.** `/catalogo` volcaba los 2134 productos activos (~1 MB de JSON) en
+> cada request; el home, `/ofertas`, `/marcas` y `/catalogo/animal|categoria|
+> subcategoria` hacían lo mismo con subconjuntos. Y el mega menú + `/marcas` +
+> el home hacían un `file_exists()` por marca (~140 `stat` sobre el bind mount).
+> **Fix (código):**
+>   - `App\Support\CatalogoCache` — cachea el payload ya transformado de esas
+>     páginas (TTL 300 s de respaldo) con invalidación por contador de versión
+>     (`CatalogoCache::flush()`); se llama desde `ProductoController` (store,
+>     update, destroy, toggleEstado, ajustarStock) y `MarcaController::store`.
+>     Un descuento que entra en vigencia por fecha tarda ≤5 min en verse (el
+>     TTL); no hay endpoint que escriba `descuentos` (se editan por BD).
+>   - `Marca::logoValido()` / `Marca::logosDisponibles()` — un `scandir` de
+>     `public/image/marcas` cacheado 1 h, reemplaza el `file_exists()` por marca
+>     en `MenuService`, `HomeService` y `MarcaCatalogoController`. Refréscalo con
+>     `php artisan cache:clear` si agregas logos a mano.
+>
+> **Config del contenedor (vía override, no toca `.env`):** `APP_ENV=local`,
+> `APP_DEBUG=true` los pone el override (dev). En prod real irían a `production`
+> / `false` + `php artisan optimize` (config/route/view/event cache) — hoy el
+> Dockerfile NO corre `optimize` y `bootstrap/cache/` solo tiene el
+> package:discover. OPcache está ON y sano (no es el cuello de botella).
+>
+> ---
+
 > ## Actualización 2026-09-01 (cambios traídos de GitHub) — LEER PRIMERO
 >
 > Desde la foto anterior (checkout, 2026-08-27) el proyecto creció mucho. Estado verificado el 2026-09-01: `npx tsc --noEmit` **en verde**, `npx vite build` **en verde**, `php artisan test` **37/50** (las 13 rojas son la misma deuda pre-existente de siempre: los tests de `Auth/*`, `Settings/*`, `ExampleTest` y ahora también `DashboardTest` dan 500 porque su `setUp()` no crea las tablas que `HandleInertiaRequests` consulta en cada respuesta Inertia — ver abajo). `./vendor/bin/pint --test` marca ~37 archivos con fixes de estilo pendientes (cosmético). Todas las migraciones corrieron en `mosso2`.
