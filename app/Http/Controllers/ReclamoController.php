@@ -40,7 +40,8 @@ class ReclamoController extends Controller
 
             'tienda_compra' => ['required', Rule::in(['fisica', 'online'])],
             'monto_reclamado' => ['nullable', 'numeric', 'min:0', 'max:999999.99'],
-            'tipo_bien' => ['required', Rule::in(['producto', 'servicio'])],
+            // MOSSO solo vende productos: el formulario ya no ofrece "servicio" como opción.
+            'tipo_bien' => ['required', Rule::in(['producto'])],
             'descripcion_bien' => ['required', 'string', 'max:2000'],
 
             'tipo_atencion' => ['required', Rule::in(['reclamo', 'queja'])],

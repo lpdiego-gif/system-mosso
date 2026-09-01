@@ -9,7 +9,32 @@ use Inertia\Response;
 
 class MarcaCatalogoController extends Controller
 {
-    public function __invoke(Marca $marca): Response
+    /**
+     * Listado de todas las marcas ("Ver todas" del mega menú / botón "Marca").
+     */
+    public function index(): Response
+    {
+        $marcas = Marca::withCount(['productos' => fn ($q) => $q->activos()])
+            ->orderBy('nombre')
+            ->get()
+            ->filter(fn (Marca $m) => $m->productos_count > 0)
+            ->map(fn (Marca $m) => [
+                'id' => $m->id_marca,
+                'nombre' => $m->nombre,
+                'logo' => $m->logo && file_exists(public_path("image/marcas/{$m->logo}"))
+                    ? "/image/marcas/{$m->logo}"
+                    : null,
+                'totalProductos' => $m->productos_count,
+                'href' => "/marcas/{$m->id_marca}",
+            ])
+            ->values();
+
+        return Inertia::render('marcas/index', [
+            'marcas' => $marcas,
+        ]);
+    }
+
+    public function show(Marca $marca): Response
     {
         $productos = Producto::activos()
             ->with(['marca', 'descuentoActivo'])
@@ -21,7 +46,7 @@ class MarcaCatalogoController extends Controller
         return Inertia::render('catalogo/index', [
             'titulo'      => $marca->nombre,
             'breadcrumbs' => [
-                ['label' => 'Marcas',       'href' => null],
+                ['label' => 'Marcas',       'href' => '/marcas'],
                 ['label' => $marca->nombre, 'href' => null],
             ],
             'productos'   => $productos->values(),

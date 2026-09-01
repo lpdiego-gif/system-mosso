@@ -39,7 +39,8 @@ Route::get('/', HomeController::class)->name('home');
 Route::get('/buscar', BusquedaController::class)->name('buscar');
 Route::get('/favoritos', FavoritosController::class)->name('favoritos');
 Route::get('/ofertas', OfertasController::class)->name('ofertas');
-Route::get('/marcas/{marca}', MarcaCatalogoController::class)->whereNumber('marca')->name('marcas.show');
+Route::get('/marcas', [MarcaCatalogoController::class, 'index'])->name('marcas.index');
+Route::get('/marcas/{marca}', [MarcaCatalogoController::class, 'show'])->whereNumber('marca')->name('marcas.show');
 
 /*
 |--------------------------------------------------------------------------

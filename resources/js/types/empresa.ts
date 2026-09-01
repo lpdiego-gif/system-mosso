@@ -31,8 +31,10 @@ export interface Distrito {
     fk_provincia: number;
 }
 
-/** Datos públicos de la empresa compartidos en todas las páginas (header/footer). */
+/** Datos públicos de la empresa compartidos en todas las páginas (header/footer, Libro de Reclamaciones). */
 export interface EmpresaPublica {
+    ruc: string | null;
+    razon_social: string | null;
     nombre_comercial: string;
     logo: string | null;
     correo: string;

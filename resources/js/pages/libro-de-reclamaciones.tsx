@@ -5,25 +5,21 @@ import { store } from '@/actions/App/Http/Controllers/ReclamoController';
 import InputError from '@/components/input-error';
 import StorefrontLayout from '@/layouts/storefront-layout';
 import type { ReclamoRegistradoFlash } from '@/types/reclamo';
-
-/**
- * Datos legales de cabecera. Reemplaza estos placeholders cuando tengas el
- * RUC y la dirección fiscal reales de MOSSO S.A.C.
- */
-const EMPRESA = {
-  razonSocial: 'MOSSO S.A.C.',
-  ruc: '[Completar RUC de MOSSO S.A.C.]',
-  direccionFiscal: '[Completar dirección fiscal de MOSSO S.A.C.]',
-};
+import type { EmpresaPublica } from '@/types/empresa';
 
 const inputClass =
   'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-mosso-yellow focus:border-mosso-yellow';
 
 export default function LibroDeReclamaciones() {
-  const { flash } = usePage().props as unknown as {
+  const { flash, empresa } = usePage().props as unknown as {
     flash?: { reclamoRegistrado?: ReclamoRegistradoFlash };
+    empresa: EmpresaPublica | null;
   };
   const [esMenorEdad, setEsMenorEdad] = useState(false);
+
+  const direccionFiscal = empresa?.direccion
+    ? `${empresa.direccion}${empresa.distrito ? `, ${empresa.distrito}` : ''}`
+    : null;
 
   return (
     <StorefrontLayout>
@@ -35,13 +31,16 @@ export default function LibroDeReclamaciones() {
 
           <div className="mt-4 rounded-lg bg-gray-50 border border-gray-200 p-4 text-sm text-gray-600 space-y-1">
             <p>
-              <span className="font-semibold text-gray-900">Razón social:</span> {EMPRESA.razonSocial}
+              <span className="font-semibold text-gray-900">Razón social:</span>{' '}
+              {empresa?.razon_social || 'Pendiente de configurar en el panel de administración.'}
             </p>
             <p>
-              <span className="font-semibold text-gray-900">RUC:</span> {EMPRESA.ruc}
+              <span className="font-semibold text-gray-900">RUC:</span>{' '}
+              {empresa?.ruc || 'Pendiente de configurar en el panel de administración.'}
             </p>
             <p>
-              <span className="font-semibold text-gray-900">Dirección fiscal:</span> {EMPRESA.direccionFiscal}
+              <span className="font-semibold text-gray-900">Dirección fiscal:</span>{' '}
+              {direccionFiscal || 'Pendiente de configurar en el panel de administración.'}
             </p>
           </div>
 
@@ -146,18 +145,11 @@ export default function LibroDeReclamaciones() {
                   </Campo>
                 </div>
 
-                <fieldset className="mt-4">
-                  <legend className="block text-sm font-medium text-gray-700 mb-2">
-                    Identificación del bien contratado
-                  </legend>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <RadioCard name="tipo_bien" value="producto" label="Producto" defaultChecked />
-                    <RadioCard name="tipo_bien" value="servicio" label="Servicio" />
-                  </div>
-                  <InputError message={errors.tipo_bien} className="mt-1" />
-                </fieldset>
+                {/* MOSSO solo vende productos (no ofrece servicios reclamables), así que el
+                    tipo de bien queda fijo en "producto" — sin selector para el cliente. */}
+                <input type="hidden" name="tipo_bien" value="producto" />
 
-                <Campo label="Descripción del producto o servicio" error={errors.descripcion_bien} className="mt-4">
+                <Campo label="Descripción del producto" error={errors.descripcion_bien} className="mt-4">
                   <textarea name="descripcion_bien" required rows={3} className={inputClass} />
                 </Campo>
               </FormSeccion>

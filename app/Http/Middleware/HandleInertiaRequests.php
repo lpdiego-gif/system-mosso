@@ -82,14 +82,15 @@ class HandleInertiaRequests extends Middleware
                 'cantidad' => app(CarritoService::class)->contarItems($request),
             ],
 
-            // Datos públicos de la empresa (logo, contacto, dirección) para el
-            // header/footer. Se cachea (se consulta en cada request); se
-            // invalida sola al guardar desde /empresa (ver EmpresaController).
+            // Datos públicos de la empresa (razón social, RUC, logo, contacto,
+            // dirección) para el header/footer y el Libro de Reclamaciones. Se
+            // cachea (se consulta en cada request); se invalida sola al
+            // guardar desde /empresa (ver EmpresaController).
             'empresa' => fn () => Cache::remember(self::EMPRESA_CACHE_KEY, 300, fn () => DB::table('empresa as e')
                 ->leftJoin('direcciones as d', 'd.id_direccion', '=', 'e.fk_direccion')
                 ->leftJoin('distritos as dist', 'dist.id_distrito', '=', 'd.fk_distrito')
                 ->select([
-                    'e.nombre_comercial', 'e.logo', 'e.correo', 'e.telefono',
+                    'e.ruc', 'e.razon_social', 'e.nombre_comercial', 'e.logo', 'e.correo', 'e.telefono',
                     'd.direccion', 'dist.nombre as distrito',
                 ])
                 ->first()),
