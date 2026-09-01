@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CarritoDetalle;
 use App\Models\Pedido;
+use App\Models\Producto;
+use App\Services\CarritoService;
 use App\Services\CuentaService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -82,5 +85,59 @@ class MiCuentaPedidosController extends Controller
         ]);
 
         return redirect()->route('mi-cuenta.pedidos');
+    }
+
+    /**
+     * "Ir a pagar" de un pedido "Pendiente de pago": el checkout siempre
+     * cobra sobre el carrito ACTUAL del cliente (nunca sobre el pedido en
+     * sí), así que aquí reemplazamos el carrito por los mismos productos y
+     * cantidades del pedido antes de mandarlo a /checkout. El pedido
+     * pendiente anterior se descarta solo cuando complete un nuevo intento
+     * de pago (ver CheckoutService::descartarPedidosPendientes()).
+     */
+    public function reintentarPago(Request $request, CuentaService $cuentaService, CarritoService $carritoService, Pedido $pedido): RedirectResponse
+    {
+        $clienteId = $cuentaService->clienteIdDe($request->user());
+
+        abort_if($clienteId === null, 403, 'Esta sección es solo para cuentas de cliente.');
+        abort_unless($pedido->fk_cliente === $clienteId, 403);
+
+        $yaPagado = $pedido->pago && $pedido->pago->estado === 'pagado';
+
+        if ($yaPagado) {
+            Inertia::flash('toast', ['type' => 'info', 'message' => 'Este pedido ya fue pagado.']);
+
+            return redirect()->route('checkout.confirmacion', $pedido->id_pedido);
+        }
+
+        $carrito = $carritoService->resolverCarrito($request);
+
+        // Se reemplaza el carrito por los productos de este pedido (no se
+        // mezclan con lo que ya hubiera en el carrito, para no confundir el
+        // total a pagar).
+        CarritoDetalle::where('fk_carrito', $carrito->id_carrito)->delete();
+
+        $huboProductosFaltantes = false;
+
+        foreach ($pedido->detalles as $detalle) {
+            $producto = Producto::find($detalle->fk_producto);
+
+            if (! $producto) {
+                $huboProductosFaltantes = true;
+
+                continue;
+            }
+
+            $carritoService->agregarProducto($carrito, $detalle->fk_producto, $detalle->cantidad);
+        }
+
+        if ($huboProductosFaltantes) {
+            Inertia::flash('toast', [
+                'type' => 'info',
+                'message' => 'Algunos productos de tu pedido ya no están disponibles y no se agregaron al carrito.',
+            ]);
+        }
+
+        return redirect()->route('checkout.show');
     }
 }
