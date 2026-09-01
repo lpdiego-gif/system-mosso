@@ -1,6 +1,7 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
+import { abrirAcceso } from '@/components/ModalAcceso';
 import { useFavoritos } from '@/hooks/use-favoritos';
 import type { EmpresaPublica } from '@/types/empresa';
 import MegaMenu from './MegaMenu';
@@ -56,13 +57,7 @@ function TopBar({
         <div className="hidden items-center gap-1 md:flex">
           <HelpDropdown />
           <span className="mx-0.5 h-6 w-px bg-gray-200" aria-hidden="true" />
-          <Link
-            href="/cuenta"
-            aria-label="Mi cuenta"
-            className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-600 transition-colors hover:bg-gray-50 hover:text-mosso-dark"
-          >
-            <UserIcon />
-          </Link>
+          <CuentaButton />
           <FavoritosButton />
           <CartButton />
         </div>
@@ -154,6 +149,36 @@ function HelpDropdown() {
       <HelpIcon />
       ¿Necesitas ayuda?
       <ChevronDown />
+    </button>
+  );
+}
+
+/**
+ * Icono de usuario. Invitado -> abre el modal de acceso (ModalAcceso) sin
+ * navegar. Con sesión -> va a /cuenta, que en el backend redirige a
+ * /mi-cuenta o /dashboard según el tipo de cuenta.
+ */
+function CuentaButton() {
+  const { auth } = usePage().props;
+  const claseIcono =
+    'flex h-10 w-10 items-center justify-center rounded-lg text-gray-600 transition-colors hover:bg-gray-50 hover:text-mosso-dark';
+
+  if (auth?.user) {
+    return (
+      <Link href="/cuenta" aria-label="Mi cuenta" className={claseIcono}>
+        <UserIcon />
+      </Link>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={abrirAcceso}
+      aria-label="Iniciar sesión"
+      className={claseIcono}
+    >
+      <UserIcon />
     </button>
   );
 }

@@ -1,5 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import { abrirAcceso } from '@/components/ModalAcceso';
 import type { EmpresaPublica } from '@/types/empresa';
 import type { MenuHijo, MenuItem } from '@/types/menu';
 
@@ -151,16 +152,7 @@ return;
 
         {/* Cuenta y ayuda */}
         <div className="shrink-0 space-y-1 border-t border-gray-100 bg-gray-50/60 p-2">
-          <Link
-            href="/cuenta"
-            onClick={onClose}
-            className="flex items-center gap-3 rounded-lg px-2.5 py-2.5 text-sm font-semibold text-gray-900 transition-colors hover:bg-white"
-          >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-mosso-yellow/15 text-mosso-dark">
-              <UserIcon />
-            </span>
-            Mi cuenta
-          </Link>
+          <CuentaLink onClose={onClose} />
           <button
             type="button"
             className="flex w-full items-center gap-3 rounded-lg px-2.5 py-2.5 text-left text-sm font-semibold text-gray-900 transition-colors hover:bg-white"
@@ -173,6 +165,46 @@ return;
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * "Mi cuenta" del menú mobile. Invitado -> cierra el menú y abre el modal de
+ * acceso. Con sesión -> va a /cuenta (el backend redirige a /mi-cuenta o
+ * /dashboard).
+ */
+function CuentaLink({ onClose }: { onClose: () => void }) {
+  const { auth } = usePage().props;
+  const clase =
+    'flex w-full items-center gap-3 rounded-lg px-2.5 py-2.5 text-left text-sm font-semibold text-gray-900 transition-colors hover:bg-white';
+  const contenido = (
+    <>
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-mosso-yellow/15 text-mosso-dark">
+        <UserIcon />
+      </span>
+      Mi cuenta
+    </>
+  );
+
+  if (auth?.user) {
+    return (
+      <Link href="/cuenta" onClick={onClose} className={clase}>
+        {contenido}
+      </Link>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        onClose();
+        abrirAcceso();
+      }}
+      className={clase}
+    >
+      {contenido}
+    </button>
   );
 }
 
