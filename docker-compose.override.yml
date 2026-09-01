@@ -5,11 +5,48 @@
 #
 # Sigue usando "docker compose up -d --build" cuando cambies el Dockerfile,
 # composer.json/composer.lock, o corras "npm run build" (assets nuevos).
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# RENDIMIENTO EN WINDOWS
+# ─────────────────────────────────────────────────────────────────────────────
+# El bind mount "- .:/var/www/html" cruza el sistema de archivos de Windows
+# hacia la VM de Linux de Docker Desktop. Cada lectura/stat de archivo cuesta
+# ~1-3 ms (contra ~0.05 ms en el disco nativo del contenedor). Laravel toca
+# cientos de archivos por request, así que montar TODO -- incluido vendor/
+# (~15 000 archivos) -- hacía que cada página tardara 5-13 s.
+#
+# Solución: se deja el código de la app montado (edición en vivo) pero los
+# directorios grandes y de solo-runtime viven en VOLÚMENES de Docker (disco
+# rápido de Linux), sembrados desde la imagen:
+#   - vendor            -> lo genera "composer install" en el Dockerfile
+#   - node_modules      -> no se usa en runtime (assets ya compilados)
+#   - storage/framework -> vistas Blade compiladas, cache de framework
+#   - bootstrap/cache   -> packages.php / services.php (package:discover)
+#
+# Si cambias composer.json y reconstruyes la imagen, refresca el volumen de
+# vendor:  docker compose up -d --build --renew-anon-volumes
+#          (o "docker compose down" + "docker volume rm system_mosso_vendor")
 
 services:
   app:
     environment:
       APP_ENV: local
       APP_DEBUG: "true"
+      # `file` en vez de `database`: la caché del catálogo guarda payloads
+      # grandes (~1 MB serializado) y el store de BD hacía un SELECT/INSERT de
+      # ese blob en cada hit. Con storage/framework en volumen (disco rápido),
+      # file es más rápido y consistente. Igual para las sesiones.
+      CACHE_STORE: file
+      SESSION_DRIVER: file
     volumes:
       - .:/var/www/html
+      - vendor:/var/www/html/vendor
+      - node_modules:/var/www/html/node_modules
+      - storage_framework:/var/www/html/storage/framework
+      - bootstrap_cache:/var/www/html/bootstrap/cache
+
+volumes:
+  vendor:
+  node_modules:
+  storage_framework:
+  bootstrap_cache:
