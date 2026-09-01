@@ -40,10 +40,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'gestiona.roles' => EnsureGestionaRoles::class,
         ]);
 
-        // El checkout es parte del storefront: el invitado va al login público
-        // (/cuenta), no al login por defecto de Fortify (/login).
+        // El checkout y "Cambios y devoluciones" son parte del storefront: el
+        // invitado va al login público (/cuenta), no al login por defecto de
+        // Fortify (/login).
         $middleware->redirectGuestsTo(function (Request $request) {
-            if ($request->routeIs('checkout.*')) {
+            if ($request->routeIs('checkout.*') || $request->routeIs('devoluciones.*')) {
                 return route('cuenta');
             }
 
