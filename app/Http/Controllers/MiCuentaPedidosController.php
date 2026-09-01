@@ -134,6 +134,31 @@ class MiCuentaPedidosController extends Controller
             return redirect()->route('mi-cuenta.pedidos');
         }
 
+        // Primero se resuelven los productos que todavía existen; el carrito
+        // no se toca hasta saber que hay al menos uno que agregar (si no,
+        // vaciar el carrito para dejarlo igual de vacío solo confunde).
+        $porAgregar = [];
+        $huboProductosFaltantes = false;
+
+        foreach ($pedido->detalles as $detalle) {
+            if (Producto::whereKey($detalle->fk_producto)->doesntExist()) {
+                $huboProductosFaltantes = true;
+
+                continue;
+            }
+
+            $porAgregar[] = $detalle;
+        }
+
+        if ($porAgregar === []) {
+            Inertia::flash('toast', [
+                'type' => 'error',
+                'message' => 'Ninguno de los productos de este pedido sigue disponible. Elimínalo y vuelve a comprar, o contáctanos.',
+            ]);
+
+            return redirect()->route('mi-cuenta.pedidos');
+        }
+
         $carrito = $carritoService->resolverCarrito($request);
 
         // Se reemplaza el carrito por los productos de este pedido (no se
@@ -141,17 +166,7 @@ class MiCuentaPedidosController extends Controller
         // total a pagar).
         CarritoDetalle::where('fk_carrito', $carrito->id_carrito)->delete();
 
-        $huboProductosFaltantes = false;
-
-        foreach ($pedido->detalles as $detalle) {
-            $producto = Producto::find($detalle->fk_producto);
-
-            if (! $producto) {
-                $huboProductosFaltantes = true;
-
-                continue;
-            }
-
+        foreach ($porAgregar as $detalle) {
             $carritoService->agregarProducto($carrito, $detalle->fk_producto, $detalle->cantidad);
         }
 
