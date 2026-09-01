@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Pedido;
 use App\Services\CuentaService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -45,5 +47,40 @@ class MiCuentaPedidosController extends Controller
         return Inertia::render('mi-cuenta-pedidos', [
             'pedidos' => $pedidos,
         ]);
+    }
+
+    /**
+     * El cliente cancela/elimina un pedido que quedó "Pendiente de pago"
+     * (por ejemplo, si abandonó el pago o ya no quiere continuar). Solo se
+     * permite mientras no exista un pago confirmado -- mismo criterio que
+     * usa CheckoutService::descartarPedidosPendientes() al reintentar el
+     * checkout, así que es seguro: nunca borra un pedido ya pagado.
+     */
+    public function cancelar(Request $request, CuentaService $cuentaService, Pedido $pedido): RedirectResponse
+    {
+        $clienteId = $cuentaService->clienteIdDe($request->user());
+
+        abort_if($clienteId === null, 403, 'Esta sección es solo para cuentas de cliente.');
+        abort_unless($pedido->fk_cliente === $clienteId, 403);
+
+        $yaPagado = $pedido->pago && $pedido->pago->estado === 'pagado';
+
+        if ($yaPagado) {
+            Inertia::flash('toast', [
+                'type' => 'error',
+                'message' => 'Este pedido ya fue pagado, no se puede eliminar. Si quieres devolverlo, usa "Cambios y devoluciones".',
+            ]);
+
+            return back();
+        }
+
+        $pedido->delete();
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => 'Pedido eliminado correctamente.',
+        ]);
+
+        return redirect()->route('mi-cuenta.pedidos');
     }
 }

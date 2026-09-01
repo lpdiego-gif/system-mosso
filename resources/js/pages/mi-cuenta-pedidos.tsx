@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import MiCuentaShell from '@/components/MiCuentaShell';
 import StorefrontLayout from '@/layouts/storefront-layout';
 import type { MiCuentaPedidosProps, Pedido } from '@/types/cuenta';
@@ -29,6 +29,16 @@ function PedidoCard({ pedido }: { pedido: Pedido }) {
     year: 'numeric',
   });
 
+  const pendienteDePago = pedido.estado.toLowerCase() === 'pendiente de pago';
+
+  const eliminar = () => {
+    if (!window.confirm(`¿Eliminar el pedido #${String(pedido.id_pedido).padStart(6, '0')}? Esta acción no se puede deshacer.`)) {
+      return;
+    }
+
+    router.delete(`/mi-cuenta/pedidos/${pedido.id_pedido}`, { preserveScroll: true });
+  };
+
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
       <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -55,6 +65,24 @@ function PedidoCard({ pedido }: { pedido: Pedido }) {
           )}
         </div>
       </div>
+
+      {pendienteDePago && (
+        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-4">
+          <a
+            href="/checkout"
+            className="inline-flex items-center gap-1.5 rounded-full bg-mosso-yellow px-4 py-1.5 text-xs font-bold text-gray-900 hover:bg-mosso-yellow/85"
+          >
+            Ir a pagar
+          </a>
+          <button
+            type="button"
+            onClick={eliminar}
+            className="inline-flex items-center gap-1.5 rounded-full border border-red-200 px-4 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50"
+          >
+            Eliminar pedido
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -153,6 +153,7 @@ Route::middleware(['auth', 'cliente'])->group(function () {
 
     Route::middleware('menu.cuenta:pedidos')->group(function () {
         Route::get('/mi-cuenta/pedidos', [MiCuentaPedidosController::class, 'index'])->name('mi-cuenta.pedidos');
+        Route::delete('/mi-cuenta/pedidos/{pedido}', [MiCuentaPedidosController::class, 'cancelar'])->whereNumber('pedido')->name('mi-cuenta.pedidos.cancelar');
     });
 
     Route::middleware('menu.cuenta:direcciones')->prefix('mi-cuenta/direcciones')->name('mi-cuenta.direcciones.')->group(function () {

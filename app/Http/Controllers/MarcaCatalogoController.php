@@ -14,10 +14,11 @@ class MarcaCatalogoController extends Controller
      */
     public function index(): Response
     {
+        // Se listan TODAS las marcas registradas (tengan o no productos activos
+        // en este momento) -- es el listado completo, no solo las del mega menú.
         $marcas = Marca::withCount(['productos' => fn ($q) => $q->activos()])
             ->orderBy('nombre')
             ->get()
-            ->filter(fn (Marca $m) => $m->productos_count > 0)
             ->map(fn (Marca $m) => [
                 'id' => $m->id_marca,
                 'nombre' => $m->nombre,
