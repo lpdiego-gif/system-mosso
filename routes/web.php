@@ -116,6 +116,10 @@ Route::get('/catalogo/animal/{animal}', [CatalogoController::class, 'porAnimal']
     ->middleware('menu.animal:animal')
     ->name('catalogo.animal');
 
+Route::get('/producto/{producto}', [CatalogoController::class, 'show'])
+    ->whereNumber('producto')
+    ->name('catalogo.producto');
+
 /*
 |--------------------------------------------------------------------------
 | Libro de Reclamaciones (público, sin auth)

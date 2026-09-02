@@ -393,54 +393,6 @@ function MenuLinkItem({
                     </ul>
                   )}
 
-                {/* =================================================
-                    PRODUCTOS
-                ================================================== */}
-                {activeSubcategoria &&
-                  !!activeSubcategoria.productos
-                    ?.length && (
-
-                    <div className="w-[236px] shrink-0 p-4">
-
-                      <p className="mb-2 truncate px-1 text-xs font-bold uppercase tracking-wide text-gray-400">
-                        {activeSubcategoria.nombre}
-                      </p>
-
-                      <div className="grid grid-cols-2 gap-2">
-
-                        {activeSubcategoria.productos.map(
-                          (producto) => (
-
-                            <img
-                              key={producto.id}
-                              src={producto.imagen ?? '/image/paw-icon.png'}
-                              alt={producto.nombre}
-                              title={producto.nombre}
-                              className="aspect-square w-full rounded-lg border border-gray-200 bg-gray-50 object-cover transition-colors hover:border-mosso-yellow"
-                              onError={(e) => { e.currentTarget.src = '/image/paw-icon.png'; e.currentTarget.onerror = null; }}
-                            />
-
-                          )
-                        )}
-
-                      </div>
-
-                      <Link
-                        href={
-                          activeSubcategoria.href
-                        }
-                        className="mt-3 flex items-center justify-center gap-1 rounded-lg px-2.5 py-2 text-xs font-semibold text-mosso-dark transition-colors hover:bg-mosso-yellow/10"
-                      >
-
-                        Ver todo en{' '}
-                        {activeSubcategoria.nombre}
-
-                        <ChevronRight className="text-mosso-dark" />
-
-                      </Link>
-
-                    </div>
-                  )}
 
               </div>
             )}

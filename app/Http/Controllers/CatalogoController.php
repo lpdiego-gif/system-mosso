@@ -102,6 +102,58 @@ class CatalogoController extends Controller
         ]);
     }
 
+    public function show(Producto $producto): Response
+    {
+        $producto->load(['marca', 'descuentoActivo', 'subcategoria.categoria.animal']);
+
+        $sub  = $producto->subcategoria;
+        $cat  = $sub?->categoria;
+        $animal = $cat?->animal;
+
+        $descuento  = $producto->descuentoActivo;
+        $precioFinal = (float) $producto->precio;
+        $porcentajeOff = null;
+
+        if ($descuento) {
+            if ($descuento->tipo === 'porcentaje') {
+                $precioFinal   = $producto->precio - ($producto->precio * $descuento->valor / 100);
+                $porcentajeOff = (int) round($descuento->valor);
+            } else {
+                $precioFinal   = max(0, $producto->precio - $descuento->valor);
+                $porcentajeOff = (int) round((1 - $precioFinal / $producto->precio) * 100);
+            }
+        }
+
+        $breadcrumbs = [];
+        if ($animal) {
+            $breadcrumbs[] = ['label' => $animal->nombre, 'href' => "/catalogo/animal/{$animal->id_animal}"];
+        }
+        if ($cat) {
+            $breadcrumbs[] = ['label' => $cat->nombre, 'href' => "/catalogo/categoria/{$cat->id_categoria}"];
+        }
+        if ($sub) {
+            $breadcrumbs[] = ['label' => $sub->nom_sub_categoria, 'href' => "/catalogo/subcategoria/{$sub->id_subcategorias}"];
+        }
+        $breadcrumbs[] = ['label' => $producto->nombre, 'href' => null];
+
+        return Inertia::render('catalogo/producto', [
+            'producto' => [
+                'id'           => $producto->id_producto,
+                'sku'          => $producto->sku,
+                'nombre'       => $producto->nombre,
+                'descripcion'  => $producto->descripcion,
+                'marca'        => $producto->marca?->nombre,
+                'imagen'       => Producto::urlImagen($producto->imagen_principal),
+                'precio'       => (float) $producto->precio,
+                'precioFinal'  => round($precioFinal, 2),
+                'porcentajeOff' => $porcentajeOff,
+                'stock'        => (int) $producto->stock,
+                'href'         => "/producto/{$producto->id_producto}",
+            ],
+            'breadcrumbs' => $breadcrumbs,
+        ]);
+    }
+
     private function formato(Producto $p): array
     {
         $descuento = $p->descuentoActivo;

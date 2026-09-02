@@ -35,9 +35,9 @@ export default function Welcome({
               >
                 Ver catálogo
               </Link>
-              <button className="border-2 border-gray-900 text-gray-900 font-bold px-6 py-3 rounded-xl hover:bg-gray-900 hover:text-white transition-colors">
+              <Link href={route('ofertas')} className="border-2 border-gray-900 text-gray-900 font-bold px-6 py-3 rounded-xl hover:bg-gray-900 hover:text-white transition-colors">
                 Ver ofertas
-              </button>
+              </Link>
             </div>
           </div>
           <div className="flex-1 flex justify-end">
