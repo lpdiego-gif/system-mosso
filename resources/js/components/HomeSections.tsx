@@ -1,9 +1,67 @@
 import { useAgregarAlCarrito } from '@/hooks/use-agregar-al-carrito';
 import { useFavoritos } from '@/hooks/use-favoritos';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
+import type { MenuItem } from '@/types/menu';
 import type { ProductoCard as ProductoCardType, MarcaCard } from '@/types/producto';
 import { imagenProducto, onImagenError } from '@/types/producto';
+
+/* ============================ COMPRAR POR MASCOTA ============================ */
+
+const IMAGEN_POR_ANIMAL: Record<string, string> = {
+  Perros: '/image/category-dogs.png',
+  Gatos: '/image/category-cats.png',
+};
+
+interface MenuPageProps {
+  menu: MenuItem[];
+  [key: string]: unknown;
+}
+
+/** Título de sección con un pequeño acento de color, reutilizado por las secciones del home. */
+function SectionHeading({ children }: { children: ReactNode }) {
+  return (
+    <div className="text-center">
+      <h2 className="text-2xl font-black text-gray-900">{children}</h2>
+      <span aria-hidden className="mx-auto mt-2 block h-1 w-12 rounded-full bg-mosso-yellow" />
+    </div>
+  );
+}
+
+/** Accesos rápidos por tipo de mascota, a partir del mismo menú del header (mismos enlaces reales). */
+export function CategoriasRapidas() {
+  const { menu } = usePage<MenuPageProps>().props;
+  const animales = menu.filter((m) => m.tipo === 'animal' || m.tipo === 'tipo_animal');
+
+  if (animales.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="border-t border-gray-100 bg-white px-6 py-12">
+      <div className="mx-auto max-w-6xl">
+        <SectionHeading>Compra por tu mascota</SectionHeading>
+        <div className="mt-7 flex flex-wrap items-start justify-center gap-x-6 gap-y-6 sm:gap-x-10">
+          {animales.map((a) => (
+            <Link
+              key={a.id}
+              href={a.href ?? '/catalogo'}
+              className="group flex w-24 flex-col items-center gap-2.5 rounded-2xl border border-transparent px-3 py-4 transition-all hover:-translate-y-1 hover:border-gray-100 hover:bg-mosso-cream hover:shadow-md sm:w-28"
+            >
+              <img
+                src={IMAGEN_POR_ANIMAL[a.nombre] ?? '/image/paw-icon.png'}
+                alt={a.nombre}
+                className="h-16 w-16 object-contain transition-transform duration-200 group-hover:scale-110 sm:h-20 sm:w-20"
+              />
+              <span className="text-sm font-semibold text-gray-900">{a.nombre}</span>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
 
 /* ============================== BENEFICIOS ============================== */
 
@@ -16,11 +74,14 @@ const beneficios = [
 
 export function BeneficiosBar() {
   return (
-    <section className="border-t border-gray-100 bg-white px-6 py-8">
-      <div className="max-w-[1440px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <section className="border-t border-gray-100 bg-white px-6 py-9">
+      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {beneficios.map((b) => (
-          <div key={b.titulo} className="flex items-start gap-3">
-            <span className="text-mosso-yellow shrink-0 mt-0.5">
+          <div
+            key={b.titulo}
+            className="flex items-start gap-3 rounded-2xl border border-gray-100 p-4 transition-colors hover:border-mosso-yellow/40 hover:bg-mosso-cream/60"
+          >
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-mosso-yellow/15 text-mosso-dark">
               <IconoBeneficio nombre={b.icono} />
             </span>
             <div>
@@ -106,13 +167,15 @@ export function ProductoCarrusel({
   if (productos.length === 0) return null;
 
   return (
-    <section className="max-w-[1440px] mx-auto px-6 py-10">
-      <h2 className="text-2xl font-black text-center text-gray-900 mb-6">{titulo}</h2>
+    <section className="mx-auto max-w-6xl px-6 py-12">
+      <SectionHeading>{titulo}</SectionHeading>
 
       <div
-        className="relative"
+        className="relative mt-7"
         onMouseEnter={() => setPausado(true)}
         onMouseLeave={() => setPausado(false)}
+        onTouchStart={() => setPausado(true)}
+        onTouchEnd={() => setPausado(false)}
       >
         <button
           onClick={() => scroll('left')}
@@ -124,7 +187,7 @@ export function ProductoCarrusel({
 
         <div
           ref={scrollRef}
-          className="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2 [&::-webkit-scrollbar]:hidden"
+          className="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-proximity pb-2 [&::-webkit-scrollbar]:hidden touch-pan-x"
         >
           {productos.map((p) => (
             <div key={p.id} className="w-48 md:w-56 shrink-0 snap-start">
@@ -240,13 +303,15 @@ export function MarcaCarrusel({ marcas = [] }: { marcas?: MarcaCard[] }) {
   if (marcas.length === 0) return null;
 
   return (
-    <section className="max-w-[1440px] mx-auto px-6 py-10">
-      <h2 className="text-2xl font-black text-center text-gray-900 mb-6">Marcas premium para tu mascota</h2>
+    <section className="mx-auto max-w-6xl px-6 py-12">
+      <SectionHeading>Marcas premium para tu mascota</SectionHeading>
 
       <div
-        className="relative"
+        className="relative mt-7"
         onMouseEnter={() => setPausado(true)}
         onMouseLeave={() => setPausado(false)}
+        onTouchStart={() => setPausado(true)}
+        onTouchEnd={() => setPausado(false)}
       >
         <button
           onClick={() => scroll('left')}
@@ -258,7 +323,7 @@ export function MarcaCarrusel({ marcas = [] }: { marcas?: MarcaCard[] }) {
 
         <div
           ref={scrollRef}
-          className="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-2 [&::-webkit-scrollbar]:hidden"
+          className="flex gap-4 overflow-x-auto scroll-smooth snap-x snap-proximity pb-2 [&::-webkit-scrollbar]:hidden touch-pan-x"
         >
           {marcas.map((m) => (
             <Link

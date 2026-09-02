@@ -11,6 +11,24 @@
         ],
         "createdAt": "2026-08-28T09:08:59.621Z",
         "reason": "model: false positive — icon buttons swap hover:text-* in the same hover: group as hover:bg-*, so gray text never renders on the colored (hover) background"
+      },
+      {
+        "rule": "gradient-text",
+        "value": "*",
+        "files": [
+          "resources/js/components/Footer.tsx"
+        ],
+        "createdAt": "2026-09-02T06:00:39.788Z",
+        "reason": "Mirrors the gold gradient/glow wordmark the user just hand-authored in Header.tsx (same MOSSO brand text) and matches their explicit ask this turn for 'reflejos' / pro styling on the footer brand mark"
+      },
+      {
+        "rule": "gradient-text",
+        "value": "*",
+        "files": [
+          "resources/js/components/Header.tsx"
+        ],
+        "createdAt": "2026-09-02T06:39:14.710Z",
+        "reason": "User's own hand-authored gold gradient/glow logotype (Logo() component), predates this session's edits to this file per git diff"
       }
     ]
   }

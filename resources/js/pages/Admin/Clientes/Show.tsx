@@ -71,83 +71,83 @@ export default function Show({
             <div className="mx-auto flex w-full flex-col gap-5 p-4 sm:p-6 lg:p-8">
                 {/* Barra superior */}
                 {/* Cabecera de perfil */}
-               <div className="relative overflow-hidden rounded-xl border border-border/60 bg-card shadow-xs transition-all hover:shadow-sm">
-    {/* Acciones Superpuestas */}
-    <div className="absolute top-3 inset-x-3 z-10 flex items-center justify-between gap-2">
-        <Link
-            href={route('admin.clientes.index')}
-            className="inline-flex items-center gap-1 rounded-md bg-background/80 px-2.5 py-1 text-xs font-medium text-muted-foreground backdrop-blur-md transition-colors hover:bg-background hover:text-foreground border border-border/40 shadow-xs"
-        >
-            <ArrowLeft className="size-3.5" /> Clientes
-        </Link>
-        <Link
-            href={route('admin.clientes.edit', cliente.id_cliente)}
-            className="inline-flex items-center gap-1 rounded-md bg-primary/90 px-2.5 py-1 text-xs font-medium text-primary-foreground shadow-xs transition-colors hover:bg-primary backdrop-blur-md"
-        >
-            <Pencil className="size-3.5" /> Editar
-        </Link>
-    </div>
+                <div className="relative overflow-hidden rounded-xl border border-border/60 bg-card shadow-xs transition-all hover:shadow-sm">
+                    {/* Acciones Superpuestas */}
+                    <div className="absolute top-3 inset-x-3 z-10 flex items-center justify-between gap-2">
+                        <Link
+                            href={route('admin.clientes.index')}
+                            className="inline-flex items-center gap-1 rounded-md bg-background/80 px-2.5 py-1 text-xs font-medium text-muted-foreground backdrop-blur-md transition-colors hover:bg-background hover:text-foreground border border-border/40 shadow-xs"
+                        >
+                            <ArrowLeft className="size-3.5" /> Clientes
+                        </Link>
+                        <Link
+                            href={route('admin.clientes.edit', cliente.id_cliente)}
+                            className="inline-flex items-center gap-1 rounded-md bg-primary/90 px-2.5 py-1 text-xs font-medium text-primary-foreground shadow-xs transition-colors hover:bg-primary backdrop-blur-md"
+                        >
+                            <Pencil className="size-3.5" /> Editar
+                        </Link>
+                    </div>
 
-    {/* Header / Portada con Degradado */}
-    <div className="h-16 bg-gradient-to-r from-mosso-yellow/20 via-mosso-yellow/5 to-transparent border-b border-border/40" />
+                    {/* Header / Portada con Degradado */}
+                    <div className="h-16 bg-gradient-to-r from-mosso-yellow/20 via-mosso-yellow/5 to-transparent border-b border-border/40" />
 
-    {/* Contenido Principal */}
-    <div className="flex flex-col gap-3 px-4 pb-4 sm:flex-row sm:items-end sm:gap-4">
-        <ClienteAvatar
-            nombre={cliente.nombre}
-            iniciales={cliente.iniciales}
-            size="lg"
-            className="-mt-6 ring-2 ring-card shadow-sm"
-        />
+                    {/* Contenido Principal */}
+                    <div className="flex flex-col gap-3 px-4 pb-4 sm:flex-row sm:items-end sm:gap-4">
+                        <ClienteAvatar
+                            nombre={cliente.nombre}
+                            iniciales={cliente.iniciales}
+                            size="lg"
+                            className="-mt-6 ring-2 ring-card shadow-sm"
+                        />
 
-        <div className="min-w-0 flex-1 space-y-1.5">
-            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-                <h1 className="text-base font-semibold tracking-tight text-foreground sm:text-lg">
-                    {cliente.nombre}
-                </h1>
-                <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground/80 font-normal">
-                    <CalendarClock className="size-3 text-muted-foreground/70" />
-                    Cliente {tiempoRelativo(cliente.creado_en)}
-                </span>
-            </div>
+                        <div className="min-w-0 flex-1 space-y-1.5">
+                            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                                <h1 className="text-base font-semibold tracking-tight text-foreground sm:text-lg">
+                                    {cliente.nombre}
+                                </h1>
+                                <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground/80 font-normal">
+                                    <CalendarClock className="size-3 text-muted-foreground/70" />
+                                    Cliente {tiempoRelativo(cliente.creado_en)}
+                                </span>
+                            </div>
 
-            {/* Badges nativos estilizados */}
-            <div className="flex flex-wrap items-center gap-1.5">
-                {cliente.num_documento ? (
-                    <span className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-300">
-                        <IdCard className="size-3 text-slate-500" />
-                        {cliente.tipo_documento ?? 'Doc.'} {cliente.num_documento}
-                    </span>
-                ) : null}
+                            {/* Badges nativos estilizados */}
+                            <div className="flex flex-wrap items-center gap-1.5">
+                                {cliente.num_documento ? (
+                                    <span className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-300">
+                                        <IdCard className="size-3 text-slate-500" />
+                                        {cliente.tipo_documento ?? 'Doc.'} {cliente.num_documento}
+                                    </span>
+                                ) : null}
 
-                {cliente.es_empresa ? (
-                    <span className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300">
-                        <Building2 className="size-3 text-amber-600 dark:text-amber-400" />
-                        Empresa
-                    </span>
-                ) : null}
+                                {cliente.es_empresa ? (
+                                    <span className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300">
+                                        <Building2 className="size-3 text-amber-600 dark:text-amber-400" />
+                                        Empresa
+                                    </span>
+                                ) : null}
 
-                {cliente.cuenta_email ? (
-                    cliente.cuenta_verificada ? (
-                        <span className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-300">
-                            <ShieldCheck className="size-3 text-emerald-600 dark:text-emerald-400" />
-                            Cuenta verificada
-                        </span>
-                    ) : (
-                        <span className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300">
-                            <ShieldAlert className="size-3 text-amber-600 dark:text-amber-400" />
-                            Cuenta sin verificar
-                        </span>
-                    )
-                ) : (
-                    <span className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-400">
-                        Sin cuenta
-                    </span>
-                )}
-            </div>
-        </div>
-    </div>
-</div>
+                                {cliente.cuenta_email ? (
+                                    cliente.cuenta_verificada ? (
+                                        <span className="inline-flex items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-300">
+                                            <ShieldCheck className="size-3 text-emerald-600 dark:text-emerald-400" />
+                                            Cuenta verificada
+                                        </span>
+                                    ) : (
+                                        <span className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300">
+                                            <ShieldAlert className="size-3 text-amber-600 dark:text-amber-400" />
+                                            Cuenta sin verificar
+                                        </span>
+                                    )
+                                ) : (
+                                    <span className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-400">
+                                        Sin cuenta
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 {cliente.sin_persona ? (
                     <div className="flex items-start gap-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-800 dark:text-amber-300">
@@ -291,9 +291,9 @@ export default function Show({
                                                         'rounded-full px-2 py-0.5 text-xs font-medium',
                                                         (p.estado &&
                                                             ESTADO_TONO[
-                                                                p.estado
+                                                            p.estado
                                                             ]) ||
-                                                            'bg-secondary text-secondary-foreground',
+                                                        'bg-secondary text-secondary-foreground',
                                                     )}
                                                 >
                                                     {p.estado ?? 'Sin estado'}
@@ -343,8 +343,8 @@ export default function Show({
                                     valor={
                                         cliente.fecha_nacimiento
                                             ? fechaCorta(
-                                                  cliente.fecha_nacimiento,
-                                              )
+                                                cliente.fecha_nacimiento,
+                                            )
                                             : '—'
                                     }
                                 />

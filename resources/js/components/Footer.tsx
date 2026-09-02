@@ -1,4 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
+import { whatsappUrl } from '@/lib/whatsapp';
 import type { EmpresaPublica } from '@/types/empresa';
 
 interface FooterPageProps {
@@ -26,13 +27,6 @@ const enlacesAyuda = [
 
 const mediosPago = ['VISA', 'Mastercard', 'Amex', 'Yape', 'Plin', 'Culqi'];
 
-function whatsappUrl(telefono: string): string {
-  const digitos = telefono.replace(/\D/g, '');
-  const conCodigo = digitos.startsWith('51') ? digitos : `51${digitos}`;
-
-  return `https://wa.me/${conCodigo}`;
-}
-
 export default function Footer() {
   const { empresa } = usePage<FooterPageProps>().props;
 
@@ -52,25 +46,31 @@ export default function Footer() {
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-20 left-1/4 h-72 w-72 rounded-full bg-mosso-yellow/10 blur-[110px]" />
         <div className="absolute -bottom-24 right-1/4 h-72 w-72 rounded-full bg-mosso-red/5 blur-[110px]" />
+        <div className="absolute top-1/3 right-0 h-56 w-56 rounded-full bg-mosso-yellow/[0.06] blur-[100px]" />
       </div>
 
-      <div className="relative mx-auto grid max-w-[1440px] grid-cols-1 gap-10 px-4 py-12 sm:grid-cols-2 sm:gap-x-8 sm:px-6 md:py-16 lg:grid-cols-[1.3fr_1fr_1fr_1fr_1fr] lg:gap-x-10">
+      <div className="relative mx-auto grid max-w-6xl grid-cols-1 gap-10 px-4 py-12 sm:grid-cols-2 sm:gap-x-8 sm:px-6 md:py-16 lg:grid-cols-[1.3fr_1fr_1fr_1fr_1fr] lg:gap-x-10">
         {/* Columna 1: Branding */}
         <div className="sm:col-span-2 lg:col-span-1">
-          <Link href="/" aria-label={nombre} className="flex items-center gap-2.5">
+          <Link href="/" aria-label={nombre} className="group flex items-center gap-2.5">
             {empresa?.logo ? (
               <>
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white p-1.5 shadow-lg shadow-black/20">
+                <span className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white p-1.5 shadow-lg shadow-black/20">
                   <img
                     src={`/storage/${empresa.logo}`}
                     alt={nombre}
                     className="h-full w-full object-contain"
                   />
+                  <Brillo />
                 </span>
-                <span className="text-lg font-black tracking-tight text-white">{nombre}</span>
+                <span className="bg-gradient-to-b from-amber-200 via-mosso-yellow to-amber-500 bg-clip-text text-lg font-black tracking-tight text-transparent drop-shadow-[0_1px_12px_rgba(255,197,39,0.35)]">
+                  {nombre}
+                </span>
               </>
             ) : (
-              <span className="text-xl font-black tracking-tight text-white">{nombre}</span>
+              <span className="bg-gradient-to-b from-amber-200 via-mosso-yellow to-amber-500 bg-clip-text text-xl font-black tracking-tight text-transparent drop-shadow-[0_1px_12px_rgba(255,197,39,0.35)]">
+                {nombre}
+              </span>
             )}
           </Link>
           <p className="mt-4 max-w-[240px] text-sm leading-relaxed text-gray-400">
@@ -143,13 +143,14 @@ export default function Footer() {
 
         {/* Columna 5: Medios de pago */}
         <FooterColumna titulo="Medios de pago">
-          <li className="flex flex-wrap gap-2">
+          <li className="flex flex-wrap gap-2 rounded-2xl border border-white/10 bg-white/[0.04] p-3 shadow-inner shadow-black/20 backdrop-blur-sm">
             {mediosPago.map((medio) => (
               <span
                 key={medio}
-                className="flex items-center justify-center rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-gray-300 transition-colors hover:border-mosso-yellow/40 hover:text-white"
+                className="group relative flex items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-gray-300 transition-colors hover:border-mosso-yellow/40 hover:text-white"
               >
                 {medio}
+                <Brillo />
               </span>
             ))}
           </li>
@@ -158,7 +159,7 @@ export default function Footer() {
 
       {/* Barra inferior */}
       <div className="relative border-t border-white/10">
-        <div className="mx-auto flex max-w-[1440px] flex-col items-center justify-center gap-3 px-4 py-6 text-center text-xs text-gray-500 sm:flex-row sm:justify-between sm:px-6">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-center gap-3 px-4 py-6 text-center text-xs text-gray-500 sm:flex-row sm:justify-between sm:px-6">
           <p>
             © {new Date().getFullYear()} <span className="font-semibold text-gray-400">{nombre.toUpperCase()}</span>.
             Todos los derechos reservados.
@@ -237,10 +238,21 @@ function RedSocialIcon({
       target="_blank"
       rel="noopener noreferrer"
       aria-label={label}
-      className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-gray-300 transition-all duration-200 hover:-translate-y-0.5 hover:border-mosso-yellow hover:bg-mosso-yellow hover:text-gray-900 hover:shadow-lg hover:shadow-mosso-yellow/20"
+      className="group relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/5 text-gray-300 transition-all duration-200 hover:-translate-y-0.5 hover:border-mosso-yellow hover:bg-mosso-yellow hover:text-gray-900 hover:shadow-lg hover:shadow-mosso-yellow/20"
     >
       {children}
+      <Brillo />
     </a>
+  );
+}
+
+/** Barrido de brillo diagonal sobre el elemento `group` que lo contiene (hover). */
+function Brillo() {
+  return (
+    <span
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 -translate-x-full skew-x-12 bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-0 transition-all duration-700 ease-out group-hover:translate-x-full group-hover:opacity-100"
+    />
   );
 }
 

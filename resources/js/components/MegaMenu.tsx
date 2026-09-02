@@ -393,6 +393,62 @@ function MenuLinkItem({
                     </ul>
                   )}
 
+                {/* =================================================
+                    VISTA PREVIA DE PRODUCTOS
+                ================================================== */}
+                {activeSubcategoria &&
+                  activeSubcategoria.productos &&
+                  activeSubcategoria.productos.length >
+                    0 && (
+
+                    <div className="w-80 shrink-0 p-4">
+
+                      <p className="mb-3 truncate text-xs font-bold tracking-widest text-gray-400 uppercase">
+                        {activeSubcategoria.nombre}
+                      </p>
+
+                      <div className="grid grid-cols-3 gap-2">
+
+                        {activeSubcategoria.productos.map(
+                          (p) => (
+                            <Link
+                              key={p.id}
+                              href={`/producto/${p.id}`}
+                              className="group/prod flex flex-col items-center gap-1.5 rounded-lg p-2 text-center transition-colors hover:bg-gray-50"
+                            >
+
+                              <span className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg border border-gray-100 bg-white">
+                                <img
+                                  src={p.imagen}
+                                  alt={p.nombre}
+                                  className="h-full w-full object-contain"
+                                />
+                              </span>
+
+                              <span className="line-clamp-2 text-xs text-gray-600 group-hover/prod:text-gray-900">
+                                {p.nombre}
+                              </span>
+
+                            </Link>
+                          )
+                        )}
+
+                      </div>
+
+                      {!!activeSubcategoria.totalProductos &&
+                        activeSubcategoria.totalProductos >
+                          activeSubcategoria.productos.length && (
+
+                          <Link
+                            href={activeSubcategoria.href}
+                            className="mt-3 block text-center text-xs font-semibold text-mosso-dark hover:underline"
+                          >
+                            Ver los {activeSubcategoria.totalProductos} productos →
+                          </Link>
+                        )}
+
+                    </div>
+                  )}
 
               </div>
             )}

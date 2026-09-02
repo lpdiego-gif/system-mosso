@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 import ModalAcceso from '@/components/ModalAcceso';
+import WhatsappFlotante from '@/components/WhatsappFlotante';
 
 /**
  * Layout para las páginas PÚBLICAS de la tienda (home, catálogo, producto, carrito...).
@@ -14,6 +15,7 @@ export default function StorefrontLayout({ children }: { children: ReactNode }) 
       <main className="flex-1">{children}</main>
       <Footer />
       <ModalAcceso />
+      <WhatsappFlotante />
     </div>
   );
 }

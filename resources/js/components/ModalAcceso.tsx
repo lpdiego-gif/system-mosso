@@ -69,22 +69,22 @@ export default function ModalAcceso() {
                 type="button"
                 aria-label="Cerrar"
                 onClick={cerrar}
-                className="fixed inset-0 bg-black/50"
+                className="fixed inset-0 bg-black/55 backdrop-blur-[2px]"
             />
 
             <div
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="titulo-acceso"
-                className="relative w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl sm:p-8"
+                className="relative w-full max-w-sm rounded-2xl border border-gray-200 bg-white p-5 shadow-2xl sm:p-6"
             >
                 <button
                     type="button"
                     onClick={cerrar}
                     aria-label="Cerrar"
-                    className="absolute top-4 right-4 text-gray-400 transition-colors hover:text-gray-700"
+                    className="absolute top-3.5 right-3.5 flex size-8 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
                 >
-                    <X className="size-5" />
+                    <X className="size-4" />
                 </button>
 
                 <span id="titulo-acceso" className="sr-only">

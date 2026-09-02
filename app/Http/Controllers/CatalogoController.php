@@ -151,7 +151,50 @@ class CatalogoController extends Controller
                 'href'         => "/producto/{$producto->id_producto}",
             ],
             'breadcrumbs' => $breadcrumbs,
+            'relacionados' => $this->relacionados($producto, $sub, $cat),
         ]);
+    }
+
+    /**
+     * Productos recomendados debajo del detalle: primero intenta la misma
+     * subcategoría (más relevante); si tiene pocos productos, amplía a toda
+     * la categoría. Nunca incluye al producto actual.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function relacionados(Producto $producto, ?SubCategoria $sub, ?Categoria $cat): array
+    {
+        $minResultados = 4;
+        $limite = 10;
+
+        $base = fn () => Producto::activos()
+            ->where('id_producto', '!=', $producto->id_producto)
+            ->whereNotNull('imagen_principal')
+            ->with(['marca', 'descuentoActivo', 'subcategoria.categoria.animal']);
+
+        if ($sub) {
+            $productos = $base()
+                ->where('fk_id_subcategorias', $sub->id_subcategorias)
+                ->inRandomOrder()
+                ->limit($limite)
+                ->get();
+
+            if ($productos->count() >= $minResultados) {
+                return $productos->map(fn (Producto $p) => $this->formato($p))->values()->all();
+            }
+        }
+
+        if ($cat) {
+            $productos = $base()
+                ->whereHas('subcategoria', fn ($q) => $q->where('fk_id_categoria', $cat->id_categoria))
+                ->inRandomOrder()
+                ->limit($limite)
+                ->get();
+
+            return $productos->map(fn (Producto $p) => $this->formato($p))->values()->all();
+        }
+
+        return [];
     }
 
     private function formato(Producto $p): array

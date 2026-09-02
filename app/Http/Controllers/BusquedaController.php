@@ -3,11 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Producto;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class BusquedaController extends Controller
 {
+    private const MAX_SUGERENCIAS = 6;
+
     public function __invoke(Request $request)
     {
         $q = trim((string) $request->query('q', ''));
@@ -24,6 +27,30 @@ class BusquedaController extends Controller
             'query'     => $q,
             'productos' => $productos->values(),
         ]);
+    }
+
+    /**
+     * Búsqueda instantánea para el desplegable del buscador del header:
+     * JSON liviano, pocos resultados. No confundir con __invoke() (página
+     * completa de resultados, usada al enviar el formulario).
+     */
+    public function sugerencias(Request $request): JsonResponse
+    {
+        $q = trim((string) $request->query('q', ''));
+
+        if (mb_strlen($q) < 2) {
+            return response()->json(['productos' => []]);
+        }
+
+        $productos = Producto::activos()
+            ->with(['marca', 'descuentoActivo', 'subcategoria.categoria.animal'])
+            ->where('nombre', 'like', "%{$q}%")
+            ->orderBy('nombre')
+            ->limit(self::MAX_SUGERENCIAS)
+            ->get()
+            ->map(fn (Producto $p) => $this->formato($p));
+
+        return response()->json(['productos' => $productos->values()]);
     }
 
     private function formato(Producto $p): array

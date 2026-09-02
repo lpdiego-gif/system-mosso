@@ -1,5 +1,5 @@
 import { Form, router } from '@inertiajs/react';
-import { Eye, EyeOff, X } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, ShieldCheck, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import {
     reenviar as reenviarStore,
@@ -12,10 +12,19 @@ import { store as loginStore } from '@/routes/login';
 import { email as passwordEmail } from '@/routes/password';
 import type { RegistroPendienteFlash } from '@/types/cuenta';
 
-const inputClass =
-    'w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-base text-gray-900 placeholder:text-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-mosso-yellow focus:border-mosso-yellow sm:text-sm';
+const inputBase =
+    'w-full rounded-lg border border-gray-300 bg-white py-2 text-base text-gray-900 placeholder:text-gray-400 transition-colors focus:border-mosso-yellow focus:ring-2 focus:ring-mosso-yellow focus:outline-none sm:text-sm';
 
-const labelClass = 'block text-sm font-medium text-gray-700 mb-1.5';
+/** Input con ícono a la izquierda (correo). */
+const inputClass = `${inputBase} pl-9 pr-3.5`;
+
+/** Input sin ícono, padding simétrico (código de verificación). */
+const inputCentradoClass = `${inputBase} px-3.5`;
+
+const iconoCampoClass =
+    'pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400';
+
+const labelClass = 'mb-1 block text-sm font-medium text-gray-700';
 
 const botonClass =
     'w-full rounded-lg bg-mosso-yellow px-6 py-2 text-sm font-bold text-gray-900 shadow-sm transition-colors hover:bg-mosso-yellow/85 disabled:opacity-60';
@@ -107,7 +116,7 @@ function ToggleAcceso({
     ];
 
     return (
-        <div className="mb-6 grid grid-cols-2 gap-1 rounded-xl bg-gray-100 p-1 text-sm font-semibold">
+        <div className="mb-5 grid grid-cols-2 gap-1 rounded-xl bg-gray-100 p-1 text-sm font-semibold">
             {opciones.map(({ valor, texto }) => (
                 <button
                     key={valor}
@@ -136,12 +145,42 @@ function Encabezado({
 }) {
     return (
         <div className="text-center">
-            <h1 className="text-2xl font-black text-gray-900">{titulo}</h1>
+            <h1 className="text-xl font-black text-gray-900">{titulo}</h1>
             {descripcion && (
-                <p className="mx-auto mt-1.5 max-w-xs text-sm text-gray-500">
+                <p className="mx-auto mt-1 max-w-xs text-sm text-gray-500">
                     {descripcion}
                 </p>
             )}
+        </div>
+    );
+}
+
+/** Nota de confianza bajo el botón principal, discreta y sin alarmar. */
+function NotaSegura() {
+    return (
+        <p className="flex items-center justify-center gap-1.5 text-center text-xs text-gray-400">
+            <ShieldCheck className="size-3.5" />
+            Tu información viaja cifrada y nunca se comparte.
+        </p>
+    );
+}
+
+/** Input de correo con ícono, reutilizado por los 3 formularios (login, registro, recuperar). */
+function CampoEmail({ autoFocus = true }: { autoFocus?: boolean }) {
+    return (
+        <div className="relative">
+            <span className={iconoCampoClass}>
+                <Mail className="size-4" />
+            </span>
+            <input
+                type="email"
+                name="email"
+                required
+                autoFocus={autoFocus}
+                autoComplete="email"
+                placeholder="nombre@correo.com"
+                className={inputClass}
+            />
         </div>
     );
 }
@@ -167,6 +206,9 @@ function CampoPassword({
 
     return (
         <div className="relative">
+            <span className={iconoCampoClass}>
+                <Lock className="size-4" />
+            </span>
             <input
                 type={visible ? 'text' : 'password'}
                 name={name}
@@ -174,7 +216,7 @@ function CampoPassword({
                 autoFocus={autoFocus}
                 autoComplete={autoComplete}
                 placeholder={placeholder}
-                className={`${inputClass} pr-10`}
+                className={`${inputBase} pr-10 pl-9`}
             />
             <button
                 type="button"
@@ -206,7 +248,7 @@ function FormularioLogin({
         <div>
             <Encabezado titulo="Bienvenido de vuelta" />
 
-            <div className="mt-6">
+            <div className="mt-5">
                 <PasskeyVerify
                     label="Ingresar con passkey"
                     loadingLabel="Autenticando…"
@@ -218,7 +260,7 @@ function FormularioLogin({
                 {...loginStore.form()}
                 resetOnSuccess={['password']}
                 disableWhileProcessing
-                className="space-y-4"
+                className="space-y-3.5"
             >
                 {({ processing, errors }) => (
                     <>
@@ -226,15 +268,7 @@ function FormularioLogin({
                             <label className={labelClass}>
                                 Correo electrónico
                             </label>
-                            <input
-                                type="email"
-                                name="email"
-                                required
-                                autoFocus
-                                autoComplete="email"
-                                placeholder="nombre@correo.com"
-                                className={inputClass}
-                            />
+                            <CampoEmail />
                             <InputError
                                 message={errors.email}
                                 className="mt-1"
@@ -281,6 +315,8 @@ function FormularioLogin({
                         >
                             {processing ? 'Ingresando…' : 'Ingresar'}
                         </button>
+
+                        <NotaSegura />
                     </>
                 )}
             </Form>
@@ -299,7 +335,7 @@ function FormularioRegistro() {
             <Form
                 {...registroStore.form()}
                 disableWhileProcessing
-                className="mt-6 space-y-4"
+                className="mt-5 space-y-3.5"
             >
                 {({ processing, errors }) => (
                     <>
@@ -307,15 +343,7 @@ function FormularioRegistro() {
                             <label className={labelClass}>
                                 Correo electrónico
                             </label>
-                            <input
-                                type="email"
-                                name="email"
-                                required
-                                autoFocus
-                                autoComplete="email"
-                                placeholder="nombre@correo.com"
-                                className={inputClass}
-                            />
+                            <CampoEmail />
                             <InputError
                                 message={errors.email}
                                 className="mt-1"
@@ -359,6 +387,8 @@ function FormularioRegistro() {
                                 ? 'Creando cuenta…'
                                 : 'Crear cuenta y enviar código'}
                         </button>
+
+                        <NotaSegura />
                     </>
                 )}
             </Form>
@@ -377,7 +407,7 @@ function FormularioRecuperar({ onIrALogin }: { onIrALogin: () => void }) {
             <Form
                 {...passwordEmail.form()}
                 disableWhileProcessing
-                className="mt-6 space-y-4"
+                className="mt-5 space-y-3.5"
             >
                 {({ processing, errors }) => (
                     <>
@@ -385,15 +415,7 @@ function FormularioRecuperar({ onIrALogin }: { onIrALogin: () => void }) {
                             <label className={labelClass}>
                                 Correo electrónico
                             </label>
-                            <input
-                                type="email"
-                                name="email"
-                                required
-                                autoFocus
-                                autoComplete="email"
-                                placeholder="nombre@correo.com"
-                                className={inputClass}
-                            />
+                            <CampoEmail />
                             <InputError
                                 message={errors.email}
                                 className="mt-1"
@@ -411,7 +433,7 @@ function FormularioRecuperar({ onIrALogin }: { onIrALogin: () => void }) {
                 )}
             </Form>
 
-            <p className="mt-6 text-center text-sm text-gray-500">
+            <p className="mt-5 text-center text-sm text-gray-500">
                 <button
                     type="button"
                     onClick={onIrALogin}
@@ -476,22 +498,22 @@ function ModalCodigo({
                 type="button"
                 aria-label="Cerrar"
                 onClick={onCerrar}
-                className="absolute inset-0 bg-black/50"
+                className="absolute inset-0 bg-black/55 backdrop-blur-[2px]"
             />
 
             <div
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="titulo-codigo"
-                className="relative max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-2xl bg-white p-6 shadow-xl sm:p-7"
+                className="relative max-h-[90vh] w-full max-w-xs overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl sm:p-6"
             >
                 <button
                     type="button"
                     onClick={onCerrar}
                     aria-label="Cerrar"
-                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-700"
+                    className="absolute top-3.5 right-3.5 flex size-8 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
                 >
-                    <X className="size-5" />
+                    <X className="size-4" />
                 </button>
 
                 <h2
@@ -509,7 +531,7 @@ function ModalCodigo({
                 <Form
                     {...verificarStore.form()}
                     disableWhileProcessing
-                    className="mt-5 space-y-4"
+                    className="mt-4 space-y-3.5"
                 >
                     {({ processing, errors }) => (
                         <>
@@ -528,7 +550,7 @@ function ModalCodigo({
                                     pattern="[0-9]{6}"
                                     maxLength={6}
                                     placeholder="000000"
-                                    className={`${inputClass} text-center text-lg font-bold tracking-[0.5em]`}
+                                    className={`${inputCentradoClass} text-center text-lg font-bold tracking-[0.5em]`}
                                 />
                                 <InputError
                                     message={errors.codigo}
