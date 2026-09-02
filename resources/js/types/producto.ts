@@ -20,6 +20,18 @@ export function onImagenError(e: React.SyntheticEvent<HTMLImageElement>): void {
     e.currentTarget.onerror = null;
 }
 
+// Shape que devuelve CatalogoController::formato() — extiende ProductoCard con
+// los campos que necesita el panel de filtros de /catalogo/{animal|categoria|subcategoria}.
+// No se toca ProductoCard porque Home/Ofertas/Marcas/Buscar/Favoritos dependen de su shape actual.
+export interface ProductoCatalogo extends ProductoCard {
+    stock: number;
+    marcaId: number | null;
+    categoriaId: number | null;
+    categoriaNombre: string | null;
+    subcategoriaId: number | null;
+    subcategoriaNombre: string | null;
+}
+
 export interface MarcaCard {
     id: number;
     nombre: string;

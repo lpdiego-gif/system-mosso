@@ -26,6 +26,7 @@ class CatalogoController extends Controller
 
         return Inertia::render('catalogo/index', [
             'titulo' => $subcategoria->nom_sub_categoria,
+            'nivel' => 'subcategoria',
             'breadcrumbs' => [
                 [
                     'label' => $subcategoria->categoria->animal->nombre,
@@ -60,6 +61,7 @@ class CatalogoController extends Controller
 
         return Inertia::render('catalogo/index', [
             'titulo' => $categoria->nombre,
+            'nivel' => 'categoria',
             'breadcrumbs' => [
                 [
                     'label' => $categoria->animal->nombre,
@@ -92,6 +94,7 @@ class CatalogoController extends Controller
 
         return Inertia::render('catalogo/index', [
             'titulo' => $animal->nombre,
+            'nivel' => 'animal',
             'breadcrumbs' => [
                 [
                     'label' => $animal->nombre,
@@ -106,20 +109,20 @@ class CatalogoController extends Controller
     {
         $producto->load(['marca', 'descuentoActivo', 'subcategoria.categoria.animal']);
 
-        $sub  = $producto->subcategoria;
-        $cat  = $sub?->categoria;
+        $sub = $producto->subcategoria;
+        $cat = $sub?->categoria;
         $animal = $cat?->animal;
 
-        $descuento  = $producto->descuentoActivo;
+        $descuento = $producto->descuentoActivo;
         $precioFinal = (float) $producto->precio;
         $porcentajeOff = null;
 
         if ($descuento) {
             if ($descuento->tipo === 'porcentaje') {
-                $precioFinal   = $producto->precio - ($producto->precio * $descuento->valor / 100);
+                $precioFinal = $producto->precio - ($producto->precio * $descuento->valor / 100);
                 $porcentajeOff = (int) round($descuento->valor);
             } else {
-                $precioFinal   = max(0, $producto->precio - $descuento->valor);
+                $precioFinal = max(0, $producto->precio - $descuento->valor);
                 $porcentajeOff = (int) round((1 - $precioFinal / $producto->precio) * 100);
             }
         }
@@ -138,17 +141,17 @@ class CatalogoController extends Controller
 
         return Inertia::render('catalogo/producto', [
             'producto' => [
-                'id'           => $producto->id_producto,
-                'sku'          => $producto->sku,
-                'nombre'       => $producto->nombre,
-                'descripcion'  => $producto->descripcion,
-                'marca'        => $producto->marca?->nombre,
-                'imagen'       => Producto::urlImagen($producto->imagen_principal),
-                'precio'       => (float) $producto->precio,
-                'precioFinal'  => round($precioFinal, 2),
+                'id' => $producto->id_producto,
+                'sku' => $producto->sku,
+                'nombre' => $producto->nombre,
+                'descripcion' => $producto->descripcion,
+                'marca' => $producto->marca?->nombre,
+                'imagen' => Producto::urlImagen($producto->imagen_principal),
+                'precio' => (float) $producto->precio,
+                'precioFinal' => round($precioFinal, 2),
                 'porcentajeOff' => $porcentajeOff,
-                'stock'        => (int) $producto->stock,
-                'href'         => "/producto/{$producto->id_producto}",
+                'stock' => (int) $producto->stock,
+                'href' => "/producto/{$producto->id_producto}",
             ],
             'breadcrumbs' => $breadcrumbs,
             'relacionados' => $this->relacionados($producto, $sub, $cat),
@@ -213,15 +216,24 @@ class CatalogoController extends Controller
             }
         }
 
+        $subcategoria = $p->subcategoria;
+        $categoria = $subcategoria?->categoria;
+
         return [
             'id' => $p->id_producto,
             'nombre' => $p->nombre,
             'marca' => $p->marca?->nombre,
+            'marcaId' => $p->marca?->id_marca,
             'imagen' => Producto::urlImagen($p->imagen_principal),
-            'tipo_animal' => $p->subcategoria?->categoria?->animal?->nombre,
+            'tipo_animal' => $categoria?->animal?->nombre,
             'precio' => (float) $p->precio,
             'precioFinal' => round($precioFinal, 2),
             'porcentajeOff' => $porcentajeOff,
+            'stock' => (int) $p->stock,
+            'categoriaId' => $categoria?->id_categoria,
+            'categoriaNombre' => $categoria?->nombre,
+            'subcategoriaId' => $subcategoria?->id_subcategorias,
+            'subcategoriaNombre' => $subcategoria?->nom_sub_categoria,
             'href' => "/producto/{$p->id_producto}",
         ];
     }
