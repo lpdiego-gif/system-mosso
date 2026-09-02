@@ -123,7 +123,7 @@ export default function MobileMenu({
 
   const cuentaNodo: NodoNav = auth?.user
     ? { key: 'cuenta', nombre: 'Mi cuenta', descripcion: 'Pedidos, direcciones y más', icono: <UserIcon />, href: '/cuenta' }
-    : { key: 'cuenta', nombre: 'Mi cuenta', descripcion: 'Inicia sesión o regístrate', icono: <UserIcon />, accion: abrirAcceso };
+    : { key: 'cuenta', nombre: 'Mi cuenta', descripcion: 'Inicia sesión o regístrate', icono: <UserIcon />, accion: () => abrirAcceso() };
 
   const ayudaHijos: NodoNav[] = [
     {

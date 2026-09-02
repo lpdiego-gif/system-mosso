@@ -83,6 +83,16 @@
         border-top: 1px solid #e5e7eb;
         padding-top: 8px;
     }
+    .aviso {
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        color: #92400e;
+        border-radius: 6px;
+        padding: 6px 10px;
+        margin-bottom: 14px;
+        font-size: 8px;
+        text-align: center;
+    }
 </style>
 </head>
 <body>
@@ -95,6 +105,13 @@
         {{ count($productos) }} {{ count($productos) === 1 ? 'producto' : 'productos' }}
     </p>
 </div>
+
+@if($truncado ?? false)
+<div class="aviso">
+    Este PDF muestra los primeros {{ count($productos) }} de {{ $totalReal }} productos que coinciden.
+    Aplica un filtro (animal, categoría o búsqueda) para un catálogo más específico.
+</div>
+@endif
 
 @php
     $chunks = collect($productos)->chunk(3);

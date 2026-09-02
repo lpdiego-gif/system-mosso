@@ -6,8 +6,10 @@ use App\Models\Carrito;
 use App\Models\CarritoDetalle;
 use App\Models\Cliente;
 use App\Models\Producto;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class CarritoService
@@ -91,6 +93,66 @@ class CarritoService
                 'cantidad'       => $d->cantidad,
                 'subtotal'       => round($d->precio_unitario * $d->cantidad, 2),
             ]);
+    }
+
+    /**
+     * Se llama justo después de un login exitoso (ver Listeners\FusionarCarritoInvitado).
+     * Antes de loguearse, un invitado arma su carrito bajo un `token_invitado`
+     * de sesión (ver obtenerOGenerarToken); ese carrito es una fila
+     * completamente distinta al que le corresponde como cliente (fk_cliente).
+     * Sin este paso, iniciar sesión "vaciaba" el carrito a los ojos del
+     * usuario -- en realidad nunca se tocaba el suyo, seguía viendo el del
+     * cliente (vacío la primera vez) mientras el de invitado quedaba huérfano.
+     *
+     * Si el producto ya existe en el carrito del cliente, suma cantidades
+     * (mismo criterio que agregarProducto); si no, mueve el detalle tal cual.
+     */
+    public function fusionarCarritoInvitado(Request $request, Authenticatable $user): void
+    {
+        $cliente = Cliente::where('fk_user', $user->getAuthIdentifier())->first();
+        if (! $cliente) {
+            return;
+        }
+
+        $token = $request->session()->get('cart_token');
+        if (! $token) {
+            return;
+        }
+
+        $carritoInvitado = Carrito::where('token_invitado', $token)->first();
+        if (! $carritoInvitado) {
+            return;
+        }
+
+        DB::transaction(function () use ($carritoInvitado, $cliente) {
+            $detallesInvitado = CarritoDetalle::where('fk_carrito', $carritoInvitado->id_carrito)->get();
+
+            if ($detallesInvitado->isNotEmpty()) {
+                $carritoCliente = Carrito::firstOrCreate(['fk_cliente' => $cliente->id_cliente]);
+
+                foreach ($detallesInvitado as $detalle) {
+                    $existente = CarritoDetalle::where('fk_carrito', $carritoCliente->id_carrito)
+                        ->where('fk_producto', $detalle->fk_producto)
+                        ->first();
+
+                    if ($existente) {
+                        $existente->update(['cantidad' => $existente->cantidad + $detalle->cantidad]);
+                    } else {
+                        CarritoDetalle::create([
+                            'fk_carrito' => $carritoCliente->id_carrito,
+                            'fk_producto' => $detalle->fk_producto,
+                            'cantidad' => $detalle->cantidad,
+                            'precio_unitario' => $detalle->precio_unitario,
+                        ]);
+                    }
+                }
+            }
+
+            $carritoInvitado->detalles()->delete();
+            $carritoInvitado->delete();
+        });
+
+        $request->session()->forget('cart_token');
     }
 
     // ------------------------------------------------------------------

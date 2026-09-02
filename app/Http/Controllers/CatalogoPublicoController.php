@@ -9,12 +9,20 @@ use App\Models\SubCategoria;
 use App\Support\CatalogoCache;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class CatalogoPublicoController extends Controller
 {
+    /**
+     * El catálogo completo son ~2100 productos activos: armar el PDF con
+     * todos agota la memoria (dompdf es muy pesado por nodo de CSS/DOM) y
+     * antes truena con 500 sin descargar nada. Con 300 el PDF pesa ~1.4 MB,
+     * usa ~130 MB de memoria y tarda ~20s -- ya probado. Si el filtro deja
+     * más que esto, el PDF avisa que se truncó (ver pdf.catalogo.blade.php).
+     */
+    private const MAX_PRODUCTOS_PDF = 300;
+
     public function index(): Response
     {
         // Esta página vuelca TODO el catálogo activo (~2000 productos, ~1 MB
@@ -79,24 +87,31 @@ class CatalogoPublicoController extends Controller
             $query->where('nombre', 'like', $q);
         }
 
-        // Procesa en lotes de 100 para no cargar todos los modelos Eloquent a la vez.
+        $total = (clone $query)->count();
+        $truncado = $total > self::MAX_PRODUCTOS_PDF;
+
+        // cursor() en vez de chunk(): con el límite ya aplicado, itera fila a
+        // fila sin cargar de más -- chunk() no combina bien con limit().
         $productos = [];
-        $query->chunk(100, function ($chunk) use (&$productos) {
-            foreach ($chunk as $p) {
-                $productos[] = $this->formatoPdf($p);
-            }
-            gc_collect_cycles();
-        });
+        foreach ($query->limit(self::MAX_PRODUCTOS_PDF)->cursor() as $p) {
+            $productos[] = $this->formatoPdf($p);
+        }
+        gc_collect_cycles();
 
         $pdf = Pdf::loadView('pdf.catalogo', [
             'productos' => collect($productos),
             'titulo' => $this->tituloFiltro($request),
             'fecha' => now()->format('d/m/Y H:i'),
+            'truncado' => $truncado,
+            'totalReal' => $total,
         ])
             ->setOptions(['isLocalFileSystemAllowed' => true])
             ->setPaper('a4', 'portrait');
 
-        return $pdf->download('catalogo-mosso.pdf');
+        // stream() en vez de download(): abre el PDF en el visor del
+        // navegador (Content-Disposition: inline) para que el usuario lo vea
+        // antes de decidir si lo descarga, en vez de forzar la descarga.
+        return $pdf->stream('catalogo-mosso.pdf');
     }
 
     private function formato(Producto $p): array
@@ -158,20 +173,6 @@ class CatalogoPublicoController extends Controller
         $full = str_starts_with($path, 'productos/')
             ? storage_path("app/public/{$path}")
             : public_path("image/Productos/{$path}");
-
-        // Log diagnóstico para los primeros 5 productos (temporal).
-        static $logCount = 0;
-        if ($logCount < 5) {
-            $logCount++;
-            Log::info("PDF imagen [{$logCount}]", [
-                'path' => $path,
-                'full' => $full,
-                'exists' => file_exists($full),
-                'bytes' => file_exists($full) ? filesize($full) : null,
-                'ext' => strtolower(pathinfo($full, PATHINFO_EXTENSION)),
-                'gd' => extension_loaded('gd'),
-            ]);
-        }
 
         if (! file_exists($full)) {
             return null;

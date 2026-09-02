@@ -5,13 +5,21 @@ import PanelAcceso from '@/components/PanelAcceso';
 
 /**
  * Evento que abre el modal de acceso desde cualquier parte del storefront
- * (icono de usuario del Header, "Mi cuenta" del MobileMenu). Mismo patrón de
- * eventos DOM que usa `use-favoritos` para no pasar props por todo el árbol.
+ * (icono de usuario del Header, "Mi cuenta" del MobileMenu, "Proceder al
+ * pago" del carrito estando deslogueado). Mismo patrón de eventos DOM que usa
+ * `use-favoritos` para no pasar props por todo el árbol.
  */
 export const EVENTO_ABRIR_ACCESO = 'mosso:abrir-acceso';
 
-export function abrirAcceso(): void {
-    window.dispatchEvent(new Event(EVENTO_ABRIR_ACCESO));
+/**
+ * @param redirectTo Ruta a la que ir justo después de iniciar sesión (ej.
+ * "/checkout"). Si no se pasa, el login usa su destino de siempre (mi
+ * cuenta o dashboard, según CuentaService). Viaja como campo oculto del
+ * formulario hasta `LoginResponse`, que valida que sea una ruta local antes
+ * de usarla.
+ */
+export function abrirAcceso(redirectTo?: string): void {
+    window.dispatchEvent(new CustomEvent(EVENTO_ABRIR_ACCESO, { detail: { redirectTo } }));
 }
 
 /**
@@ -24,11 +32,15 @@ export default function ModalAcceso() {
     const { auth } = usePage().props;
     const autenticado = Boolean(auth?.user);
     const [abierto, setAbierto] = useState(false);
+    const [redirectTo, setRedirectTo] = useState<string | undefined>(undefined);
 
     const cerrar = useCallback(() => setAbierto(false), []);
 
     useEffect(() => {
-        const abrir = () => setAbierto(true);
+        const abrir = (e: Event) => {
+            setRedirectTo((e as CustomEvent<{ redirectTo?: string }>).detail?.redirectTo);
+            setAbierto(true);
+        };
 
         window.addEventListener(EVENTO_ABRIR_ACCESO, abrir);
 
@@ -91,7 +103,7 @@ export default function ModalAcceso() {
                     Iniciar sesión o crear cuenta
                 </span>
 
-                <PanelAcceso onCerrarCodigo={cerrar} />
+                <PanelAcceso onCerrarCodigo={cerrar} redirectTo={redirectTo} />
             </div>
         </div>
     );

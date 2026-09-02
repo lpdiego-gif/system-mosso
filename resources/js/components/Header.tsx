@@ -425,7 +425,7 @@ function CuentaButton() {
   return (
     <button
       type="button"
-      onClick={abrirAcceso}
+      onClick={() => abrirAcceso()}
       aria-label="Iniciar sesión"
       className={claseIcono}
     >

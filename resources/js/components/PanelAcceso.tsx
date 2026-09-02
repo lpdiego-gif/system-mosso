@@ -1,5 +1,5 @@
 import { Form, router } from '@inertiajs/react';
-import { Eye, EyeOff, Lock, Mail, ShieldCheck, X } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, ShieldCheck, ShoppingBag, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import {
     reenviar as reenviarStore,
@@ -48,9 +48,12 @@ type Modo = 'login' | 'registro' | 'recuperar';
 export default function PanelAcceso({
     canResetPassword = true,
     onCerrarCodigo,
+    redirectTo,
 }: {
     canResetPassword?: boolean;
     onCerrarCodigo?: () => void;
+    /** Ruta a la que ir justo después de iniciar sesión (ver ModalAcceso/abrirAcceso). */
+    redirectTo?: string;
 }) {
     const [modo, setModo] = useState<Modo>('login');
     const [emailPendiente, setEmailPendiente] = useState<string | null>(null);
@@ -74,6 +77,8 @@ export default function PanelAcceso({
 
     return (
         <div>
+            {redirectTo === '/checkout' && <AvisoCheckout />}
+
             {modo !== 'recuperar' && (
                 <ToggleAcceso modo={modo} onCambiar={setModo} />
             )}
@@ -86,18 +91,34 @@ export default function PanelAcceso({
                 <FormularioLogin
                     canResetPassword={canResetPassword}
                     onRecuperar={() => setModo('recuperar')}
+                    redirectTo={redirectTo}
                 />
             )}
 
             {emailPendiente && (
                 <ModalCodigo
                     email={emailPendiente}
+                    redirectTo={redirectTo}
                     onCerrar={() => {
                         setEmailPendiente(null);
                         onCerrarCodigo?.();
                     }}
                 />
             )}
+        </div>
+    );
+}
+
+/** Contexto de por qué se abrió el modal justo en este momento (ej. al pagar sin sesión). */
+function AvisoCheckout() {
+    return (
+        <div className="mb-4 flex items-center gap-2.5 rounded-xl border border-mosso-yellow/30 bg-mosso-yellow/10 px-3.5 py-2.5">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white text-mosso-dark shadow-sm">
+                <ShoppingBag className="size-4" />
+            </span>
+            <p className="text-xs font-medium text-gray-700">
+                Inicia sesión o crea una cuenta para continuar con tu compra.
+            </p>
         </div>
     );
 }
@@ -240,9 +261,11 @@ function CampoPassword({
 function FormularioLogin({
     canResetPassword,
     onRecuperar,
+    redirectTo,
 }: {
     canResetPassword: boolean;
     onRecuperar: () => void;
+    redirectTo?: string;
 }) {
     return (
         <div>
@@ -264,6 +287,10 @@ function FormularioLogin({
             >
                 {({ processing, errors }) => (
                     <>
+                        {redirectTo && (
+                            <input type="hidden" name="redirect" value={redirectTo} />
+                        )}
+
                         <div>
                             <label className={labelClass}>
                                 Correo electrónico
@@ -454,9 +481,11 @@ function FormularioRecuperar({ onIrALogin }: { onIrALogin: () => void }) {
  */
 function ModalCodigo({
     email,
+    redirectTo,
     onCerrar,
 }: {
     email: string;
+    redirectTo?: string;
     onCerrar: () => void;
 }) {
     const [reenviando, setReenviando] = useState(false);
@@ -536,6 +565,9 @@ function ModalCodigo({
                     {({ processing, errors }) => (
                         <>
                             <input type="hidden" name="email" value={email} />
+                            {redirectTo && (
+                                <input type="hidden" name="redirect" value={redirectTo} />
+                            )}
 
                             <div>
                                 <label className={labelClass}>

@@ -260,7 +260,7 @@ export default function CatalogoPublico({ animales, productos }: Props) {
                         {compartiendo ? 'Generando…' : 'Compartir PDF'}
                     </button>
 
-                    {/* Descargar PDF */}
+                    {/* Ver catálogo en PDF (se abre en una pestaña nueva; el usuario decide si lo descarga desde el visor del navegador) */}
                     <a
                         href={pdfUrl}
                         target="_blank"
@@ -268,7 +268,7 @@ export default function CatalogoPublico({ animales, productos }: Props) {
                         className="flex items-center gap-2 bg-gray-900 hover:bg-gray-700 active:bg-gray-800 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
                     >
                         <PdfIcon className="w-4 h-4 flex-shrink-0" />
-                        Descargar PDF
+                        Ver catálogo en PDF
                     </a>
                 </div>
 
