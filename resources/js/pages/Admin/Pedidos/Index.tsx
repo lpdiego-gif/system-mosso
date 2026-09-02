@@ -1,11 +1,14 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import {
     ArrowDown,
     ArrowUp,
+    ChevronDown,
     ChevronLeft,
     ChevronRight,
     ChevronsUpDown,
     Eye,
+    FileText,
+    Loader2,
     PackageCheck,
     Search,
     ShoppingBag,
@@ -16,22 +19,10 @@ import { useEffect, useRef, useState } from 'react';
 import { route } from 'ziggy-js';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { soles, tiempoRelativo } from '@/components/clientes/cliente-helpers';
+import { PedidoDetalleDrawer } from '@/components/pedidos/pedido-detalle-drawer';
+import { ESTADO_TONO } from '@/components/pedidos/pedido-helpers';
 import { cn } from '@/lib/utils';
-
-interface PedidoRow {
-    id_pedido: number;
-    cliente: string;
-    correo: string | null;
-    estado: string;
-    fk_estado_pedido: number;
-    total: number;
-    fecha_pedido: string;
-}
-
-interface EstadoOpcion {
-    id_estado_pedido: number;
-    nombre: string;
-}
+import type { EstadoOpcion, PedidoRow } from '@/types/pedido';
 
 interface Filtros {
     search: string | null;
@@ -67,15 +58,6 @@ interface PageProps {
     opciones: { estados: EstadoOpcion[]; porPagina: number[] };
 }
 
-const ESTADO_TONO: Record<string, string> = {
-    'Pendiente de pago': 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400',
-    Pagado: 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-400',
-    'En preparación': 'bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-400',
-    Enviado: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-400',
-    Entregado: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400',
-    Cancelado: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-400',
-};
-
 const inputBase =
     'w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30';
 
@@ -90,7 +72,29 @@ interface RecargaParams {
 export default function Index({ pedidos, filtros, stats, opciones }: PageProps) {
     const [search, setSearch] = useState(filtros.search ?? '');
     const [cargando, setCargando] = useState(false);
+    const [pedidoSeleccionado, setPedidoSeleccionado] = useState<number | null>(null);
+    const [drawerAbierto, setDrawerAbierto] = useState(false);
+    const [guardandoEstadoId, setGuardandoEstadoId] = useState<number | null>(null);
     const primeraCarga = useRef(true);
+
+    function verDetalle(id: number) {
+        setPedidoSeleccionado(id);
+        setDrawerAbierto(true);
+    }
+
+    function cambiarEstado(idPedido: number, fkEstado: number) {
+        setGuardandoEstadoId(idPedido);
+        router.patch(
+            route('admin.pedidos.estado', idPedido),
+            { fk_estado_pedido: fkEstado },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                only: ['pedidos'],
+                onFinish: () => setGuardandoEstadoId(null),
+            },
+        );
+    }
 
     useEffect(() => {
         const off1 = router.on('start', () => setCargando(true));
@@ -261,18 +265,53 @@ export default function Index({ pedidos, filtros, stats, opciones }: PageProps) 
                                                 {tiempoRelativo(p.fecha_pedido)}
                                             </td>
                                             <td className="px-4 py-3">
-                                                <span className={cn('inline-block rounded-full px-2.5 py-0.5 text-xs font-medium', ESTADO_TONO[p.estado] ?? 'bg-muted text-muted-foreground')}>
-                                                    {p.estado}
-                                                </span>
+                                                <div className="relative inline-block">
+                                                    <select
+                                                        value={p.fk_estado_pedido}
+                                                        onChange={(e) => cambiarEstado(p.id_pedido, Number(e.target.value))}
+                                                        disabled={guardandoEstadoId === p.id_pedido}
+                                                        aria-label={`Cambiar estado del pedido #${p.id_pedido}`}
+                                                        className={cn(
+                                                            'cursor-pointer appearance-none rounded-full py-1 pr-6 pl-2.5 text-xs font-medium outline-none transition-opacity disabled:cursor-not-allowed disabled:opacity-60',
+                                                            ESTADO_TONO[p.estado] ?? 'bg-muted text-muted-foreground',
+                                                        )}
+                                                    >
+                                                        {opciones.estados.map((e) => (
+                                                            <option key={e.id_estado_pedido} value={e.id_estado_pedido} className="bg-popover text-foreground">
+                                                                {e.nombre}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                    {guardandoEstadoId === p.id_pedido ? (
+                                                        <Loader2 className="pointer-events-none absolute top-1/2 right-1.5 size-3 -translate-y-1/2 animate-spin" />
+                                                    ) : (
+                                                        <ChevronDown className="pointer-events-none absolute top-1/2 right-1.5 size-3 -translate-y-1/2 opacity-60" />
+                                                    )}
+                                                </div>
                                             </td>
                                             <td className="px-4 py-3 text-right font-semibold tabular-nums text-foreground">{soles(p.total)}</td>
-                                            <td className="px-4 py-3 text-right">
-                                                <Link
-                                                    href={route('admin.pedidos.show', p.id_pedido)}
-                                                    className="inline-flex items-center gap-1.5 rounded-md border bg-background px-2.5 py-1.5 text-xs font-medium shadow-xs transition-colors hover:bg-accent"
-                                                >
-                                                    <Eye className="size-3.5" /> Ver
-                                                </Link>
+                                            <td className="px-4 py-3">
+                                                <div className="flex items-center justify-end gap-1.5">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => verDetalle(p.id_pedido)}
+                                                        title="Ver detalle"
+                                                        aria-label={`Ver detalle del pedido #${p.id_pedido}`}
+                                                        className="inline-flex size-8 items-center justify-center rounded-md border bg-background text-muted-foreground shadow-xs transition-colors hover:bg-accent hover:text-foreground"
+                                                    >
+                                                        <Eye className="size-4" />
+                                                    </button>
+                                                    <a
+                                                        href={route('admin.pedidos.pdf', p.id_pedido)}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        title="Ver PDF"
+                                                        aria-label={`Ver PDF del pedido #${p.id_pedido}`}
+                                                        className="inline-flex size-8 items-center justify-center rounded-md border bg-background text-muted-foreground shadow-xs transition-colors hover:bg-accent hover:text-foreground"
+                                                    >
+                                                        <FileText className="size-4" />
+                                                    </a>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
@@ -284,6 +323,18 @@ export default function Index({ pedidos, filtros, stats, opciones }: PageProps) 
 
                 {!sinResultados ? <Pagination data={pedidos} disabled={cargando} onNavigate={irA} /> : null}
             </div>
+
+            <PedidoDetalleDrawer
+                pedidoId={pedidoSeleccionado}
+                open={drawerAbierto}
+                onOpenChange={(value) => {
+                    setDrawerAbierto(value);
+
+                    if (!value) {
+                        setPedidoSeleccionado(null);
+                    }
+                }}
+            />
         </>
     );
 }

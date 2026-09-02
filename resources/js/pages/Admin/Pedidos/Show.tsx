@@ -1,49 +1,13 @@
 import { Head, Link, useForm } from '@inertiajs/react';
-import { ArrowLeft, CreditCard, Loader2, MapPin, Receipt, ShoppingBag, Truck, User } from 'lucide-react';
+import { ArrowLeft, CreditCard, FileText, Loader2, MapPin, Receipt, ShoppingBag, Truck, User } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { route } from 'ziggy-js';
 import { fechaCorta, soles } from '@/components/clientes/cliente-helpers';
+import { ESTADO_TONO } from '@/components/pedidos/pedido-helpers';
 import { cn } from '@/lib/utils';
+import type { PedidoDetalleResponse } from '@/types/pedido';
 
-interface DetalleItem {
-    id_pedido_detalle: number;
-    producto: string | null;
-    imagen: string | null;
-    cantidad: number;
-    precio_unitario: number;
-    descuento_unitario: number;
-    subtotal: number;
-}
-
-interface Props {
-    pedido: {
-        id_pedido: number;
-        estado: string | null;
-        fk_estado_pedido: number;
-        fecha_pedido: string | null;
-        subtotal: number;
-        descuento_total: number;
-        igv: number;
-        total: number;
-        tipo_entrega: string | null;
-        forma_pago: string | null;
-        cliente: { id_cliente: number | null; nombre: string; correo: string | null; telefono: string | null };
-        direccion_envio: { direccion: string | null; referencia: string | null; distrito: string | null } | null;
-        pago: { estado: string | null; monto: number; referencia: string | null; fecha_pago: string | null } | null;
-        comprobante: { tipo: string | null; serie: string | null; numero: string | null } | null;
-    };
-    detalles: DetalleItem[];
-    opciones: { estados: { id_estado_pedido: number; nombre: string }[] };
-}
-
-const ESTADO_TONO: Record<string, string> = {
-    'Pendiente de pago': 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400',
-    Pagado: 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-400',
-    'En preparación': 'bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-400',
-    Enviado: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-400',
-    Entregado: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400',
-    Cancelado: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-400',
-};
+type Props = PedidoDetalleResponse;
 
 const inputBase =
     'w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30';
@@ -86,11 +50,21 @@ export default function Show({ pedido, detalles, opciones }: Props) {
                     <Link href={route('admin.pedidos.index')} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
                         <ArrowLeft className="size-4" /> Volver a pedidos
                     </Link>
-                    {pedido.estado ? (
-                        <span className={cn('inline-block rounded-full px-3 py-1 text-xs font-semibold', ESTADO_TONO[pedido.estado] ?? 'bg-muted text-muted-foreground')}>
-                            {pedido.estado}
-                        </span>
-                    ) : null}
+                    <div className="flex items-center gap-3">
+                        {pedido.estado ? (
+                            <span className={cn('inline-block rounded-full px-3 py-1 text-xs font-semibold', ESTADO_TONO[pedido.estado] ?? 'bg-muted text-muted-foreground')}>
+                                {pedido.estado}
+                            </span>
+                        ) : null}
+                        <a
+                            href={route('admin.pedidos.pdf', pedido.id_pedido)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 rounded-md border bg-background px-2.5 py-1.5 text-xs font-medium shadow-xs transition-colors hover:bg-accent"
+                        >
+                            <FileText className="size-3.5" /> Ver PDF
+                        </a>
+                    </div>
                 </div>
 
                 <div className="rounded-xl border bg-card p-5 shadow-sm">

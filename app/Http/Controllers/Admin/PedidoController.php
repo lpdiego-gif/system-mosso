@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\EstadoPedido;
 use App\Models\Pedido;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -70,69 +72,47 @@ class PedidoController extends Controller
 
     public function show(Pedido $pedido): Response
     {
-        $pedido->load([
-            'cliente.persona',
-            'cliente.user',
-            'estadoPedido',
-            'tipoEntrega',
-            'formaPago',
-            'direccionEnvio',
-            'pago',
-            'comprobante.tipoComprobante',
-            'recojoTercero',
-            'detalles.producto',
-        ]);
-
         return Inertia::render('Admin/Pedidos/Show', [
-            'pedido' => [
-                'id_pedido' => $pedido->id_pedido,
-                'estado' => $pedido->estadoPedido?->nombre,
-                'fk_estado_pedido' => $pedido->fk_estado_pedido,
-                'fecha_pedido' => $pedido->fecha_pedido?->toISOString(),
-                'subtotal' => (float) $pedido->subtotal,
-                'descuento_total' => (float) $pedido->descuento_total,
-                'igv' => (float) $pedido->igv,
-                'total' => (float) $pedido->total,
-                'tipo_entrega' => $pedido->tipoEntrega?->nombre,
-                'forma_pago' => $pedido->formaPago?->nombre,
-                'cliente' => [
-                    'id_cliente' => $pedido->cliente?->id_cliente,
-                    'nombre' => $this->nombreCliente($pedido),
-                    'correo' => $pedido->cliente?->correo,
-                    'telefono' => $pedido->cliente?->persona?->telefono,
-                ],
-                'direccion_envio' => $pedido->direccionEnvio ? [
-                    'direccion' => $pedido->direccionEnvio->direccion,
-                    'referencia' => $pedido->direccionEnvio->referencia,
-                    'distrito' => DB::table('distritos')
-                        ->where('id_distrito', $pedido->direccionEnvio->fk_distrito)
-                        ->value('nombre'),
-                ] : null,
-                'pago' => $pedido->pago ? [
-                    'estado' => $pedido->pago->estado,
-                    'monto' => (float) $pedido->pago->monto,
-                    'referencia' => $pedido->pago->referencia,
-                    'fecha_pago' => $pedido->pago->fecha_pago?->toISOString(),
-                ] : null,
-                'comprobante' => $pedido->comprobante ? [
-                    'tipo' => $pedido->comprobante->tipoComprobante?->nombre,
-                    'serie' => $pedido->comprobante->serie,
-                    'numero' => $pedido->comprobante->numero,
-                ] : null,
-            ],
-            'detalles' => $pedido->detalles->map(fn ($d) => [
-                'id_pedido_detalle' => $d->id_pedido_detalle,
-                'producto' => $d->producto?->nombre,
-                'imagen' => $d->producto?->imagen_principal,
-                'cantidad' => $d->cantidad,
-                'precio_unitario' => (float) $d->precio_unitario,
-                'descuento_unitario' => (float) $d->descuento_unitario,
-                'subtotal' => (float) $d->subtotal,
-            ])->values(),
+            ...$this->detalleCompleto($pedido),
             'opciones' => [
                 'estados' => EstadoPedido::orderBy('id_estado_pedido')->get(['id_estado_pedido', 'nombre']),
             ],
         ]);
+    }
+
+    /**
+     * Detalle completo del pedido en JSON, para el Drawer de la tabla de
+     * Pedidos (evita navegar a la página completa para una vista rápida).
+     */
+    public function detalle(Pedido $pedido): JsonResponse
+    {
+        return response()->json([
+            ...$this->detalleCompleto($pedido),
+            'opciones' => [
+                'estados' => EstadoPedido::orderBy('id_estado_pedido')->get(['id_estado_pedido', 'nombre']),
+            ],
+        ]);
+    }
+
+    /**
+     * Comprobante del pedido en PDF (mismo detalle que el Drawer/Show, con
+     * los datos de la empresa emisora) para revisión o impresión rápida.
+     */
+    public function pdf(Pedido $pedido)
+    {
+        $empresa = DB::table('empresa as e')
+            ->leftJoin('direcciones as d', 'd.id_direccion', '=', 'e.fk_direccion')
+            ->leftJoin('distritos as dist', 'dist.id_distrito', '=', 'd.fk_distrito')
+            ->select(['e.ruc', 'e.razon_social', 'e.nombre_comercial', 'e.logo', 'e.correo', 'e.telefono', 'd.direccion', 'dist.nombre as distrito'])
+            ->first();
+
+        $pdf = Pdf::loadView('pdf.pedido', [
+            ...$this->detalleCompleto($pedido),
+            'empresa' => $empresa,
+            'generadoEl' => now()->format('d/m/Y H:i'),
+        ])->setPaper('a4', 'portrait');
+
+        return $pdf->stream(sprintf('pedido-%s.pdf', str_pad((string) $pedido->id_pedido, 6, '0', STR_PAD_LEFT)));
     }
 
     public function actualizarEstado(Request $request, Pedido $pedido): RedirectResponse
@@ -180,6 +160,86 @@ class PedidoController extends Controller
         };
 
         $query->orderBy('pedidos.id_pedido', 'desc');
+    }
+
+    /**
+     * Detalle completo de un pedido (cabecera + cliente + entrega + pago +
+     * comprobante + ítems), compartido por show(), detalle() y pdf() para no
+     * duplicar la forma del payload entre la página completa, el Drawer y el PDF.
+     *
+     * @return array{pedido: array<string, mixed>, detalles: array<int, array<string, mixed>>}
+     */
+    private function detalleCompleto(Pedido $pedido): array
+    {
+        $pedido->load([
+            'cliente.persona',
+            'cliente.user',
+            'estadoPedido',
+            'tipoEntrega',
+            'formaPago',
+            'direccionEnvio',
+            'pago',
+            'comprobante.tipoComprobante',
+            'recojoTercero',
+            'detalles.producto',
+        ]);
+
+        return [
+            'pedido' => [
+                'id_pedido' => $pedido->id_pedido,
+                'estado' => $pedido->estadoPedido?->nombre,
+                'fk_estado_pedido' => $pedido->fk_estado_pedido,
+                'fecha_pedido' => $pedido->fecha_pedido?->toISOString(),
+                'subtotal' => (float) $pedido->subtotal,
+                'descuento_total' => (float) $pedido->descuento_total,
+                'igv' => (float) $pedido->igv,
+                'total' => (float) $pedido->total,
+                'tipo_entrega' => $pedido->tipoEntrega?->nombre,
+                'forma_pago' => $pedido->formaPago?->nombre,
+                'cliente' => [
+                    'id_cliente' => $pedido->cliente?->id_cliente,
+                    'nombre' => $this->nombreCliente($pedido),
+                    'correo' => $pedido->cliente?->correo,
+                    'telefono' => $pedido->cliente?->persona?->telefono,
+                    'documento' => $pedido->cliente?->persona
+                        ? trim((string) $pedido->cliente->persona->num_documento)
+                        : null,
+                ],
+                'direccion_envio' => $pedido->direccionEnvio ? [
+                    'direccion' => $pedido->direccionEnvio->direccion,
+                    'referencia' => $pedido->direccionEnvio->referencia,
+                    'distrito' => DB::table('distritos')
+                        ->where('id_distrito', $pedido->direccionEnvio->fk_distrito)
+                        ->value('nombre'),
+                ] : null,
+                'recojo_tercero' => $pedido->recojoTercero ? [
+                    'nombres' => trim("{$pedido->recojoTercero->nombres} {$pedido->recojoTercero->apellidos}"),
+                    'documento' => $pedido->recojoTercero->num_documento,
+                    'telefono' => $pedido->recojoTercero->telefono,
+                ] : null,
+                'pago' => $pedido->pago ? [
+                    'estado' => $pedido->pago->estado,
+                    'monto' => (float) $pedido->pago->monto,
+                    'referencia' => $pedido->pago->referencia,
+                    'fecha_pago' => $pedido->pago->fecha_pago?->toISOString(),
+                ] : null,
+                'comprobante' => $pedido->comprobante ? [
+                    'tipo' => $pedido->comprobante->tipoComprobante?->nombre,
+                    'serie' => $pedido->comprobante->serie,
+                    'numero' => $pedido->comprobante->numero,
+                    'fecha_emision' => $pedido->comprobante->fecha_emision?->toISOString(),
+                ] : null,
+            ],
+            'detalles' => $pedido->detalles->map(fn ($d) => [
+                'id_pedido_detalle' => $d->id_pedido_detalle,
+                'producto' => $d->producto?->nombre,
+                'imagen' => $d->producto?->imagen_principal,
+                'cantidad' => $d->cantidad,
+                'precio_unitario' => (float) $d->precio_unitario,
+                'descuento_unitario' => (float) $d->descuento_unitario,
+                'subtotal' => (float) $d->subtotal,
+            ])->values()->all(),
+        ];
     }
 
     /**

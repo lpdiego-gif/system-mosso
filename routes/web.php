@@ -311,6 +311,8 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::middleware('permiso:pedidos.ver')->group(function () {
         Route::get('/pedidos', [AdminPedidoController::class, 'index'])->name('pedidos.index');
         Route::get('/pedidos/{pedido}', [AdminPedidoController::class, 'show'])->whereNumber('pedido')->name('pedidos.show');
+        Route::get('/pedidos/{pedido}/detalle', [AdminPedidoController::class, 'detalle'])->whereNumber('pedido')->name('pedidos.detalle');
+        Route::get('/pedidos/{pedido}/pdf', [AdminPedidoController::class, 'pdf'])->whereNumber('pedido')->name('pedidos.pdf');
     });
 
     Route::middleware('permiso:pedidos.gestionar')->group(function () {

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Devolucion;
+use App\Models\EstadoPedido;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -122,6 +123,17 @@ class DevolucionController extends Controller
                 ? now()
                 : $devolucion->atendido_en,
         ]);
+
+        // Una devolución completa (no un cambio) marca el pedido como
+        // "Devuelto" -- así el listado de Pedidos deja de mostrarlo como
+        // "Entregado" para siempre una vez que el producto ya volvió.
+        if ($devolucion->tipo === 'devolucion' && $data['estado'] === 'completada') {
+            $idDevuelto = EstadoPedido::where('nombre', 'Devuelto')->value('id_estado_pedido');
+
+            if ($idDevuelto) {
+                $devolucion->pedido()->update(['fk_estado_pedido' => $idDevuelto]);
+            }
+        }
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Solicitud actualizada.']);
 
