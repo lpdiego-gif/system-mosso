@@ -1,4 +1,5 @@
 import type { Auth } from '@/types/auth';
+import type { EmpresaPublica } from '@/types/empresa';
 
 declare module 'react' {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -17,6 +18,8 @@ declare module '@inertiajs/core' {
             misPermisos: string[];
             esSuperAdmin: boolean;
             puedeGestionarRoles: boolean;
+            miRol: string | null;
+            empresa: EmpresaPublica | null;
             [key: string]: unknown;
         };
     }
