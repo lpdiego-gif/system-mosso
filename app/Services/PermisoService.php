@@ -59,6 +59,17 @@ class PermisoService
     }
 
     /**
+     * Nombre del rol del trabajador autenticado (p. ej. «Administrador»,
+     * «Vendedor»). `null` si el usuario no tiene fila activa en
+     * `trabajadores` (p. ej. un cliente). Se comparte en todas las páginas
+     * para mostrarlo en el encabezado del sidebar admin.
+     */
+    public function rolDe(User $user): ?string
+    {
+        return $this->nombreRolDe($user);
+    }
+
+    /**
      * Claves de permiso que este usuario tiene efectivamente. Un Super
      * Administrador recibe el catálogo completo (bypass); los demás,
      * exactamente lo asignado a su rol.

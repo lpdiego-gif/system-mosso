@@ -68,6 +68,11 @@ class HandleInertiaRequests extends Middleware
                 ? app(PermisoService::class)->puedeGestionarRoles($request->user())
                 : false,
 
+            // Nombre del rol del trabajador autenticado (encabezado del sidebar admin).
+            'miRol' => fn () => $request->user()
+                ? app(PermisoService::class)->rolDe($request->user())
+                : null,
+
             // Menú del header/mega menu, disponible en todas las páginas
             'menu' => fn () => app(MenuService::class)->build(),
 
