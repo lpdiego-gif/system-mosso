@@ -156,6 +156,12 @@ export default function Show({ pedido, detalles, opciones }: Props) {
                             <Seccion icon={Receipt} titulo="Comprobante">
                                 <Dato label="Tipo" valor={pedido.comprobante.tipo} />
                                 <Dato label="Serie - número" valor={`${pedido.comprobante.serie ?? ''}-${pedido.comprobante.numero ?? ''}`} />
+                                <Link
+                                    href={route('admin.ventas.show', pedido.comprobante.id)}
+                                    className="mt-2 inline-block text-xs font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
+                                >
+                                    Ver en Ventas →
+                                </Link>
                             </Seccion>
                         ) : null}
 

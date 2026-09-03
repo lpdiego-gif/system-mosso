@@ -224,6 +224,7 @@ class PedidoController extends Controller
                     'fecha_pago' => $pedido->pago->fecha_pago?->toISOString(),
                 ] : null,
                 'comprobante' => $pedido->comprobante ? [
+                    'id' => $pedido->comprobante->id_comprobante,
                     'tipo' => $pedido->comprobante->tipoComprobante?->nombre,
                     'serie' => $pedido->comprobante->serie,
                     'numero' => $pedido->comprobante->numero,

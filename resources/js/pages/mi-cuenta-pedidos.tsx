@@ -1,4 +1,6 @@
 import { Head, router } from '@inertiajs/react';
+import axios from 'axios';
+import { useState } from 'react';
 import MiCuentaShell from '@/components/MiCuentaShell';
 import StorefrontLayout from '@/layouts/storefront-layout';
 import type { MiCuentaPedidosProps, Pedido } from '@/types/cuenta';
@@ -46,6 +48,21 @@ function PedidoCard({ pedido }: { pedido: Pedido }) {
     router.post(`/mi-cuenta/pedidos/${pedido.id_pedido}/reintentar-pago`);
   };
 
+  const [reenviando, setReenviando] = useState(false);
+
+  const reenviarComprobante = async () => {
+    if (!pedido.id_comprobante) return;
+    setReenviando(true);
+    try {
+      const { data } = await axios.post(`/comprobante/${pedido.id_comprobante}/reenviar`, {});
+      alert(data.message);
+    } catch (err: any) {
+      alert(err.response?.data?.message ?? 'No se pudo reenviar el comprobante.');
+    } finally {
+      setReenviando(false);
+    }
+  };
+
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
       <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -72,6 +89,33 @@ function PedidoCard({ pedido }: { pedido: Pedido }) {
           )}
         </div>
       </div>
+
+      {pedido.id_comprobante && (
+        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-4">
+          <a
+            href={`/comprobante/${pedido.id_comprobante}/pdf`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 px-4 py-1.5 text-xs font-semibold text-gray-700 hover:border-gray-300"
+          >
+            Ver comprobante (PDF)
+          </a>
+          <a
+            href={`/comprobante/${pedido.id_comprobante}/xml`}
+            className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 px-4 py-1.5 text-xs font-semibold text-gray-700 hover:border-gray-300"
+          >
+            XML
+          </a>
+          <button
+            type="button"
+            onClick={reenviarComprobante}
+            disabled={reenviando}
+            className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 px-4 py-1.5 text-xs font-semibold text-gray-700 hover:border-gray-300 disabled:opacity-50"
+          >
+            {reenviando ? 'Enviando…' : 'Reenviar a mi correo'}
+          </button>
+        </div>
+      )}
 
       {pendienteDePago && (
         <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-4">

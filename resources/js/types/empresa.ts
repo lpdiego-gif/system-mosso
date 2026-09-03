@@ -6,12 +6,27 @@ export interface Empresa {
     logo: string | null;
     correo: string;
     telefono: string;
+    celular: string | null;
+    website: string | null;
     fk_direccion: number;
     direccion: string;
     referencia: string | null;
     fk_distrito: number;
     fk_provincia: number;
     fk_departamento: number;
+}
+
+export interface CuentaBancaria {
+    id_cuenta_bancaria: number;
+    fk_empresa: number;
+    banco: string;
+    moneda: 'PEN' | 'USD';
+    tipo_cuenta: string;
+    numero_cuenta: string;
+    cci: string | null;
+    titular: string | null;
+    activo: boolean;
+    orden: number;
 }
 
 export interface Departamento {
@@ -49,6 +64,8 @@ export interface EmpresaFormValues {
     nombre_comercial: string;
     correo: string;
     telefono: string;
+    celular: string;
+    website: string;
     direccion: string;
     referencia: string;
     fk_departamento: string;

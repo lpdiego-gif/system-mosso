@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\SubCategoria;
 
 class Producto extends Model
 {
@@ -22,6 +21,11 @@ class Producto extends Model
     public function marca()
     {
         return $this->belongsTo(Marca::class, 'fk_marca', 'id_marca');
+    }
+
+    public function unidadMedida()
+    {
+        return $this->belongsTo(UnidadMedida::class, 'fk_unidad_medida', 'id_unidad_medida');
     }
 
     public function descuentoActivo()
@@ -60,6 +64,24 @@ class Producto extends Model
     public function precioFinal(): float
     {
         return round((float) $this->precio - $this->descuentoUnitario(), 2);
+    }
+
+    /**
+     * Código de unidad de medida del Catálogo N°03 de SUNAT (UN/ECE Rec. 20),
+     * para el futuro generador de XML de comprobantes — preparación de datos
+     * únicamente, todavía no hay nada de facturación electrónica implementado.
+     * 'NIU' (unidad genérica) es el fallback a nivel app cuando la unidad no
+     * tiene `codigo_sunat` cargado o el producto no tiene unidad asignada.
+     * Los SERVICIOS (no productos físicos) van con 'ZZ' — eso lo resuelve el
+     * generador de XML por tipo de ítem, no esta tabla.
+     */
+    public function codigoUnidadSunat(): string
+    {
+        $unidad = $this->relationLoaded('unidadMedida')
+            ? $this->getRelation('unidadMedida')
+            : $this->unidadMedida()->first();
+
+        return $unidad?->codigo_sunat ?? 'NIU';
     }
 
     public function scopeActivos($query)

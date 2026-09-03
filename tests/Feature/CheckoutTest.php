@@ -2,11 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Mail\ComprobanteMail;
 use App\Models\User;
+use App\Services\ZonasEnvioService;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
@@ -43,10 +46,19 @@ class CheckoutTest extends TestCase
             $t->string('ruc')->nullable();
             $t->string('razon_social')->nullable();
             $t->string('nombre_comercial')->nullable();
+            $t->string('logo')->nullable();
             $t->string('correo')->nullable();
             $t->string('telefono')->nullable();
+            $t->string('celular')->nullable();
+            $t->string('website')->nullable();
             $t->unsignedBigInteger('fk_direccion')->nullable();
         });
+
+        // `cuentas_bancarias` la crea la migración real
+        // 2026_09_02_160002_create_cuentas_bancarias_table (tabla de negocio
+        // NUEVA con migración Laravel de verdad, no dump manual -- a
+        // diferencia de las demás tablas de este setUp(), RefreshDatabase SÍ
+        // la crea sola; declararla de nuevo acá rompe con "already exists").
 
         Schema::create('personas', function (Blueprint $t) {
             $t->id('id_persona');
@@ -131,7 +143,9 @@ class CheckoutTest extends TestCase
         Schema::create('distritos', function (Blueprint $t) {
             $t->id('id_distrito');
             $t->string('nombre');
-            $t->decimal('costo_envio', 8, 2)->default(0);
+            $t->string('ubigeo')->nullable();
+            $t->decimal('costo_envio', 8, 2)->nullable();
+            $t->boolean('activo')->default(false);
             $t->unsignedBigInteger('fk_provincia');
         });
         Schema::create('direcciones', function (Blueprint $t) {
@@ -208,7 +222,21 @@ class CheckoutTest extends TestCase
             $t->unsignedBigInteger('fk_empresa');
             $t->string('serie', 10);
             $t->string('numero', 20);
+            $t->char('moneda', 3)->default('PEN');
             $t->timestamp('fecha_emision')->useCurrent();
+            $t->decimal('op_gravadas', 10, 2)->default(0);
+            $t->decimal('op_exoneradas', 10, 2)->default(0);
+            $t->decimal('op_inafectas', 10, 2)->default(0);
+            $t->decimal('descuento_global', 10, 2)->default(0);
+            $t->decimal('igv', 10, 2)->default(0);
+            $t->decimal('total', 10, 2)->default(0);
+            $t->string('total_letras')->nullable();
+            $t->string('xml_path')->nullable();
+            $t->string('hash', 100)->nullable();
+            $t->text('qr_data')->nullable();
+            $t->string('estado_sunat', 20)->nullable()->default('no_enviado');
+            $t->string('observacion_sunat')->nullable();
+            $t->timestamp('correo_enviado_en')->nullable();
         });
         // Catálogos base.
         DB::table('tipo_documento')->insert([['nombre' => 'DNI'], ['nombre' => 'CE'], ['nombre' => 'Pasaporte']]);
@@ -224,7 +252,7 @@ class CheckoutTest extends TestCase
         DB::table('forma_pagos')->insert([['nombre' => 'Tarjeta (Culqi)']]);
         DB::table('departamentos')->insert(['id_departamento' => 1, 'nombre' => 'Lima']);
         DB::table('provincias')->insert(['id_provincia' => 1, 'nombre' => 'Lima', 'fk_departamento' => 1]);
-        DB::table('distritos')->insert(['id_distrito' => 1, 'nombre' => 'Miraflores', 'costo_envio' => 15, 'fk_provincia' => 1]);
+        DB::table('distritos')->insert(['id_distrito' => 1, 'nombre' => 'Miraflores', 'ubigeo' => '150122', 'costo_envio' => 15, 'activo' => true, 'fk_provincia' => 1]);
         DB::table('empresa')->insert(['id_empresa' => 1, 'nombre_comercial' => 'MOSSO', 'razon_social' => 'MOSSO SAC', 'ruc' => '20123456789']);
     }
 
@@ -288,6 +316,7 @@ class CheckoutTest extends TestCase
     public function test_happy_path_creates_paid_order_and_decrements_stock(): void
     {
         Http::fake(['*' => Http::response(['id' => 'chr_test_123', 'object' => 'charge'], 200)]);
+        Mail::fake();
 
         ['user' => $user, 'idProducto' => $idProducto] = $this->clienteConCarrito();
 
@@ -309,6 +338,32 @@ class CheckoutTest extends TestCase
         $this->assertSame(3, (int) DB::table('productos')->where('id_producto', $idProducto)->value('stock'));
         $this->assertDatabaseHas('comprobantes', ['fk_pedido' => $pedidoId, 'serie' => 'B001']);
         $this->assertSame(0, (int) DB::table('carrito_detalle')->count());
+
+        Mail::assertSent(ComprobanteMail::class, fn (ComprobanteMail $mail) => $mail->hasTo($user->email));
+        $this->assertNotNull(DB::table('comprobantes')->where('fk_pedido', $pedidoId)->value('correo_enviado_en'));
+    }
+
+    public function test_un_fallo_al_enviar_el_correo_no_revierte_el_pago(): void
+    {
+        Http::fake(['*' => Http::response(['id' => 'chr_test_456', 'object' => 'charge'], 200)]);
+        Mail::shouldReceive('to')->andThrow(new \RuntimeException('SMTP caído (simulado)'));
+
+        ['user' => $user, 'idProducto' => $idProducto] = $this->clienteConCarrito();
+
+        $pedidoId = $this->actingAs($user)->postJson('/checkout/iniciar', [
+            'comprobante' => 'boleta', 'fk_tipo_entrega' => 2, 'receptor' => 'yo',
+        ])->json('pedido_id');
+
+        $this->actingAs($user)
+            ->post("/checkout/{$pedidoId}/pagar", ['culqi_token' => 'tkn_test_x', 'comprobante' => 'boleta'])
+            ->assertRedirect(route('checkout.confirmacion', $pedidoId));
+
+        // El pago quedó confirmado y el stock descontado pese a que el correo
+        // reventó -- nunca debe revertir ni bloquear la venta (ver
+        // CheckoutService::enviarComprobantePorCorreo()).
+        $this->assertDatabaseHas('pagos', ['fk_pedido' => $pedidoId, 'estado' => 'pagado']);
+        $this->assertSame(3, (int) DB::table('productos')->where('id_producto', $idProducto)->value('stock'));
+        $this->assertNull(DB::table('comprobantes')->where('fk_pedido', $pedidoId)->value('correo_enviado_en'));
     }
 
     public function test_factura_without_ruc_is_rejected(): void
@@ -432,6 +487,58 @@ class CheckoutTest extends TestCase
             'apellido_paterno' => 'Díaz',
             'telefono' => '987654321',
             'fk_tipo_entrega' => '2', // string
+            'receptor' => 'yo',
+        ])->assertOk();
+    }
+
+    // ------------------------------------------- Zonas de envío por UBIGEO
+
+    public function test_distrito_inactivo_no_aparece_en_arbol_de_zonas_envio(): void
+    {
+        DB::table('distritos')->insert([
+            'id_distrito' => 2, 'nombre' => 'Comas', 'ubigeo' => '150110',
+            'costo_envio' => 20, 'activo' => false, 'fk_provincia' => 1,
+        ]);
+
+        $idsEnArbol = collect(ZonasEnvioService::arbol())
+            ->flatMap(fn ($dep) => collect($dep['provincias']))
+            ->flatMap(fn ($prov) => collect($prov['distritos']))
+            ->pluck('id_distrito');
+
+        $this->assertTrue($idsEnArbol->contains(1)); // activo, del fixture base
+        $this->assertFalse($idsEnArbol->contains(2)); // recién insertado, inactivo
+    }
+
+    public function test_checkout_a_domicilio_con_direccion_en_distrito_inactivo_es_rechazado(): void
+    {
+        ['user' => $user] = $this->clienteConCarrito();
+
+        DB::table('distritos')->insert([
+            'id_distrito' => 2, 'nombre' => 'Comas', 'ubigeo' => '150110',
+            'costo_envio' => 20, 'activo' => false, 'fk_provincia' => 1,
+        ]);
+
+        $idCliente = DB::table('clientes')->where('fk_user', $user->id)->value('id_cliente');
+        $idDir = DB::table('direcciones')->insertGetId(['direccion' => 'Sin envío 123', 'fk_distrito' => 2]);
+        DB::table('cliente_direcciones')->insert(['fk_cliente' => $idCliente, 'fk_direccion' => $idDir, 'es_principal' => 1]);
+
+        $this->actingAs($user)->postJson('/checkout/iniciar', [
+            'comprobante' => 'boleta',
+            'fk_tipo_entrega' => 1, // domicilio
+            'direccion_modo' => 'guardada',
+            'id_direccion' => $idDir,
+            'receptor' => 'yo',
+        ])->assertStatus(422)->assertJsonValidationErrors(['id_direccion']);
+    }
+
+    public function test_retiro_en_tienda_funciona_aunque_no_haya_distritos_activos(): void
+    {
+        DB::table('distritos')->update(['activo' => false]);
+        ['user' => $user] = $this->clienteConCarrito();
+
+        $this->actingAs($user)->postJson('/checkout/iniciar', [
+            'comprobante' => 'boleta',
+            'fk_tipo_entrega' => 2, // retiro en tienda: la dirección no participa
             'receptor' => 'yo',
         ])->assertOk();
     }

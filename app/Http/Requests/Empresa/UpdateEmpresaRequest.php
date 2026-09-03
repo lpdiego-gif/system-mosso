@@ -19,6 +19,12 @@ class UpdateEmpresaRequest extends FormRequest
             'nombre_comercial' => trim(strip_tags((string) $this->input('nombre_comercial'))),
             'correo' => strtolower(trim((string) $this->input('correo'))),
             'telefono' => trim(strip_tags((string) $this->input('telefono'))),
+            'celular' => $this->filled('celular')
+                ? trim(strip_tags((string) $this->input('celular')))
+                : null,
+            'website' => $this->filled('website')
+                ? trim(strip_tags((string) $this->input('website')))
+                : null,
             'direccion' => trim(strip_tags((string) $this->input('direccion'))),
             'referencia' => $this->filled('referencia')
                 ? trim(strip_tags((string) $this->input('referencia')))
@@ -34,6 +40,8 @@ class UpdateEmpresaRequest extends FormRequest
             'nombre_comercial' => ['required', 'string', 'max:150'],
             'correo' => ['required', 'string', 'email', 'max:150'],
             'telefono' => ['required', 'string', 'max:20', 'regex:/^[0-9+\s-]{6,20}$/'],
+            'celular' => ['nullable', 'string', 'max:20', 'regex:/^[0-9+\s-]{6,20}$/'],
+            'website' => ['nullable', 'string', 'max:150', 'url'],
             'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'eliminar_logo' => ['nullable', 'boolean'],
 

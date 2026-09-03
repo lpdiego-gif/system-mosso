@@ -33,9 +33,7 @@ export default function CheckoutIndex(props: CheckoutIndexProps) {
         tiposDocumento,
         tipoEntregas,
         direcciones,
-        departamentos,
-        provincias,
-        distritos,
+        zonasEnvio,
         empresa,
         culqiPublicKey,
         culqiConfigurado,
@@ -72,11 +70,18 @@ export default function CheckoutIndex(props: CheckoutIndexProps) {
 
     const direccionPrincipal =
         direcciones.find((d) => d.es_principal === 1) ?? direcciones[0];
+    // Si la dirección principal (o la primera) no tiene envío disponible, se
+    // preselecciona la primera que sí lo tenga en vez de dejar elegida una
+    // dirección deshabilitada.
+    const direccionInicial =
+        direccionPrincipal?.envio_disponible === 1
+            ? direccionPrincipal
+            : (direcciones.find((d) => d.envio_disponible === 1) ?? direccionPrincipal);
     const [direccionModo, setDireccionModo] = useState<'guardada' | 'nueva'>(
         direcciones.length > 0 ? 'guardada' : 'nueva',
     );
     const [idDireccion, setIdDireccion] = useState<number | null>(
-        direccionPrincipal?.id_direccion ?? null,
+        direccionInicial?.id_direccion ?? null,
     );
 
     const [deptSel, setDeptSel] = useState('');
@@ -114,12 +119,12 @@ export default function CheckoutIndex(props: CheckoutIndexProps) {
     } | null>(null);
 
     const provinciasFiltradas = useMemo(
-        () => provincias.filter((pr) => pr.fk_departamento === Number(deptSel)),
-        [provincias, deptSel],
+        () => zonasEnvio.find((dep) => dep.id_departamento === Number(deptSel))?.provincias ?? [],
+        [zonasEnvio, deptSel],
     );
     const distritosFiltrados = useMemo(
-        () => distritos.filter((d) => d.fk_provincia === Number(provSel)),
-        [distritos, provSel],
+        () => provinciasFiltradas.find((pr) => pr.id_provincia === Number(provSel))?.distritos ?? [],
+        [provinciasFiltradas, provSel],
     );
 
     const tipoEntregaSel = tipoEntregas.find(
@@ -768,40 +773,48 @@ export default function CheckoutIndex(props: CheckoutIndexProps) {
                                             data-campo="id_direccion"
                                             className="space-y-2"
                                         >
-                                            {direcciones.map((d) => (
-                                                <button
-                                                    key={d.id_direccion}
-                                                    type="button"
-                                                    onClick={() =>
-                                                        setIdDireccion(
-                                                            d.id_direccion,
-                                                        )
-                                                    }
-                                                    className={`block w-full rounded-xl border p-3 text-left text-sm transition-colors ${
-                                                        idDireccion ===
-                                                        d.id_direccion
-                                                            ? 'border-mosso-yellow bg-amber-50/60'
-                                                            : 'border-gray-200 hover:border-gray-300'
-                                                    }`}
-                                                >
-                                                    <span className="font-semibold text-gray-900">
-                                                        {d.alias || 'Dirección'}
-                                                    </span>
-                                                    {d.es_principal === 1 && (
-                                                        <span className="ml-2 rounded-full bg-mosso-yellow/20 px-2 py-0.5 text-[11px] font-bold">
-                                                            Principal
+                                            {direcciones.map((d) => {
+                                                const disponible =
+                                                    d.envio_disponible === 1;
+
+                                                return (
+                                                    <button
+                                                        key={d.id_direccion}
+                                                        type="button"
+                                                        disabled={!disponible}
+                                                        onClick={() =>
+                                                            setIdDireccion(
+                                                                d.id_direccion,
+                                                            )
+                                                        }
+                                                        className={`block w-full rounded-xl border p-3 text-left text-sm transition-colors ${
+                                                            !disponible
+                                                                ? 'cursor-not-allowed border-gray-100 bg-gray-50 opacity-60'
+                                                                : idDireccion ===
+                                                                    d.id_direccion
+                                                                  ? 'border-mosso-yellow bg-amber-50/60'
+                                                                  : 'border-gray-200 hover:border-gray-300'
+                                                        }`}
+                                                    >
+                                                        <span className="font-semibold text-gray-900">
+                                                            {d.alias || 'Dirección'}
                                                         </span>
-                                                    )}
-                                                    <span className="mt-1 block text-gray-600">
-                                                        {d.direccion}
-                                                    </span>
-                                                    <span className="block text-xs text-gray-400">
-                                                        {d.distrito},{' '}
-                                                        {d.provincia},{' '}
-                                                        {d.departamento}
-                                                    </span>
-                                                </button>
-                                            ))}
+                                                        {d.es_principal === 1 && (
+                                                            <span className="ml-2 rounded-full bg-mosso-yellow/20 px-2 py-0.5 text-[11px] font-bold">
+                                                                Principal
+                                                            </span>
+                                                        )}
+                                                        <span className="mt-1 block text-gray-600">
+                                                            {d.direccion}
+                                                        </span>
+                                                        <span className="block text-xs text-gray-400">
+                                                            {d.distrito},{' '}
+                                                            {d.provincia},{' '}
+                                                            {d.departamento}
+                                                        </span>
+                                                    </button>
+                                                );
+                                            })}
                                             {err('id_direccion') && (
                                                 <p className="text-xs text-red-500">
                                                     {err('id_direccion')}
@@ -826,7 +839,7 @@ export default function CheckoutIndex(props: CheckoutIndexProps) {
                                                         <option value="">
                                                             Selecciona…
                                                         </option>
-                                                        {departamentos.map(
+                                                        {zonasEnvio.map(
                                                             (d) => (
                                                                 <option
                                                                     key={

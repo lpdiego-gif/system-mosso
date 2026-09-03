@@ -1,6 +1,7 @@
 import { Head, usePage } from '@inertiajs/react';
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
+import type { DistritoUbigeo } from '@/types/ubigeo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,33 +30,15 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
     AlertTriangle,
     ChevronLeft,
     ChevronRight,
     Landmark,
     Loader2,
     MapPinned,
-    MoreVertical,
     Pencil,
     Plus,
     Search,
-    Trash2,
 } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
@@ -76,7 +59,9 @@ interface Provincia {
 interface Distrito {
     id_distrito: number;
     nombre: string;
-    costo_envio: string | number;
+    ubigeo: string;
+    costo_envio: string | number | null;
+    activo: boolean | 0 | 1;
     fk_provincia: number;
     id_departamento: number;
     provincia: string;
@@ -100,19 +85,7 @@ interface PageProps {
     provincias: Provincia[];
 }
 
-interface FormValues {
-    nombre: string;
-    costo_envio: string;
-    fk_departamento: string;
-    fk_provincia: string;
-}
-
-const emptyForm: FormValues = {
-    nombre: '',
-    costo_envio: '0.00',
-    fk_departamento: '',
-    fk_provincia: '',
-};
+type FiltroEstado = 'todos' | 'activos' | 'inactivos';
 
 const formatoMoneda = new Intl.NumberFormat('es-PE', {
     style: 'currency',
@@ -131,6 +104,7 @@ export default function Distrito() {
     const [search, setSearch] = useState('');
     const [filtroDepartamento, setFiltroDepartamento] = useState('todos');
     const [filtroProvincia, setFiltroProvincia] = useState('todos');
+    const [filtroEstado, setFiltroEstado] = useState<FiltroEstado>('todos');
     const [page, setPage] = useState(1);
     const [perPage, setPerPage] = useState('10');
 
@@ -156,6 +130,7 @@ export default function Distrito() {
                     search: search || undefined,
                     departamento: filtroDepartamento !== 'todos' ? filtroDepartamento : undefined,
                     provincia: filtroProvincia !== 'todos' ? filtroProvincia : undefined,
+                    estado: filtroEstado !== 'todos' ? filtroEstado : undefined,
                     page,
                     per_page: perPage,
                 },
@@ -170,105 +145,136 @@ export default function Distrito() {
                 if (axios.isCancel(err)) return;
             })
             .finally(() => setLoading(false));
-    }, [search, filtroDepartamento, filtroProvincia, page, perPage]);
+    }, [search, filtroDepartamento, filtroProvincia, filtroEstado, page, perPage]);
 
     useEffect(() => {
         const t = window.setTimeout(cargar, search ? 400 : 0);
         return () => window.clearTimeout(t);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [search, filtroDepartamento, filtroProvincia, page, perPage]);
+    }, [search, filtroDepartamento, filtroProvincia, filtroEstado, page, perPage]);
 
     useEffect(() => {
         setPage(1);
-    }, [search, filtroDepartamento, filtroProvincia, perPage]);
+    }, [search, filtroDepartamento, filtroProvincia, filtroEstado, perPage]);
 
-    // -------------------------------------------------------- modal crear/editar
-    const [formOpen, setFormOpen] = useState(false);
-    const [editando, setEditando] = useState<Distrito | null>(null);
-    const [values, setValues] = useState<FormValues>(emptyForm);
-    const [errors, setErrors] = useState<Record<string, string>>({});
-    const [processing, setProcessing] = useState(false);
+    // ---------------------------------------------------- modal "Nuevo distrito"
+    const [nuevoOpen, setNuevoOpen] = useState(false);
+    const [nuevoDep, setNuevoDep] = useState('');
+    const [nuevoProv, setNuevoProv] = useState('');
+    const [nuevoDist, setNuevoDist] = useState('');
+    const [nuevoCosto, setNuevoCosto] = useState('0.00');
+    const [opcionesDistrito, setOpcionesDistrito] = useState<DistritoUbigeo[]>([]);
+    const [cargandoDistritos, setCargandoDistritos] = useState(false);
+    const [nuevoErrors, setNuevoErrors] = useState<Record<string, string>>({});
+    const [nuevoProcesando, setNuevoProcesando] = useState(false);
 
-    const provinciasForm = useMemo(
-        () =>
-            values.fk_departamento
-                ? provincias.filter((p) => String(p.fk_departamento) === values.fk_departamento)
-                : [],
-        [provincias, values.fk_departamento],
+    const provinciasNuevo = useMemo(
+        () => (nuevoDep ? provincias.filter((p) => String(p.fk_departamento) === nuevoDep) : []),
+        [provincias, nuevoDep],
     );
 
     function abrirNuevo() {
-        setEditando(null);
-        setValues(emptyForm);
-        setErrors({});
-        setFormOpen(true);
+        setNuevoDep('');
+        setNuevoProv('');
+        setNuevoDist('');
+        setNuevoCosto('0.00');
+        setOpcionesDistrito([]);
+        setNuevoErrors({});
+        setNuevoOpen(true);
     }
 
-    function abrirEditar(d: Distrito) {
-        setEditando(d);
-        setValues({
-            nombre: d.nombre,
-            costo_envio: String(d.costo_envio),
-            fk_departamento: String(d.id_departamento),
-            fk_provincia: String(d.fk_provincia),
-        });
-        setErrors({});
-        setFormOpen(true);
+    useEffect(() => {
+        if (!nuevoProv) {
+            setOpcionesDistrito([]);
+            return;
+        }
+
+        setCargandoDistritos(true);
+        axios
+            .get<DistritoUbigeo[]>('/ubigeo/distritos', { params: { provincia: nuevoProv } })
+            .then((r) => setOpcionesDistrito(r.data))
+            .finally(() => setCargandoDistritos(false));
+    }, [nuevoProv]);
+
+    // Si el distrito elegido ya tenía un costo cargado, se precarga (se
+    // comporta como edición; nunca se duplica una fila en `distritos`).
+    function seleccionarNuevoDistrito(id: string) {
+        setNuevoDist(id);
+        const opcion = opcionesDistrito.find((d) => String(d.id_distrito) === id);
+        setNuevoCosto(opcion?.costo_envio != null ? String(opcion.costo_envio) : '0.00');
     }
 
-    function set<K extends keyof FormValues>(key: K, value: FormValues[K]) {
-        setValues((v) => ({ ...v, [key]: value }));
-    }
-
-    async function handleSubmit(e: FormEvent) {
+    async function handleSubmitNuevo(e: FormEvent) {
         e.preventDefault();
-        setProcessing(true);
-        setErrors({});
-
-        const payload = {
-            nombre: values.nombre,
-            costo_envio: values.costo_envio,
-            fk_provincia: values.fk_provincia,
-        };
+        setNuevoProcesando(true);
+        setNuevoErrors({});
 
         try {
-            if (editando) {
-                await axios.put(`/distrito/${editando.id_distrito}`, payload);
-            } else {
-                await axios.post('/distrito', payload);
-            }
-            setFormOpen(false);
+            await axios.post('/distrito', {
+                id_distrito: nuevoDist,
+                costo_envio: nuevoCosto,
+            });
+            setNuevoOpen(false);
             cargar();
         } catch (err: any) {
             if (err.response?.status === 422) {
                 const backendErrors = err.response.data.errors ?? {};
-                setErrors(Object.fromEntries(Object.entries(backendErrors).map(([k, v]) => [k, (v as string[])[0]])));
+                setNuevoErrors(Object.fromEntries(Object.entries(backendErrors).map(([k, v]) => [k, (v as string[])[0]])));
             }
         } finally {
-            setProcessing(false);
+            setNuevoProcesando(false);
         }
     }
 
-    // -------------------------------------------------------------- eliminar
-    const [eliminando, setEliminando] = useState<Distrito | null>(null);
-    const [eliminarError, setEliminarError] = useState<string | null>(null);
-    const [eliminarProcesando, setEliminarProcesando] = useState(false);
+    // -------------------------------------------------------- modal "Editar"
+    const [editando, setEditando] = useState<Distrito | null>(null);
+    const [editCosto, setEditCosto] = useState('0.00');
+    const [editActivo, setEditActivo] = useState(true);
+    const [editErrors, setEditErrors] = useState<Record<string, string>>({});
+    const [editProcesando, setEditProcesando] = useState(false);
 
-    async function confirmarEliminar() {
-        if (!eliminando) return;
-        setEliminarProcesando(true);
-        setEliminarError(null);
+    function abrirEditar(d: Distrito) {
+        setEditando(d);
+        setEditCosto(d.costo_envio != null ? String(d.costo_envio) : '0.00');
+        setEditActivo(Boolean(d.activo));
+        setEditErrors({});
+    }
+
+    async function handleSubmitEditar(e: FormEvent) {
+        e.preventDefault();
+        if (!editando) return;
+        setEditProcesando(true);
+        setEditErrors({});
+
         try {
-            await axios.delete(`/distrito/${eliminando.id_distrito}`);
-            setEliminando(null);
+            await axios.put(`/distrito/${editando.id_distrito}`, {
+                costo_envio: editCosto,
+                activo: editActivo,
+            });
+            setEditando(null);
             cargar();
         } catch (err: any) {
-            const msg =
-                err.response?.data?.errors?.general?.[0] ??
-                'No se pudo eliminar el distrito. Intenta nuevamente.';
-            setEliminarError(msg);
+            if (err.response?.status === 422) {
+                const backendErrors = err.response.data.errors ?? {};
+                setEditErrors(Object.fromEntries(Object.entries(backendErrors).map(([k, v]) => [k, (v as string[])[0]])));
+            }
         } finally {
-            setEliminarProcesando(false);
+            setEditProcesando(false);
+        }
+    }
+
+    // ------------------------------------------------------ switch por fila
+    const [cambiandoEstado, setCambiandoEstado] = useState<number | null>(null);
+
+    async function alternarActivo(d: Distrito) {
+        setCambiandoEstado(d.id_distrito);
+        try {
+            await axios.patch(`/distrito/${d.id_distrito}/activo`);
+            cargar();
+        } catch {
+            // El backend explica el motivo (ej. sin costo configurado) vía toast global si aplica.
+        } finally {
+            setCambiandoEstado(null);
         }
     }
 
@@ -287,7 +293,7 @@ export default function Distrito() {
                             Distritos
                         </h1>
                         <p className="text-sm text-muted-foreground">
-                            Administra los distritos y su costo de envío asociado a cada provincia.
+                            Catálogo nacional de distritos. Activa los que tienen reparto y define su costo de envío.
                         </p>
                     </div>
                     <Button onClick={abrirNuevo} className="gap-2 self-start sm:self-auto">
@@ -363,6 +369,17 @@ export default function Distrito() {
                         </SelectContent>
                     </Select>
 
+                    <Select value={filtroEstado} onValueChange={(v) => setFiltroEstado(v as FiltroEstado)}>
+                        <SelectTrigger className="sm:w-40">
+                            <SelectValue placeholder="Estado" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="todos">Todos</SelectItem>
+                            <SelectItem value="activos">Activos</SelectItem>
+                            <SelectItem value="inactivos">Inactivos</SelectItem>
+                        </SelectContent>
+                    </Select>
+
                     <Select value={perPage} onValueChange={setPerPage}>
                         <SelectTrigger className="sm:w-28">
                             <SelectValue />
@@ -387,46 +404,44 @@ export default function Distrito() {
                                 <TableHead className="font-semibold">Provincia</TableHead>
                                 <TableHead className="font-semibold">Departamento</TableHead>
                                 <TableHead className="font-semibold">Costo de envío</TableHead>
-                                <TableHead className="w-12 text-center font-semibold">Acciones</TableHead>
+                                <TableHead className="font-semibold">Estado</TableHead>
+                                <TableHead className="w-12 text-center font-semibold">Editar</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {loading ? (
                                 Array.from({ length: 5 }).map((_, i) => (
                                     <TableRow key={i}>
-                                        <TableCell colSpan={6} className="py-2">
+                                        <TableCell colSpan={7} className="py-2">
                                             <div className="h-9 animate-pulse rounded-md bg-muted/60" />
                                         </TableCell>
                                     </TableRow>
                                 ))
                             ) : rows.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="py-12 text-center text-muted-foreground">
+                                    <TableCell colSpan={7} className="py-12 text-center text-muted-foreground">
                                         No se encontraron distritos con estos filtros.
                                     </TableCell>
                                 </TableRow>
                             ) : (
                                 rows.map((d, index) => {
-                                    const numero = (page - 1) * 10 + index + 1;
+                                    const numero = (meta.current_page - 1) * meta.per_page + index + 1;
+                                    const activo = Boolean(d.activo);
 
                                     return (
                                         <TableRow key={d.id_distrito} className="transition-colors hover:bg-muted/40">
-                                            {/* Contador de Filas */}
                                             <TableCell className="text-center font-mono text-xs font-semibold text-muted-foreground">
                                                 {numero}
                                             </TableCell>
 
-                                            {/* Nombre del Distrito */}
                                             <TableCell className="font-medium text-foreground">
                                                 {d.nombre}
                                             </TableCell>
 
-                                            {/* Provincia */}
                                             <TableCell className="text-sm text-muted-foreground">
                                                 {d.provincia}
                                             </TableCell>
 
-                                            {/* Departamento */}
                                             <TableCell>
                                                 <Badge variant="outline" className="gap-1.5 border-border/80 bg-background/50 px-2.5 py-0.5 font-normal text-foreground">
                                                     <Landmark className="h-3.5 w-3.5 text-muted-foreground" />
@@ -434,34 +449,43 @@ export default function Distrito() {
                                                 </Badge>
                                             </TableCell>
 
-                                            {/* Costo de Envío */}
                                             <TableCell className="font-mono text-sm font-medium text-foreground">
-                                                {formatoMoneda.format(Number(d.costo_envio))}
+                                                {d.costo_envio == null ? (
+                                                    <span className="font-sans text-muted-foreground">Sin configurar</span>
+                                                ) : (
+                                                    formatoMoneda.format(Number(d.costo_envio))
+                                                )}
                                             </TableCell>
 
-                                            {/* Menú de Acciones */}
+                                            <TableCell>
+                                                <button
+                                                    type="button"
+                                                    role="switch"
+                                                    aria-checked={activo}
+                                                    disabled={cambiandoEstado === d.id_distrito}
+                                                    onClick={() => alternarActivo(d)}
+                                                    className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${
+                                                        activo ? 'bg-emerald-500' : 'bg-muted-foreground/30'
+                                                    }`}
+                                                    title={activo ? 'Activo — clic para desactivar' : 'Inactivo — clic para activar'}
+                                                >
+                                                    <span
+                                                        className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
+                                                            activo ? 'translate-x-[18px]' : 'translate-x-1'
+                                                        }`}
+                                                    />
+                                                </button>
+                                            </TableCell>
+
                                             <TableCell className="text-center">
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                                                            <MoreVertical className="h-4 w-4" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end" className="w-40">
-                                                        <DropdownMenuItem onClick={() => abrirEditar(d)}>
-                                                            <Pencil className="mr-2 h-4 w-4" /> Editar
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem
-                                                            className="text-destructive focus:bg-destructive/10 focus:text-destructive"
-                                                            onClick={() => {
-                                                                setEliminarError(null);
-                                                                setEliminando(d);
-                                                            }}
-                                                        >
-                                                            <Trash2 className="mr-2 h-4 w-4" /> Eliminar
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                                    onClick={() => abrirEditar(d)}
+                                                >
+                                                    <Pencil className="h-4 w-4" />
+                                                </Button>
                                             </TableCell>
                                         </TableRow>
                                     );
@@ -501,44 +525,41 @@ export default function Distrito() {
             </div>
 
             {/* ---------------------------------------------------------- */}
-            {/* Modal único: crear y editar                                  */}
+            {/* Modal: Nuevo distrito (activa uno existente del catálogo)    */}
             {/* ---------------------------------------------------------- */}
-            <Dialog open={formOpen} onOpenChange={setFormOpen}>
+            <Dialog open={nuevoOpen} onOpenChange={setNuevoOpen}>
                 <DialogContent className="sm:max-w-md border-border/60 bg-card p-0 shadow-lg overflow-hidden gap-0">
-                    <form onSubmit={handleSubmit}>
-                        {/* Cabecera del Modal con fondo sutil e ícono decorativo */}
+                    <form onSubmit={handleSubmitNuevo}>
                         <div className="border-b border-border/50 bg-muted/40 p-6 pb-4">
                             <DialogHeader className="gap-1.5">
                                 <DialogTitle className="flex items-center gap-2.5 text-lg font-semibold tracking-tight text-foreground">
                                     <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400">
                                         <MapPinned className="h-5 w-5" />
                                     </div>
-                                    {editando ? 'Editar distrito' : 'Nuevo distrito'}
+                                    Nuevo distrito
                                 </DialogTitle>
                                 <DialogDescription className="text-xs leading-relaxed text-muted-foreground">
-                                    {editando
-                                        ? 'Actualiza el nombre, la provincia o el costo de envío.'
-                                        : 'Registra un distrito y su costo de envío dentro de una provincia.'}
+                                    Elige un distrito del catálogo nacional y asígnale un costo de envío para activarlo.
                                 </DialogDescription>
                             </DialogHeader>
                         </div>
 
-                        {/* Cuerpo del Formulario */}
                         <div className="space-y-4 p-6">
-                            {errors.general && (
+                            {nuevoErrors.general && (
                                 <div className="flex items-start gap-2.5 rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-xs font-medium text-destructive">
                                     <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-                                    <span>{errors.general}</span>
+                                    <span>{nuevoErrors.general}</span>
                                 </div>
                             )}
 
                             <div className="space-y-1.5">
                                 <Label className="text-xs font-medium text-foreground/80">Departamento</Label>
                                 <Select
-                                    value={values.fk_departamento}
+                                    value={nuevoDep}
                                     onValueChange={(v) => {
-                                        set('fk_departamento', v);
-                                        set('fk_provincia', '');
+                                        setNuevoDep(v);
+                                        setNuevoProv('');
+                                        setNuevoDist('');
                                     }}
                                 >
                                     <SelectTrigger className="h-9 bg-background/50 border-border/80 text-sm focus:ring-1">
@@ -557,38 +578,48 @@ export default function Distrito() {
                             <div className="space-y-1.5">
                                 <Label className="text-xs font-medium text-foreground/80">Provincia</Label>
                                 <Select
-                                    value={values.fk_provincia}
-                                    onValueChange={(v) => set('fk_provincia', v)}
-                                    disabled={!values.fk_departamento}
+                                    value={nuevoProv}
+                                    onValueChange={(v) => {
+                                        setNuevoProv(v);
+                                        setNuevoDist('');
+                                    }}
+                                    disabled={!nuevoDep}
                                 >
                                     <SelectTrigger className="h-9 bg-background/50 border-border/80 text-sm focus:ring-1">
                                         <SelectValue placeholder="Selecciona una provincia" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {provinciasForm.map((p) => (
+                                        {provinciasNuevo.map((p) => (
                                             <SelectItem key={p.id_provincia} value={String(p.id_provincia)}>
                                                 {p.nombre}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
-                                {errors.fk_provincia && (
-                                    <p className="text-[11px] font-medium text-destructive">{errors.fk_provincia}</p>
-                                )}
                             </div>
 
                             <div className="space-y-1.5">
-                                <Label className="text-xs font-medium text-foreground/80">Nombre del distrito</Label>
-                                <Input
-                                    className="h-9 bg-background/50 border-border/80 text-sm focus:ring-1"
-                                    value={values.nombre}
-                                    onChange={(e) => set('nombre', e.target.value)}
-                                    maxLength={45}
-                                    placeholder="Ej. Independencia"
-                                    required
-                                    autoFocus
-                                />
-                                {errors.nombre && <p className="text-[11px] font-medium text-destructive">{errors.nombre}</p>}
+                                <Label className="text-xs font-medium text-foreground/80">Distrito</Label>
+                                <Select
+                                    value={nuevoDist}
+                                    onValueChange={seleccionarNuevoDistrito}
+                                    disabled={!nuevoProv || cargandoDistritos}
+                                >
+                                    <SelectTrigger className="h-9 bg-background/50 border-border/80 text-sm focus:ring-1">
+                                        <SelectValue placeholder={cargandoDistritos ? 'Cargando…' : 'Selecciona un distrito'} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {opcionesDistrito.map((d) => (
+                                            <SelectItem key={d.id_distrito} value={String(d.id_distrito)}>
+                                                {d.nombre}
+                                                {d.activo ? ' (ya activo)' : ''}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                {nuevoErrors.id_distrito && (
+                                    <p className="text-[11px] font-medium text-destructive">{nuevoErrors.id_distrito}</p>
+                                )}
                             </div>
 
                             <div className="space-y-1.5">
@@ -599,17 +630,16 @@ export default function Distrito() {
                                     step="0.01"
                                     min="0"
                                     max="999999.99"
-                                    value={values.costo_envio}
-                                    onChange={(e) => set('costo_envio', e.target.value)}
+                                    value={nuevoCosto}
+                                    onChange={(e) => setNuevoCosto(e.target.value)}
                                     required
                                 />
-                                {errors.costo_envio && (
-                                    <p className="text-[11px] font-medium text-destructive">{errors.costo_envio}</p>
+                                {nuevoErrors.costo_envio && (
+                                    <p className="text-[11px] font-medium text-destructive">{nuevoErrors.costo_envio}</p>
                                 )}
                             </div>
                         </div>
 
-                        {/* Pie del Modal con separación visual limpia */}
                         <div className="border-t border-border/50 bg-muted/20 p-4 px-6">
                             <DialogFooter className="gap-2 sm:gap-2">
                                 <Button
@@ -617,18 +647,18 @@ export default function Distrito() {
                                     variant="ghost"
                                     size="sm"
                                     className="h-9 text-xs"
-                                    onClick={() => setFormOpen(false)}
+                                    onClick={() => setNuevoOpen(false)}
                                 >
                                     Cancelar
                                 </Button>
                                 <Button
                                     type="submit"
                                     size="sm"
-                                    disabled={processing}
+                                    disabled={nuevoProcesando || !nuevoDist}
                                     className="h-9 text-xs font-medium gap-2 bg-primary hover:bg-primary/90 shadow-xs"
                                 >
-                                    {processing && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                                    {editando ? 'Guardar cambios' : 'Crear distrito'}
+                                    {nuevoProcesando && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                                    Activar distrito
                                 </Button>
                             </DialogFooter>
                         </div>
@@ -637,44 +667,111 @@ export default function Distrito() {
             </Dialog>
 
             {/* ---------------------------------------------------------- */}
-            {/* Modal de eliminación                                        */}
+            {/* Modal: Editar distrito (solo costo + activo)                 */}
             {/* ---------------------------------------------------------- */}
-            <AlertDialog open={eliminando !== null} onOpenChange={(o) => !o && setEliminando(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle className="flex items-center gap-2">
-                            <Trash2 className="h-5 w-5 text-destructive" />
-                            ¿Eliminar distrito?
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Vas a eliminar <strong>{eliminando?.nombre}</strong> ({eliminando?.provincia}). Esta
-                            acción no se puede deshacer.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-
-                    {eliminarError && (
-                        <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-                            {eliminarError}
+            <Dialog open={editando !== null} onOpenChange={(o) => !o && setEditando(null)}>
+                <DialogContent className="sm:max-w-md border-border/60 bg-card p-0 shadow-lg overflow-hidden gap-0">
+                    <form onSubmit={handleSubmitEditar}>
+                        <div className="border-b border-border/50 bg-muted/40 p-6 pb-4">
+                            <DialogHeader className="gap-1.5">
+                                <DialogTitle className="flex items-center gap-2.5 text-lg font-semibold tracking-tight text-foreground">
+                                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400">
+                                        <Pencil className="h-5 w-5" />
+                                    </div>
+                                    Editar distrito
+                                </DialogTitle>
+                                <DialogDescription className="text-xs leading-relaxed text-muted-foreground">
+                                    El departamento, la provincia y el nombre vienen del catálogo nacional y no se editan aquí.
+                                </DialogDescription>
+                            </DialogHeader>
                         </div>
-                    )}
 
-                    <AlertDialogFooter>
-                        <AlertDialogCancel disabled={eliminarProcesando}>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction
-                            disabled={eliminarProcesando}
-                            onClick={(e) => {
-                                e.preventDefault();
-                                confirmarEliminar();
-                            }}
-                            className="gap-2 bg-destructive hover:bg-destructive/90"
-                        >
-                            {eliminarProcesando && <Loader2 className="h-4 w-4 animate-spin" />}
-                            Eliminar
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+                        <div className="space-y-4 p-6">
+                            {editErrors.general && (
+                                <div className="flex items-start gap-2.5 rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-xs font-medium text-destructive">
+                                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                                    <span>{editErrors.general}</span>
+                                </div>
+                            )}
+
+                            <div className="grid grid-cols-2 gap-3 text-sm">
+                                <div>
+                                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Departamento</p>
+                                    <p className="font-medium text-foreground">{editando?.departamento}</p>
+                                </div>
+                                <div>
+                                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Provincia</p>
+                                    <p className="font-medium text-foreground">{editando?.provincia}</p>
+                                </div>
+                                <div className="col-span-2">
+                                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Distrito</p>
+                                    <p className="font-medium text-foreground">{editando?.nombre}</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <Label className="text-xs font-medium text-foreground/80">Costo de envío (S/)</Label>
+                                <Input
+                                    className="h-9 font-mono bg-background/50 border-border/80 text-sm focus:ring-1"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    max="999999.99"
+                                    value={editCosto}
+                                    onChange={(e) => setEditCosto(e.target.value)}
+                                    required
+                                    autoFocus
+                                />
+                                {editErrors.costo_envio && (
+                                    <p className="text-[11px] font-medium text-destructive">{editErrors.costo_envio}</p>
+                                )}
+                            </div>
+
+                            <label className="flex items-center justify-between rounded-lg border border-border/80 bg-background/50 px-3 py-2.5">
+                                <span className="text-xs font-medium text-foreground/80">Distrito activo (visible en el checkout)</span>
+                                <button
+                                    type="button"
+                                    role="switch"
+                                    aria-checked={editActivo}
+                                    onClick={() => setEditActivo((v) => !v)}
+                                    className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
+                                        editActivo ? 'bg-emerald-500' : 'bg-muted-foreground/30'
+                                    }`}
+                                >
+                                    <span
+                                        className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
+                                            editActivo ? 'translate-x-[18px]' : 'translate-x-1'
+                                        }`}
+                                    />
+                                </button>
+                            </label>
+                        </div>
+
+                        <div className="border-t border-border/50 bg-muted/20 p-4 px-6">
+                            <DialogFooter className="gap-2 sm:gap-2">
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-9 text-xs"
+                                    onClick={() => setEditando(null)}
+                                >
+                                    Cancelar
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    size="sm"
+                                    disabled={editProcesando}
+                                    className="h-9 text-xs font-medium gap-2 bg-primary hover:bg-primary/90 shadow-xs"
+                                >
+                                    {editProcesando && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                                    Guardar cambios
+                                </Button>
+                            </DialogFooter>
+                        </div>
+                    </form>
+                </DialogContent>
+            </Dialog>
         </>
     );
 }

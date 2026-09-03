@@ -69,8 +69,16 @@ export default function CheckoutConfirmacion({
                                 {comprobante.numero}
                             </p>
                             <p className="text-xs text-gray-400">
-                                Se enviará a tu correo.
+                                Te lo enviamos a tu correo.
                             </p>
+                            <a
+                                href={`/comprobante/${comprobante.id}/pdf`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-2 inline-block text-xs font-bold text-mosso-yellow hover:underline"
+                            >
+                                Descargar comprobante (PDF)
+                            </a>
                         </Tarjeta>
                     )}
 

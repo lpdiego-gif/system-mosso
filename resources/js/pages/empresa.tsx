@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 import axios from 'axios';
 import {
+    Banknote,
     Building2,
     ImagePlus,
     Loader2,
@@ -16,7 +17,8 @@ import type { ChangeEvent, DragEvent, FormEvent } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { route } from 'ziggy-js';
-import type { Departamento, Distrito, Empresa, EmpresaFormValues, Provincia } from '@/types/empresa';
+import CuentasBancariasPanel from '@/components/empresa/cuentas-bancarias-panel';
+import type { CuentaBancaria, Departamento, Distrito, Empresa, EmpresaFormValues, Provincia } from '@/types/empresa';
 
 const inputClass =
     'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground shadow-sm transition placeholder:text-muted-foreground/60 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-50';
@@ -28,6 +30,8 @@ function buildValues(empresa: Empresa | null): EmpresaFormValues {
         nombre_comercial: empresa?.nombre_comercial ?? '',
         correo: empresa?.correo ?? '',
         telefono: empresa?.telefono ?? '',
+        celular: empresa?.celular ?? '',
+        website: empresa?.website ?? '',
         direccion: empresa?.direccion ?? '',
         referencia: empresa?.referencia ?? '',
         fk_departamento: empresa?.fk_departamento ? String(empresa.fk_departamento) : '',
@@ -39,9 +43,11 @@ function buildValues(empresa: Empresa | null): EmpresaFormValues {
 interface PageProps {
     empresa: Empresa | null;
     departamentos: Departamento[];
+    cuentasBancarias: CuentaBancaria[];
 }
 
-export default function EmpresaPage({ empresa: empresaInicial, departamentos }: PageProps) {
+export default function EmpresaPage({ empresa: empresaInicial, departamentos, cuentasBancarias }: PageProps) {
+    const [tab, setTab] = useState<'general' | 'bancos'>('general');
     const [empresa, setEmpresa] = useState<Empresa | null>(empresaInicial);
     const [values, setValues] = useState<EmpresaFormValues>(buildValues(empresaInicial));
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -174,6 +180,15 @@ export default function EmpresaPage({ empresa: empresaInicial, departamentos }: 
         formData.append('nombre_comercial', values.nombre_comercial);
         formData.append('correo', values.correo);
         formData.append('telefono', values.telefono);
+
+        if (values.celular) {
+            formData.append('celular', values.celular);
+        }
+
+        if (values.website) {
+            formData.append('website', values.website);
+        }
+
         formData.append('direccion', values.direccion);
 
         if (values.referencia) {
@@ -229,7 +244,7 @@ export default function EmpresaPage({ empresa: empresaInicial, departamentos }: 
                     <div className="absolute right-0 bottom-0 size-72 rounded-full bg-fuchsia-600/10 blur-[100px]" />
                 </div>
 
-                <form onSubmit={handleSubmit} className="relative flex flex-col gap-6">
+                <div className="relative flex flex-col gap-6">
                     <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2 text-xl font-bold tracking-tight sm:text-2xl">
                             <Building2 className="h-6 w-6 text-indigo-500" />
@@ -241,6 +256,35 @@ export default function EmpresaPage({ empresa: empresaInicial, departamentos }: 
                         </p>
                     </div>
 
+                    <div className="flex gap-2 border-b border-border">
+                        <button
+                            type="button"
+                            onClick={() => setTab('general')}
+                            className={`flex items-center gap-1.5 border-b-2 px-3 pb-2 text-sm font-medium transition-colors ${
+                                tab === 'general'
+                                    ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                            }`}
+                        >
+                            <ScrollText className="h-4 w-4" /> Datos generales
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setTab('bancos')}
+                            className={`flex items-center gap-1.5 border-b-2 px-3 pb-2 text-sm font-medium transition-colors ${
+                                tab === 'bancos'
+                                    ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                            }`}
+                        >
+                            <Banknote className="h-4 w-4" /> Cuentas bancarias
+                        </button>
+                    </div>
+
+                    {tab === 'bancos' && <CuentasBancariasPanel cuentasIniciales={cuentasBancarias} />}
+
+                {tab === 'general' && (
+                <form onSubmit={handleSubmit} className="flex flex-col gap-6">
                     {errors.general && (
                         <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
                             {errors.general}
@@ -447,6 +491,31 @@ export default function EmpresaPage({ empresa: empresaInicial, departamentos }: 
                                         )}
                                     </div>
                                 </div>
+
+                                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <div className="space-y-1.5">
+                                        <label className="text-sm font-medium text-foreground">Celular</label>
+                                        <input
+                                            value={values.celular}
+                                            onChange={(e) => set('celular', e.target.value)}
+                                            maxLength={20}
+                                            placeholder="+51 999 999 999"
+                                            className={inputClass}
+                                        />
+                                        {errors.celular && <p className="text-xs text-destructive">{errors.celular}</p>}
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-sm font-medium text-foreground">Sitio web</label>
+                                        <input
+                                            value={values.website}
+                                            onChange={(e) => set('website', e.target.value)}
+                                            maxLength={150}
+                                            placeholder="https://mosso.pe"
+                                            className={inputClass}
+                                        />
+                                        {errors.website && <p className="text-xs text-destructive">{errors.website}</p>}
+                                    </div>
+                                </div>
                             </section>
 
                             <section className="rounded-xl border border-border bg-card p-5 shadow-sm sm:p-6">
@@ -577,6 +646,8 @@ export default function EmpresaPage({ empresa: empresaInicial, departamentos }: 
                         </div>
                     </div>
                 </form>
+                )}
+                </div>
             </div>
         </>
     );

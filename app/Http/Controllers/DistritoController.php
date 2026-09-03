@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Database\QueryException;
+use App\Services\ZonasEnvioService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -11,15 +11,17 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * `distritos` es el catálogo NACIONAL completo del Perú por UBIGEO (~1891
+ * filas, sembradas por `UbigeoSeeder`) — ya NO es un CRUD libre de nombres.
+ * Este panel solo activa/edita el costo de envío de un distrito que ya
+ * existe en el catálogo; nunca crea ni borra filas de `distritos`. Por eso
+ * `store`/`update` terminan siendo, en el fondo, la misma operación (fijar
+ * costo_envio + activo=1 sobre una fila existente) — se mantienen separados
+ * solo por claridad de permisos/UI (modal "Nuevo distrito" vs. "Editar").
+ */
 class DistritoController extends Controller
 {
-    /**
-     * NOTA DE ESQUEMA: la tabla `distritos` no trae en el dump un índice único
-     * compuesto (nombre + fk_provincia). La unicidad se valida aquí a nivel de
-     * aplicación (con lockForUpdate dentro de una transacción para evitar condiciones
-     * de carrera), pero se recomienda además agregar a futuro:
-     *   ALTER TABLE distritos ADD UNIQUE KEY distritos_nombre_provincia_unique (nombre, fk_provincia);
-     */
     public function index(): Response
     {
         return Inertia::render('trabajador/distrito', [
@@ -39,13 +41,14 @@ class DistritoController extends Controller
         $search = trim((string) $request->query('search', ''));
         $departamento = $request->query('departamento');
         $provincia = $request->query('provincia');
+        $estado = $request->query('estado', 'todos'); // activos|inactivos|todos
         $perPage = (int) $request->query('per_page', 10);
         $perPage = $perPage > 0 && $perPage <= 100 ? $perPage : 10;
         $page = max(1, (int) $request->query('page', 1));
         $sort = $request->query('sort', 'nombre');
         $direction = $request->query('direction', 'asc') === 'desc' ? 'desc' : 'asc';
 
-        $sortable = ['id_distrito', 'nombre', 'costo_envio', 'provincia', 'departamento'];
+        $sortable = ['id_distrito', 'nombre', 'costo_envio', 'activo', 'provincia', 'departamento'];
         if (! in_array($sort, $sortable, true)) {
             $sort = 'nombre';
         }
@@ -56,7 +59,9 @@ class DistritoController extends Controller
             ->select([
                 'd.id_distrito',
                 'd.nombre',
+                'd.ubigeo',
                 'd.costo_envio',
+                'd.activo',
                 'd.fk_provincia',
                 'p.nombre as provincia',
                 'dep.id_departamento',
@@ -64,7 +69,7 @@ class DistritoController extends Controller
             ]);
 
         if ($search !== '') {
-            $like = '%' . str_replace(['%', '_'], ['\\%', '\\_'], $search) . '%';
+            $like = '%'.str_replace(['%', '_'], ['\\%', '\\_'], $search).'%';
             $query->where(function ($q) use ($like) {
                 $q->where('d.nombre', 'like', $like)
                     ->orWhere('p.nombre', 'like', $like)
@@ -78,10 +83,16 @@ class DistritoController extends Controller
             $query->where('dep.id_departamento', (int) $departamento);
         }
 
+        if ($estado === 'activos') {
+            $query->where('d.activo', true);
+        } elseif ($estado === 'inactivos') {
+            $query->where('d.activo', false);
+        }
+
         $sortColumn = match ($sort) {
             'provincia' => 'p.nombre',
             'departamento' => 'dep.nombre',
-            default => 'd.' . $sort,
+            default => 'd.'.$sort,
         };
 
         $total = (clone $query)->count(DB::raw('DISTINCT d.id_distrito'));
@@ -102,28 +113,38 @@ class DistritoController extends Controller
         ]);
     }
 
+    /**
+     * "Nuevo distrito": el modal elige, vía cascada Departamento → Provincia →
+     * Distrito, una fila EXISTENTE del catálogo nacional y le fija un costo de
+     * envío. Nunca inserta una fila nueva en `distritos`.
+     */
     public function store(Request $request): JsonResponse
     {
-        $data = $this->validado($request);
+        $data = $request->validate([
+            'id_distrito' => ['required', 'integer', Rule::exists('distritos', 'id_distrito')],
+            'costo_envio' => ['required', 'numeric', 'min:0', 'max:999999.99'],
+        ]);
 
-        $distrito = DB::transaction(function () use ($data) {
-            $this->asegurarNombreUnico($data['nombre'], $data['fk_provincia']);
+        DB::table('distritos')->where('id_distrito', $data['id_distrito'])->update([
+            'costo_envio' => $data['costo_envio'],
+            'activo' => true,
+        ]);
 
-            $id = DB::table('distritos')->insertGetId([
-                'nombre' => $data['nombre'],
-                'costo_envio' => $data['costo_envio'],
-                'fk_provincia' => $data['fk_provincia'],
-            ]);
-
-            return DB::table('distritos')->where('id_distrito', $id)->first();
-        });
+        ZonasEnvioService::flush();
 
         return response()->json([
-            'message' => 'Distrito registrado correctamente.',
-            'distrito' => $distrito,
+            'message' => 'Distrito activado correctamente.',
+            'distrito' => DB::table('distritos')->where('id_distrito', $data['id_distrito'])->first(),
         ], 201);
     }
 
+    /**
+     * "Editar distrito": Departamento/Provincia/Nombre son de solo lectura
+     * (los fija el ubigeo) — solo se pueden tocar costo_envio y el switch
+     * activo. `activo` es opcional y por defecto queda en `true`: asignar un
+     * costo desde este modal activa el distrito salvo que se apague el
+     * switch explícitamente en la misma acción.
+     */
     public function update(Request $request, int $distrito): JsonResponse
     {
         $existente = DB::table('distritos')->where('id_distrito', $distrito)->first();
@@ -132,24 +153,27 @@ class DistritoController extends Controller
             abort(404, 'Distrito no encontrado.');
         }
 
-        $data = $this->validado($request);
-
-        DB::transaction(function () use ($data, $distrito) {
-            $this->asegurarNombreUnico($data['nombre'], $data['fk_provincia'], $distrito);
-
-            DB::table('distritos')->where('id_distrito', $distrito)->update([
-                'nombre' => $data['nombre'],
-                'costo_envio' => $data['costo_envio'],
-                'fk_provincia' => $data['fk_provincia'],
-            ]);
-        });
-
-        return response()->json([
-            'message' => 'Distrito actualizado correctamente.',
+        $data = $request->validate([
+            'costo_envio' => ['required', 'numeric', 'min:0', 'max:999999.99'],
+            'activo' => ['nullable', 'boolean'],
         ]);
+
+        DB::table('distritos')->where('id_distrito', $distrito)->update([
+            'costo_envio' => $data['costo_envio'],
+            'activo' => $data['activo'] ?? true,
+        ]);
+
+        ZonasEnvioService::flush();
+
+        return response()->json(['message' => 'Distrito actualizado correctamente.']);
     }
 
-    public function destroy(int $distrito): JsonResponse
+    /**
+     * Switch activo/inactivo por fila: apaga o enciende SIN tocar el costo
+     * cargado. No se puede activar un distrito que nunca tuvo un costo
+     * asignado (costo_envio null) — hay que editarlo primero.
+     */
+    public function toggleActivo(int $distrito): JsonResponse
     {
         $existente = DB::table('distritos')->where('id_distrito', $distrito)->first();
 
@@ -157,71 +181,21 @@ class DistritoController extends Controller
             abort(404, 'Distrito no encontrado.');
         }
 
-        // Bloqueo preventivo: distritos referenciados por direcciones no deben eliminarse.
-        $enUso = DB::table('direcciones')->where('fk_distrito', $distrito)->exists();
+        $activar = ! $existente->activo;
 
-        if ($enUso) {
+        if ($activar && $existente->costo_envio === null) {
             throw ValidationException::withMessages([
-                'general' => 'No se puede eliminar: este distrito está siendo usado por una o más direcciones registradas.',
+                'general' => 'Este distrito no tiene costo de envío configurado. Edítalo primero para asignarle uno.',
             ]);
         }
 
-        try {
-            DB::table('distritos')->where('id_distrito', $distrito)->delete();
-        } catch (QueryException $e) {
-            // Resguardo si existiera otra FK no contemplada (error 23000 = violación de integridad referencial).
-            if ($e->getCode() === '23000') {
-                throw ValidationException::withMessages([
-                    'general' => 'No se puede eliminar: el distrito tiene información relacionada.',
-                ]);
-            }
-            throw $e;
-        }
+        DB::table('distritos')->where('id_distrito', $distrito)->update(['activo' => $activar]);
+
+        ZonasEnvioService::flush();
 
         return response()->json([
-            'message' => 'Distrito eliminado correctamente.',
+            'message' => $activar ? 'Distrito activado.' : 'Distrito desactivado.',
+            'activo' => $activar,
         ]);
-    }
-
-    /**
-     * Validación y saneamiento común a store/update.
-     */
-    private function validado(Request $request): array
-    {
-        $request->merge([
-            'nombre' => trim(strip_tags((string) $request->input('nombre'))),
-        ]);
-
-        return $request->validate([
-            'nombre' => ['required', 'string', 'min:2', 'max:45', 'regex:/^[\p{L}\s.\'-]+$/u'],
-            'costo_envio' => ['required', 'numeric', 'min:0', 'max:999999.99'],
-            'fk_provincia' => ['required', 'integer', Rule::exists('provincias', 'id_provincia')],
-        ], [
-            'nombre.regex' => 'El nombre solo puede contener letras y espacios.',
-            'costo_envio.max' => 'El costo de envío ingresado es demasiado alto.',
-            'fk_provincia.exists' => 'La provincia seleccionada no es válida.',
-        ]);
-    }
-
-    /**
-     * Un distrito no puede repetir nombre dentro de la misma provincia (case-insensitive).
-     * Se bloquea la fila de la provincia con lockForUpdate para evitar que dos
-     * solicitudes concurrentes creen el mismo nombre a la vez.
-     */
-    private function asegurarNombreUnico(string $nombre, int $fkProvincia, ?int $ignorarId = null): void
-    {
-        DB::table('provincias')->where('id_provincia', $fkProvincia)->lockForUpdate()->first();
-
-        $duplicado = DB::table('distritos')
-            ->whereRaw('LOWER(nombre) = ?', [mb_strtolower($nombre)])
-            ->where('fk_provincia', $fkProvincia)
-            ->when($ignorarId, fn ($q) => $q->where('id_distrito', '!=', $ignorarId))
-            ->exists();
-
-        if ($duplicado) {
-            throw ValidationException::withMessages([
-                'nombre' => 'Ya existe un distrito con este nombre en la provincia seleccionada.',
-            ]);
-        }
     }
 }

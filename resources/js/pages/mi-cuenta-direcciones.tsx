@@ -1,10 +1,12 @@
 import { Form, Head, Link } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import axios from 'axios';
+import { useEffect, useMemo, useState } from 'react';
 import { store as direccionesStore } from '@/actions/App/Http/Controllers/MiCuentaDireccionController';
 import InputError from '@/components/input-error';
 import MiCuentaShell from '@/components/MiCuentaShell';
 import StorefrontLayout from '@/layouts/storefront-layout';
 import type { MiCuentaDireccionesProps } from '@/types/cuenta';
+import type { DistritoUbigeo } from '@/types/ubigeo';
 
 const input =
   'w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-mosso-yellow focus:border-transparent transition disabled:bg-gray-50 disabled:text-gray-400';
@@ -13,21 +15,52 @@ export default function MiCuentaDirecciones({
   direcciones,
   departamentos,
   provincias,
-  distritos,
 }: MiCuentaDireccionesProps) {
   const [depSel, setDepSel] = useState('');
   const [provSel, setProvSel] = useState('');
   const [distSel, setDistSel] = useState('');
   const [formOpen, setFormOpen] = useState(false);
 
+  // Catálogo nacional completo: los distritos (~1891) se piden por provincia
+  // en vez de mandarlos todos de una en el prop de la página.
+  const [distritosProvincia, setDistritosProvincia] = useState<DistritoUbigeo[]>([]);
+  const [cargandoDistritos, setCargandoDistritos] = useState(false);
+  const [avisoSinEnvio, setAvisoSinEnvio] = useState(false);
+
   const provFiltradas = useMemo(
     () => provincias.filter((p) => p.fk_departamento === Number(depSel)),
     [provincias, depSel],
   );
-  const distFiltrados = useMemo(
-    () => distritos.filter((d) => d.fk_provincia === Number(provSel)),
-    [distritos, provSel],
-  );
+
+  useEffect(() => {
+    if (!provSel) {
+      setDistritosProvincia([]);
+      return;
+    }
+
+    let cancelado = false;
+    setCargandoDistritos(true);
+    axios
+      .get<DistritoUbigeo[]>('/ubigeo/distritos', { params: { provincia: provSel } })
+      .then((r) => {
+        if (!cancelado) setDistritosProvincia(r.data);
+      })
+      .finally(() => {
+        if (!cancelado) setCargandoDistritos(false);
+      });
+
+    return () => {
+      cancelado = true;
+    };
+  }, [provSel]);
+
+  function seleccionarDistrito(id: string) {
+    setDistSel(id);
+    const opcion = distritosProvincia.find((d) => String(d.id_distrito) === id);
+    if (opcion && !opcion.activo) {
+      setAvisoSinEnvio(true);
+    }
+  }
 
   return (
     <StorefrontLayout>
@@ -135,6 +168,7 @@ export default function MiCuentaDirecciones({
                   setDepSel('');
                   setProvSel('');
                   setDistSel('');
+                  setAvisoSinEnvio(false);
                   setFormOpen(false);
                 }}
                 className="space-y-4"
@@ -207,12 +241,12 @@ export default function MiCuentaDirecciones({
                           name="fk_distrito"
                           required
                           value={distSel}
-                          onChange={(e) => setDistSel(e.target.value)}
-                          disabled={!provSel}
+                          onChange={(e) => seleccionarDistrito(e.target.value)}
+                          disabled={!provSel || cargandoDistritos}
                           className={input}
                         >
-                          <option value="">Selecciona…</option>
-                          {distFiltrados.map((d) => (
+                          <option value="">{cargandoDistritos ? 'Cargando…' : 'Selecciona…'}</option>
+                          {distritosProvincia.map((d) => (
                             <option key={d.id_distrito} value={d.id_distrito}>{d.nombre}</option>
                           ))}
                         </select>
@@ -234,6 +268,28 @@ export default function MiCuentaDirecciones({
           )}
         </div>
       </MiCuentaShell>
+
+      {avisoSinEnvio && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <button
+            aria-label="Cerrar aviso"
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setAvisoSinEnvio(false)}
+          />
+          <div className="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
+            <p className="text-sm font-bold text-gray-900">No hay envíos hacia esta dirección</p>
+            <p className="mt-2 text-sm text-gray-600">
+              Puedes guardarla igual, pero no estará disponible para envío a domicilio.
+            </p>
+            <button
+              onClick={() => setAvisoSinEnvio(false)}
+              className="mt-5 w-full bg-mosso-yellow hover:bg-mosso-yellow/85 text-gray-900 font-semibold text-sm px-6 py-2.5 rounded-xl transition-colors"
+            >
+              Entendido
+            </button>
+          </div>
+        </div>
+      )}
     </StorefrontLayout>
   );
 }

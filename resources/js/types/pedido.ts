@@ -46,7 +46,7 @@ export interface PedidoCompleto {
     direccion_envio: { direccion: string | null; referencia: string | null; distrito: string | null } | null;
     recojo_tercero: { nombres: string; documento: string | null; telefono: string | null } | null;
     pago: { estado: string | null; monto: number; referencia: string | null; fecha_pago: string | null } | null;
-    comprobante: { tipo: string | null; serie: string | null; numero: string | null; fecha_emision: string | null } | null;
+    comprobante: { id: number; tipo: string | null; serie: string | null; numero: string | null; fecha_emision: string | null } | null;
 }
 
 export interface PedidoDetalleResponse {

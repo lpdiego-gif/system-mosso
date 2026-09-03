@@ -10,6 +10,23 @@
 >
 > **La tabla `migrations` de `mosso2` está incompleta**: sólo registra las 4 migraciones de negocio; las del starter kit (`users`, `cache`, `jobs`, `passkeys`, 2FA) figuran como "Pending" aunque sus tablas existen. Por eso `php artisan migrate` a secas falla (intenta recrear `users`). Para migraciones nuevas, córrelas una por una con `--path=database/migrations/<archivo>.php`. *(2026-09-01: en la BD `mosso2` actual `php artisan migrate:status` ya muestra TODO como "Ran" — 12 batches, incluidas las del starter kit. Aun así, verifica el estado real antes de asumir que `migrate` a secas es seguro.)*
 
+> ## ⚠️ PELIGRO (2026-09-02): NUNCA correr `php artisan test` con `docker exec`
+>
+> `docker exec system_mosso-app-1 php artisan test ...` **NO usa sqlite en memoria**
+> aunque `phpunit.xml` lo configure así. Dentro del contenedor, `DB_HOST=db` /
+> `DB_DATABASE=mosso2` ya están seteadas como variables de entorno reales del
+> proceso (las pone el `docker-compose.override.yml`), y esas pisan el `<env>`
+> de `phpunit.xml`. El resultado: los tests corren contra la base **mysql `mosso2`
+> real**, y el trait `RefreshDatabase` de cualquier test (incluido `ExampleTest`)
+> ejecuta `migrate:fresh` en la primera prueba — **eso BORRA TODAS las tablas de
+> negocio de `mosso2`** (dump completo perdido, sólo quedan las tablas del
+> starter kit). Pasó de verdad el 2026-09-02 corriendo `--filter=ExampleTest` y
+> `--filter=CheckoutTest` así, y se tuvo que restaurar desde `mosso2_xampp.sql`.
+> **La suite de tests SIEMPRE se corre desde el host** (`php artisan test`,
+> sin `docker exec`) — ahí sí toma el sqlite en memoria de `phpunit.xml`. Los
+> demás comandos de `artisan` (migrate, tinker, etc.) sí son seguros por
+> `docker exec` porque no usan `RefreshDatabase`.
+
 ---
 
 > ## Rendimiento (2026-09-01) — LEER si la app va lenta
@@ -248,8 +265,25 @@ La base tiene **53 tablas** (52 preexistentes del dominio + `reclamos`, agregada
 - `roles`, `permisos`, `rol_permisos` **[roles usado solo para trabajadores; permisos/rol_permisos sin código]** — hay tabla de permisos granulares pero ningún controlador la consulta; el control de acceso actual es solo `middleware('auth')` a nivel de ruta, no por permiso.
 - `tipo_documento` (DNI=1, CE=2, Pasaporte=3) — estaba vacía; se sembró con esos 3 valores y en ese orden (migración `2026_08_25_060000_seed_tipo_documento`) porque `TrabajadorController::buscarDocumento()` ya asumía en un comentario que `id_tipo_documento = 1` era DNI, y el formulario de Detalles de mi cuenta (ver 4.10) necesitaba opciones reales para crear una `persona` válida.
 
-### 4.3 Ubicación geográfica
-`departamentos` → `provincias` (`fk_departamento`) → `distritos` (`fk_provincia`, `costo_envio`) → `direcciones` (`fk_distrito`). Jerarquía completa con CRUD ya construido para `distritos` (ver `DistritoController`); departamentos/provincias son de solo lectura (cargados como catálogo).
+### 4.3 Ubicación geográfica — catálogo nacional por UBIGEO (2026-09-02)
+`departamentos` → `provincias` (`fk_departamento`) → `distritos` (`fk_provincia`) → `direcciones` (`fk_distrito`).
+
+Los tres primeros ganaron una columna `ubigeo` (texto, nunca entero — se perderían los ceros iniciales: `departamentos.ubigeo` 2 dígitos, `provincias.ubigeo` 4, `distritos.ubigeo` 6), migración `2026_09_02_100000_add_ubigeo_a_geografia` (nullable + UNIQUE a nivel de BD; en la práctica queda 100% poblado tras `UbigeoSeeder`, la garantía "siempre texto, nunca null" la sostiene el seeder, no una constraint dura). Esa misma migración también volvió `distritos.costo_envio` NULLABLE (antes era `NOT NULL DEFAULT 0.00` — dato real de `mosso2`, no lo que asumía el plan original).
+
+**`distritos` ya NO es un CRUD libre**: es el catálogo NACIONAL completo del Perú (~1891 filas — 25 departamentos, 196 provincias — dataset INEI 2025 vendorizado en `database/data/ubigeo.json`, cargado por `database/seeders/UbigeoSeeder`, **destructivo y no corrido aún contra `mosso2` sin coordinar con el usuario**: borra `direcciones`/`distritos`/`provincias`/`departamentos` y los reinserta desde cero). `distritos` ganó `activo` (bool, default false). Semántica:
+- `costo_envio = NULL` → nunca configurado.
+- `costo_envio = 0` y `activo = 1` → envío gratis.
+- `costo_envio > 0` y `activo = 1` → zona de reparto con costo.
+- `activo = 0` → no seleccionable como envío en el checkout, sin importar el costo.
+
+Modelos Eloquent nuevos (antes todo era `DB::table` a mano, no existían): `App\Models\Departamento`, `Provincia`, `Distrito` (éste con hook `saved`/`deleted` que invalida `ZonasEnvioService`). `App\Services\ZonasEnvioService::arbol()` (cacheado, mismo patrón de versión que `CatalogoCache`) arma el árbol departamento→provincia→distrito **solo con `activo = 1`** — es lo que consume el checkout para sus `<select>` de dirección nueva. `App\Http\Controllers\UbigeoController` expone `GET /ubigeo/provincias?departamento=` y `GET /ubigeo/distritos?provincia=` (cualquier autenticado; no sensible) para las cascadas de selects del panel admin y de `/mi-cuenta/direcciones` — los distritos (~1891 filas) nunca se mandan completos de una en un prop de Inertia, se piden por provincia.
+
+`DistritoController` (`/distrito`, admin) ya no crea/renombra/borra distritos: `store`/`update` sólo fijan `costo_envio` (y `activo=1` automático al guardar un costo) sobre una fila EXISTENTE del catálogo; hay un `toggleActivo` (PATCH `/distrito/{id}/activo`) para el switch por fila, que rechaza activar un distrito sin costo configurado. **No hay `destroy()`**: con catálogo nacional fijo no tiene sentido "eliminar" un distrito — el permiso `distritos.eliminar` (seeded) quedó sin ruta que lo use.
+
+Checkout: `CheckoutController::show()` pasa `zonasEnvio` (el árbol de `ZonasEnvioService`) en vez de volcar `departamentos`/`provincias`/`distritos` completos; cada dirección guardada del cliente trae `envio_disponible` (= `distritos.activo` de su distrito) y se muestra deshabilitada en el checkout si es `false` (sin texto de aviso). Doble candado contra un distrito inactivo colándose por una llamada directa a la API (no confiar en que el frontend sólo ofrece distritos activos): `IniciarCheckoutRequest` (`Rule::exists('distritos',...)->where('activo',1)` para dirección nueva + un `withValidator` que valida el distrito de una dirección guardada) y, independientemente, `CheckoutService::crearPedidoPendiente()` corta con `ValidationException` si `DeliveryService::cotizar()` devuelve `disponible: false`.
+
+`/mi-cuenta/direcciones` sigue viendo el catálogo geográfico completo (el cliente puede guardar una dirección en cualquier distrito, tenga o no envío) — al elegir uno con `activo = 0` se le avisa con un modal ("puedes guardarla igual, pero no estará disponible para envío a domicilio") sin bloquear el guardado.
+
 `cliente_direcciones` — libreta de direcciones del cliente (`/mi-cuenta/direcciones`, ver 4.10). Cada fila enlaza un `cliente` a una `direccion` con `alias` y `es_principal`; la `direccion` en sí es la misma tabla que ya usan trabajadores/servicios/empresa.
 
 ### 4.4 Catálogo de productos
@@ -257,6 +291,7 @@ Jerarquía: `animales` → `categorias` (`fk_id_animal`) → `sub_categorias` (`
 - `animales` también tiene `id_tipo_animal` → `tipo_animales` (para agrupar "exóticos": loro, hámster, etc., por tipo en vez de por especie individual).
 - `marcas` (`nombre`, `logo`).
 - `unidades_medida`, `estados_producto` (catálogos simples usados como FK en `productos`).
+  - **`unidades_medida.codigo_sunat` (2026-09-02)**: preparación de datos para la futura facturación electrónica, NADA de generador de XML todavía. Migración `2026_09_02_150000_add_codigo_sunat_a_unidades_medida` agrega la columna (`VARCHAR(3) NULL`) y hace el backfill por nombre contra el Catálogo N°03 de SUNAT (UN/ECE Rec. 20): Kilogramo→KGM, Gramo→GRM, Litro→LTR, Mililitro→MLT, Unidad→NIU, Paquete→PK, Caja→BX. **"Frasco" no tiene un código claro en el catálogo y quedó en `NIU` por defecto** (la migración lo imprime por consola al correr) — revisar si corresponde algo más específico. Sin UI de administración (no existe pantalla CRUD de unidades; se sigue editando por BD, igual que el resto de catálogos simples del proyecto). `Producto::codigoUnidadSunat()` es el helper con fallback a nivel app: devuelve el `codigo_sunat` de la unidad del producto, o `'NIU'` si la unidad no tiene código o el producto no tiene unidad. Los **servicios** (no productos físicos) van a ir con `'ZZ'` cuando exista el generador de XML — lo resuelve el builder por tipo de ítem, no esta tabla.
 - `descuentos` (`fk_producto`, tipo `porcentaje`/`monto_fijo`, vigencia por fechas, `activo`) — un producto puede tener descuento vigente; la lógica de "descuento activo ahora" vive en `Producto::descuentoActivo()`.
 - `producto_imagenes` (`fk_producto`, `url`, `orden`) **[sin código]** — la tabla soporta galería de imágenes por producto, pero hoy `productos.imagen_principal` es la única imagen usada en toda la app.
 
@@ -283,8 +318,22 @@ Los catálogos `tipo_entregas`, `tipo_comprobante`, `estados_pedido`, `forma_pag
 - `resources/js/pages/carrito/index.tsx`: página pública (StorefrontLayout) con lista de ítems, controles +/−, botón eliminar y resumen de pedido. Usa `router.patch` y `router.delete`.
 - `resources/js/types/global.d.ts`: `carrito: { cantidad: number }` agregado a `sharedPageProps`.
 
-### 4.7 Facturación **[sin código]**
-`comprobantes` (boleta/factura, `fk_pedido`, `fk_tipo_comprobante`, `fk_empresa`, serie/número) — `tipo_comprobante`, `empresa` (datos de la empresa emisora, RUC, dirección), `empresa_redes` + `redes_sociales` (redes sociales de la empresa).
+### 4.7 Facturación — comprobante electrónico (2026-09-03)
+`comprobantes` (boleta/factura, `fk_pedido`, `fk_tipo_comprobante`, `fk_empresa`, serie/número) — `tipo_comprobante`, `empresa` (datos de la empresa emisora, RUC, dirección), `empresa_redes` + `redes_sociales` (redes sociales de la empresa, sin código todavía).
+
+**PDF + XML UBL 2.1 + correo automático + panel "Ventas" ya implementados. Firma real de SUNAT/PSE, envío, CDR, resumen diario, comunicación de baja y anulación son FASE SIGUIENTE — hoy no existe nada de eso.**
+
+- Esquema nuevo (migraciones Laravel, `2026_09_02_1600xx`): `empresa` ganó `celular`/`website`; `comprobantes` ganó el snapshot inmutable de la emisión (`moneda`, `op_gravadas/exoneradas/inafectas`, `descuento_global`, `igv`, `total`, `total_letras`, `xml_path`, `hash`, `qr_data`, `estado_sunat` default `'no_enviado'`, `observacion_sunat`, `correo_enviado_en`); tabla nueva `cuentas_bancarias` (`fk_empresa`, banco/moneda/tipo/número/CCI/titular, `activo`, `orden`) para mostrarlas en el PDF. Permisos nuevos `ventas.ver`/`ventas.gestionar` (Administrador y Vendedor).
+- **`App\Services\ComprobanteService`** es la única fuente de datos: `datos(Comprobante)` arma emisor (de `empresa` + su dirección→distrito→provincia→departamento, con `ubigeo`)/receptor (RUC+razón social si es Factura; DNI/CE/Pasaporte mapeado al catálogo N°06 de SUNAT si es Boleta; `'0'`/"CLIENTE VARIOS" si no hay documento)/items (por `pedido_detalle`, con el precio ya neto de `descuento_unitario`, IGV desglosado 18%, `unidad` = `Producto::codigoUnidadSunat()`)/totales (+ monto en letras). **El costo de envío se agrega como un ítem más ("Servicio de envío")** cuando existe — si no se itemizara, el total nunca cuadraría con `pedidos.total` (que sí lo incluye); valida esa cuadratura con tolerancia ±0.05 y lanza si no cierra. `generarXml()` es idempotente (no regenera si `xml_path` ya existe) y persiste `hash`/`qr_data`/totales en el comprobante. `construirPdf()` arma el mismo PDF para `stream()` (ver/descargar) y `output()` (adjuntar al correo) — nunca hay que duplicar la llamada a la vista.
+- **XML UBL 2.1 armado a mano con `DOMDocument`** (`App\Services\Sunat\UblComprobanteXmlBuilder`) — **NO se usa `greenter/greenter`**: su última versión pide `symfony/validator ^5||^6` (Laravel 13 trae Symfony 7) y la extensión `ext-soap` (no instalada); `composer require` falla sin forzar upgrades riesgosos. El documento (`Invoice` UBL, mismo tipo para Boleta `03` y Factura `01`, catálogos SUNAT reales en los `schemeID`) se firma con **XML-DSig enveloped real** (no un placeholder): digest SHA-256 del documento sin el nodo `ds:Signature` vía `DOMDocument::C14N()` nativo, `SignedInfo` canonicalizado y firmado con `openssl_sign` (RSA-SHA256) contra el certificado de desarrollo — verificado criptográficamente contra su propia clave pública en pruebas manuales. Es autofirmado: **no sirve para SUNAT real**, solo dejar el nodo `<ds:Signature>` presente y válido en su propio dominio.
+- Certificado de desarrollo: `php artisan comprobante:cert-dev` (`app/Console/Commands/GenerarCertificadoComprobanteDev.php`), genera el par autofirmado 100% con las funciones `openssl_*` de PHP (sin depender del binario `openssl` del sistema) en `storage/app/certs/dev.pem` (**gitignored**, `.gitignore` → `/storage/app/certs`). Ruta configurable por `SUNAT_CERT_PATH` / `config('services.sunat.cert_path')`.
+  - **GOTCHA de Windows/XAMPP**: `openssl_pkey_new()`, `openssl_csr_new()`/`_sign()` y sobre todo `openssl_pkey_export()` fallan en silencio (`false`, sin excepción si no se chequea el retorno) sin un `openssl.cnf` explícito — el default de PHP en Windows apunta a una ruta que no existe. El comando ya busca `C:\xampp\php\extras\ssl\openssl.cnf` automáticamente y lo pasa como opción `config`; en Linux (el contenedor) no hace falta nada de esto.
+  - **GOTCHA de host vs. contenedor**: como `storage/app` vive en el volumen Docker `system_mosso_storage_data` (no en el bind mount), el certificado hay que generarlo **una vez en cada lado** — `docker exec system_mosso-app-1 php artisan comprobante:cert-dev` para la app real, y `php artisan comprobante:cert-dev` desde el host para que los tests (que corren en el host, ver el aviso rojo de arriba sobre `docker exec ... test`) lo encuentren.
+- **Librerías nuevas**: `luecano/numero-a-letras` (monto en letras, `toInvoice()`) y `endroid/qr-code` v6 (`Builder` + `PngWriter` → `getDataUri()`, el QR se genera al vuelo desde `comprobantes.qr_data`, nunca se guarda como imagen). Instaladas con `composer require` — **igual que con el certificado, `vendor/` vive en un volumen Docker separado del `vendor/` real del host**: tras instalar algo con `docker exec ... composer require`, hay que correr `composer install` (o `dump-autoload`) también en el host para que `php artisan test` (que corre ahí) vea el paquete nuevo.
+- **Rutas**: `GET|POST /comprobante/{id}/pdf|xml|reenviar` (`ComprobanteController`, middleware `auth` solo — la autorización real es "cliente dueño del pedido O trabajador con `ventas.ver`/`ventas.gestionar`", un OR que no se puede expresar con middleware de ruta solo, se resuelve adentro del controlador). `GET /admin/ventas`, `/admin/ventas/data` (paginado server-side, patrón `DB::table` + joins como `/trabajador/data`), `/admin/ventas/{id}` (`Admin\VentaController`, `permiso:ventas.ver`).
+- **Correo automático**: `App\Mail\ComprobanteMail` (PDF adjunto siempre; XML solo si se pide explícitamente al reenviar) se dispara desde `CheckoutService::confirmarPago()` **después** de que el `DB::transaction()` del pago haga commit (nunca dentro — un correo lento/roto no debe poder revertir una venta ya confirmada), y solo si el pago se confirmó recién en esta llamada (no en un reintento sobre un pedido ya pagado). Todo el envío va en `try/catch`: un fallo solo deja un `Log::warning` y sigue, `correo_enviado_en` queda `null`.
+- **Enlaces**: `checkout/confirmacion.tsx` ("Descargar comprobante (PDF)"), `mi-cuenta-pedidos.tsx` (PDF/XML/"Reenviar a mi correo" por pedido, si tiene comprobante), `Admin/Pedidos/Show.tsx` ("Ver en Ventas →"), sidebar admin (ítem "Ventas" bajo `ventas.ver`, junto a Pedidos).
+- **`/empresa`**: pestañas "Datos generales" (+ `celular`/`website`) y "Cuentas bancarias" (CRUD completo: alta/edición/activar-desactivar/reordenar/eliminar vía `Admin\CuentaBancariaController`, `permiso:empresa.editar`) — componente `resources/js/components/empresa/cuentas-bancarias-panel.tsx`.
 
 ### 4.8 Servicios (peluquería, veterinaria, etc.) **[sin código]**
 `servicios` (`fk_tipo_servicio`, nombre del negocio/servicio, responsable, dirección) con tablas satélite: `servicio_beneficios`, `servicio_horarios` (por día de semana), `servicio_imagenes`, `servicio_redes`. Catálogo: `tipos_servicio`. El menú (`menus`, tipo `tipo_servicio`) ya tiene un ítem "Servicios" apuntando a `/servicios`, pero esa ruta/página **no existe todavía**.

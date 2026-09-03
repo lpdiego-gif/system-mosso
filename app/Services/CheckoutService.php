@@ -2,20 +2,23 @@
 
 namespace App\Services;
 
+use App\Mail\ComprobanteMail;
 use App\Models\Carrito;
 use App\Models\CarritoDetalle;
 use App\Models\Cliente;
-use App\Models\Producto;
 use App\Models\Comprobante;
 use App\Models\Pago;
 use App\Models\Pedido;
 use App\Models\PedidoDetalle;
 use App\Models\PedidoRecojoTercero;
+use App\Models\Producto;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 /**
  * Orquesta el checkout: recalcula el carrito contra la BD, arma el pedido y su
@@ -192,7 +195,19 @@ class CheckoutService
 
             if ($tipoEntrega->requiere_direccion) {
                 [$fkDireccionEnvio, $distritoId] = $this->resolverDireccionEnvio($cliente, $datos);
-                $costoEnvio = $this->delivery->cotizar($distritoId, $resumen['subtotal'] - $resumen['descuento_total'])['costo_envio'];
+
+                $cotizacion = $this->delivery->cotizar($distritoId, $resumen['subtotal'] - $resumen['descuento_total']);
+
+                // Segundo candado (el primero es IniciarCheckoutRequest): nunca confiar
+                // en que el frontend sólo ofreció distritos activos. Si por lo que sea
+                // llega uno inactivo hasta acá, se corta antes de crear el pedido.
+                if (! $cotizacion['disponible']) {
+                    throw ValidationException::withMessages([
+                        'id_direccion' => 'Esta dirección no tiene envío disponible. Elige otra o agrega una nueva.',
+                    ]);
+                }
+
+                $costoEnvio = $cotizacion['costo_envio'];
             }
 
             // 4) Totales (recalculados en servidor).
@@ -257,12 +272,12 @@ class CheckoutService
      */
     public function confirmarPago(Pedido $pedido, string $idTransaccionCulqi, ?string $tipoComprobante = null): void
     {
-        DB::transaction(function () use ($pedido, $idTransaccionCulqi, $tipoComprobante) {
+        $reciennPagado = DB::transaction(function () use ($pedido, $idTransaccionCulqi, $tipoComprobante) {
             $pedido = Pedido::whereKey($pedido->id_pedido)->lockForUpdate()->firstOrFail();
             $pago = Pago::where('fk_pedido', $pedido->id_pedido)->lockForUpdate()->firstOrFail();
 
             if ($pago->estado === 'pagado') {
-                return;
+                return false;
             }
 
             // Re-validación de stock con bloqueo, justo antes de descontar.
@@ -303,7 +318,51 @@ class CheckoutService
             if ($carrito) {
                 CarritoDetalle::where('fk_carrito', $carrito->id_carrito)->delete();
             }
+
+            return true;
         });
+
+        // Fuera de la transacción a propósito: un correo que tarda o falla
+        // nunca debe hacer rollback de un pago ya confirmado. `$reciennPagado`
+        // evita reenviar el correo si esta llamada solo confirmó que ya
+        // estaba pagado (idempotencia del pago, ver reclamarParaCobro()).
+        if ($reciennPagado) {
+            $this->enviarComprobantePorCorreo($pedido);
+        }
+    }
+
+    /**
+     * Envía el PDF del comprobante recién emitido al correo del cliente.
+     * Nunca revierte ni bloquea la venta: cualquier falla queda en el log.
+     */
+    private function enviarComprobantePorCorreo(Pedido $pedido): void
+    {
+        try {
+            $comprobante = Comprobante::where('fk_pedido', $pedido->id_pedido)->first();
+
+            if (! $comprobante) {
+                return;
+            }
+
+            $correo = Cliente::whereKey($pedido->fk_cliente)->value('correo');
+
+            if (! $correo) {
+                return;
+            }
+
+            $comprobantes = app(ComprobanteService::class);
+            $pdfBinario = $comprobantes->construirPdf($comprobante)->output();
+            $datos = $comprobantes->datos($comprobante);
+
+            Mail::to($correo)->send(new ComprobanteMail($datos, $pdfBinario));
+
+            $comprobante->update(['correo_enviado_en' => Carbon::now()]);
+        } catch (Throwable $e) {
+            Log::warning('No se pudo enviar el comprobante por correo tras el pago', [
+                'pedido' => $pedido->id_pedido,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**

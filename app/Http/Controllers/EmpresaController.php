@@ -28,6 +28,9 @@ class EmpresaController extends Controller
                 ->select('id_departamento', 'nombre')
                 ->orderBy('nombre')
                 ->get(),
+            'cuentasBancarias' => $empresa
+                ? DB::table('cuentas_bancarias')->where('fk_empresa', $empresa->id_empresa)->orderBy('orden')->get()
+                : [],
         ]);
     }
 
@@ -100,6 +103,8 @@ class EmpresaController extends Controller
                     'nombre_comercial' => $data['nombre_comercial'],
                     'correo' => $data['correo'],
                     'telefono' => $data['telefono'],
+                    'celular' => $data['celular'] ?? null,
+                    'website' => $data['website'] ?? null,
                     'logo' => $logo,
                     'fk_direccion' => $idDireccion,
                 ];
@@ -150,7 +155,7 @@ class EmpresaController extends Controller
             ->join('provincias as prov', 'prov.id_provincia', '=', 'dist.fk_provincia')
             ->select([
                 'e.id_empresa', 'e.ruc', 'e.razon_social', 'e.nombre_comercial',
-                'e.logo', 'e.correo', 'e.telefono', 'e.fk_direccion',
+                'e.logo', 'e.correo', 'e.telefono', 'e.celular', 'e.website', 'e.fk_direccion',
                 'd.direccion', 'd.referencia',
                 'dist.id_distrito as fk_distrito',
                 'prov.id_provincia as fk_provincia',

@@ -23,6 +23,7 @@ class MiCuentaPedidosController extends Controller
 
         $pedidos = DB::table('pedidos as p')
             ->join('estados_pedido as ep', 'ep.id_estado_pedido', '=', 'p.fk_estado_pedido')
+            ->leftJoin('comprobantes as c', 'c.fk_pedido', '=', 'p.id_pedido')
             ->where('p.fk_cliente', $clienteId)
             ->select(
                 'p.id_pedido',
@@ -32,6 +33,7 @@ class MiCuentaPedidosController extends Controller
                 'p.igv',
                 'p.total',
                 'p.fecha_pedido',
+                'c.id_comprobante',
             )
             ->orderByDesc('p.fecha_pedido')
             ->get()

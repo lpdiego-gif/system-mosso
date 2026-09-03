@@ -17,14 +17,23 @@ use Illuminate\Support\Facades\DB;
 class DeliveryService
 {
     /**
-     * @return array{costo_envio: float, gratis: bool, motivo: string}
+     * @return array{costo_envio: float, gratis: bool, motivo: string, disponible: bool}
      */
     public function cotizar(int $distritoId, float $subtotal): array
     {
         $distrito = DB::table('distritos')->where('id_distrito', $distritoId)->first();
 
         if (! $distrito) {
-            return ['costo_envio' => 0.0, 'gratis' => false, 'motivo' => 'Distrito no encontrado'];
+            return ['costo_envio' => 0.0, 'gratis' => false, 'motivo' => 'Distrito no encontrado', 'disponible' => false];
+        }
+
+        if (! $distrito->activo) {
+            return [
+                'costo_envio' => 0.0,
+                'gratis' => false,
+                'motivo' => 'Este distrito no tiene envío disponible.',
+                'disponible' => false,
+            ];
         }
 
         $costoBase = (float) $distrito->costo_envio;
@@ -36,6 +45,7 @@ class DeliveryService
                 'costo_envio' => round($costoBase, 2),
                 'gratis' => false,
                 'motivo' => 'Tarifa regular del distrito',
+                'disponible' => true,
             ];
         }
 
@@ -47,6 +57,7 @@ class DeliveryService
                     'Delivery gratis desde S/ %s',
                     number_format((float) $config->monto_minimo, 2)
                 ),
+                'disponible' => true,
             ];
         }
 
@@ -55,6 +66,7 @@ class DeliveryService
                 'costo_envio' => round($costoBase, 2),
                 'gratis' => false,
                 'motivo' => 'El delivery gratis no aplica a este distrito',
+                'disponible' => true,
             ];
         }
 
@@ -62,6 +74,7 @@ class DeliveryService
             'costo_envio' => 0.0,
             'gratis' => true,
             'motivo' => $config->descripcion ?: 'Delivery gratis',
+            'disponible' => true,
         ];
     }
 

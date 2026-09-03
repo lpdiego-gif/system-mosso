@@ -1,4 +1,4 @@
-import type { Departamento, Distrito, Provincia, TipoDocumento } from '@/types/trabajador';
+import type { Departamento, Provincia, TipoDocumento } from '@/types/trabajador';
 
 export type TipoCuenta = 'trabajador' | 'cliente' | 'otro';
 
@@ -34,7 +34,6 @@ export interface MiCuentaDireccionesProps {
   direcciones: DireccionCliente[];
   departamentos: Departamento[];
   provincias: Provincia[];
-  distritos: Distrito[];
 }
 
 export interface PersonaDetalle {
@@ -63,6 +62,7 @@ export interface Pedido {
   igv: number;
   total: number;
   fecha_pedido: string;
+  id_comprobante: number | null;
 }
 
 export interface MiCuentaPedidosProps {

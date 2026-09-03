@@ -16,6 +16,7 @@ class UnidadMedida extends Model
     protected $fillable = [
         'nombre',
         'abreviatura',
+        'codigo_sunat',
     ];
 
     public function productos(): HasMany

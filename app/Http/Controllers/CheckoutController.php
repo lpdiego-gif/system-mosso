@@ -11,6 +11,7 @@ use App\Services\CheckoutService;
 use App\Services\CuentaService;
 use App\Services\CulqiService;
 use App\Services\DeliveryService;
+use App\Services\ZonasEnvioService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -67,9 +68,7 @@ class CheckoutController extends Controller
             'tiposDocumento' => DB::table('tipo_documento')->select('id_tipo_documento', 'nombre')->orderBy('id_tipo_documento')->get(),
             'tipoEntregas' => DB::table('tipo_entregas')->select('id_tipo_entrega', 'nombre', 'requiere_direccion')->orderBy('id_tipo_entrega')->get(),
             'direcciones' => $this->direccionesDe($cliente->id_cliente),
-            'departamentos' => DB::table('departamentos')->select('id_departamento', 'nombre')->orderBy('nombre')->get(),
-            'provincias' => DB::table('provincias')->select('id_provincia', 'nombre', 'fk_departamento')->orderBy('nombre')->get(),
-            'distritos' => DB::table('distritos')->select('id_distrito', 'nombre', 'fk_provincia', 'costo_envio')->orderBy('nombre')->get(),
+            'zonasEnvio' => ZonasEnvioService::arbol(),
             'empresa' => $this->empresa(),
             'igvIncluido' => true,
             'culqiPublicKey' => $this->culqi->publicKey(),
@@ -274,6 +273,7 @@ class CheckoutController extends Controller
                 ])->values(),
             ],
             'comprobante' => $pedido->comprobante ? [
+                'id' => $pedido->comprobante->id_comprobante,
                 'tipo' => $pedido->comprobante->tipoComprobante?->nombre,
                 'serie' => $pedido->comprobante->serie,
                 'numero' => $pedido->comprobante->numero,
@@ -314,7 +314,7 @@ class CheckoutController extends Controller
             ->select([
                 'cd.id_cliente_direccion', 'cd.alias', 'cd.es_principal',
                 'd.id_direccion', 'd.direccion', 'd.referencia',
-                'dist.id_distrito', 'dist.nombre as distrito', 'dist.costo_envio',
+                'dist.id_distrito', 'dist.nombre as distrito', 'dist.costo_envio', 'dist.activo as envio_disponible',
                 'p.nombre as provincia', 'dep.nombre as departamento',
             ])
             ->orderByDesc('cd.es_principal')

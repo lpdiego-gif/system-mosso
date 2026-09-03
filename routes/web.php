@@ -4,18 +4,18 @@ use App\Http\Controllers\Admin\AnimalController;
 use App\Http\Controllers\Admin\CategoriaController;
 use App\Http\Controllers\Admin\ClienteController;
 use App\Http\Controllers\Admin\DevolucionController as AdminDevolucionController;
-use App\Http\Controllers\Admin\PedidoController as AdminPedidoController;
-use App\Http\Controllers\Admin\ReclamoController as AdminReclamoController;
-use App\Http\Controllers\DevolucionController;
+use App\Http\Controllers\Admin\FuncionController;
 use App\Http\Controllers\Admin\MarcaController;
 use App\Http\Controllers\Admin\MenuController;
-use App\Http\Controllers\Admin\FuncionController;
 use App\Http\Controllers\Admin\MenuCuentaController;
+use App\Http\Controllers\Admin\PedidoController as AdminPedidoController;
 use App\Http\Controllers\Admin\ProductoController;
+use App\Http\Controllers\Admin\ReclamoController as AdminReclamoController;
 use App\Http\Controllers\Admin\RolController;
 use App\Http\Controllers\Admin\ServicioController as AdminServicioController;
 use App\Http\Controllers\Admin\SubCategoriaController;
 use App\Http\Controllers\Admin\TipoServicioController;
+use App\Http\Controllers\Admin\VentaController;
 use App\Http\Controllers\BusquedaController;
 use App\Http\Controllers\CarritoController;
 use App\Http\Controllers\CatalogoController;
@@ -23,6 +23,7 @@ use App\Http\Controllers\CatalogoPublicoController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ClienteRegistroController;
 use App\Http\Controllers\CuentaController;
+use App\Http\Controllers\DevolucionController;
 use App\Http\Controllers\FavoritosController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MarcaCatalogoController;
@@ -85,6 +86,23 @@ Route::middleware(['auth', 'cliente'])->prefix('checkout')->name('checkout.')->g
     Route::post('/{pedido}/orden', [CheckoutController::class, 'orden'])->whereNumber('pedido')->name('orden');
     Route::post('/{pedido}/pagar', [CheckoutController::class, 'pagar'])->whereNumber('pedido')->name('pagar');
     Route::get('/confirmacion/{pedido}', [CheckoutController::class, 'confirmacion'])->whereNumber('pedido')->name('confirmacion');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Comprobante electrónico (Boleta/Factura): PDF, XML, reenvío por correo.
+|--------------------------------------------------------------------------
+| Autorización resuelta dentro del controlador (cliente dueño del pedido O
+| trabajador con permiso:ventas.*) -- no se puede expresar ese "O" solo con
+| middleware de ruta.
+*/
+
+use App\Http\Controllers\ComprobanteController;
+
+Route::middleware(['auth'])->prefix('comprobante')->name('comprobante.')->group(function () {
+    Route::get('/{comprobante}/pdf', [ComprobanteController::class, 'pdf'])->whereNumber('comprobante')->name('pdf');
+    Route::get('/{comprobante}/xml', [ComprobanteController::class, 'xml'])->whereNumber('comprobante')->name('xml');
+    Route::post('/{comprobante}/reenviar', [ComprobanteController::class, 'reenviar'])->whereNumber('comprobante')->name('reenviar');
 });
 
 /*
@@ -326,6 +344,20 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 
     /*
     |--------------------------------------------------------------------------
+    | Ventas / Comprobantes electrónicos (admin)
+    |--------------------------------------------------------------------------
+    | Ver PDF/XML y reenviar usan las rutas de ComprobanteController (fuera del
+    | grupo /admin: las comparte con el cliente dueño del comprobante).
+    */
+
+    Route::middleware('permiso:ventas.ver')->group(function () {
+        Route::get('/ventas', [VentaController::class, 'index'])->name('ventas.index');
+        Route::get('/ventas/data', [VentaController::class, 'data'])->name('ventas.data');
+        Route::get('/ventas/{comprobante}', [VentaController::class, 'show'])->whereNumber('comprobante')->name('ventas.show');
+    });
+
+    /*
+    |--------------------------------------------------------------------------
     | Cambios y devoluciones (admin)
     |--------------------------------------------------------------------------
     */
@@ -419,6 +451,7 @@ Route::middleware(['auth', 'verified', 'permiso:dashboard.ver,/'])->group(functi
 
 });
 
+use App\Http\Controllers\Admin\CuentaBancariaController;
 use App\Http\Controllers\EmpresaController;
 
 Route::middleware(['auth'])->prefix('empresa')->name('empresa.')->group(function () {
@@ -430,6 +463,14 @@ Route::middleware(['auth'])->prefix('empresa')->name('empresa.')->group(function
 
     Route::middleware('permiso:empresa.editar')->group(function () {
         Route::post('/', [EmpresaController::class, 'guardar'])->name('guardar');
+
+        Route::prefix('cuentas-bancarias')->name('cuentas-bancarias.')->group(function () {
+            Route::post('/', [CuentaBancariaController::class, 'store'])->name('store');
+            Route::put('/{cuentaBancaria}', [CuentaBancariaController::class, 'update'])->whereNumber('cuentaBancaria')->name('update');
+            Route::patch('/{cuentaBancaria}/activo', [CuentaBancariaController::class, 'toggleActivo'])->whereNumber('cuentaBancaria')->name('activo');
+            Route::patch('/{cuentaBancaria}/mover', [CuentaBancariaController::class, 'mover'])->whereNumber('cuentaBancaria')->name('mover');
+            Route::delete('/{cuentaBancaria}', [CuentaBancariaController::class, 'destroy'])->whereNumber('cuentaBancaria')->name('destroy');
+        });
     });
 });
 
@@ -473,11 +514,17 @@ Route::middleware(['auth'])->prefix('distrito')->name('distrito.')->group(functi
 
     Route::middleware('permiso:distritos.editar')->group(function () {
         Route::put('/{distrito}', [DistritoController::class, 'update'])->whereNumber('distrito')->name('update');
+        Route::patch('/{distrito}/activo', [DistritoController::class, 'toggleActivo'])->whereNumber('distrito')->name('activo');
     });
+});
 
-    Route::middleware('permiso:distritos.eliminar')->group(function () {
-        Route::delete('/{distrito}', [DistritoController::class, 'destroy'])->whereNumber('distrito')->name('destroy');
-    });
+use App\Http\Controllers\UbigeoController;
+
+// Catálogo geográfico de referencia (cascadas de selects). Sin permiso
+// granular propio: cualquier cuenta autenticada puede leerlo (no es sensible).
+Route::middleware(['auth'])->prefix('ubigeo')->name('ubigeo.')->group(function () {
+    Route::get('/provincias', [UbigeoController::class, 'provincias'])->name('provincias');
+    Route::get('/distritos', [UbigeoController::class, 'distritos'])->name('distritos');
 });
 //
 require __DIR__.'/settings.php';

@@ -1,9 +1,4 @@
-import type {
-    Departamento,
-    Distrito,
-    Provincia,
-    TipoDocumento,
-} from '@/types/trabajador';
+import type { TipoDocumento } from '@/types/trabajador';
 
 export interface CheckoutItem {
     id_producto: number;
@@ -59,6 +54,8 @@ export interface DireccionGuardada {
     costo_envio: string | number;
     provincia: string;
     departamento: string;
+    /** `distritos.activo` del distrito de esta dirección — false = sin envío disponible. */
+    envio_disponible: 0 | 1;
 }
 
 export interface EmpresaCheckout {
@@ -72,8 +69,25 @@ export interface EmpresaCheckout {
     distrito: string | null;
 }
 
-export interface CheckoutDistrito extends Distrito {
-    costo_envio: string | number;
+/** Árbol de zonas con envío activo (`ZonasEnvioService::arbol()`) — nunca
+ * incluye geografía sin distritos activos, así que los <select> del checkout
+ * solo pueden ofrecer destinos con reparto real. */
+export interface ZonaEnvioDistrito {
+    id_distrito: number;
+    nombre: string;
+    costo_envio: number;
+}
+
+export interface ZonaEnvioProvincia {
+    id_provincia: number;
+    nombre: string;
+    distritos: ZonaEnvioDistrito[];
+}
+
+export interface ZonaEnvioDepartamento {
+    id_departamento: number;
+    nombre: string;
+    provincias: ZonaEnvioProvincia[];
 }
 
 export interface CheckoutIndexProps {
@@ -83,9 +97,7 @@ export interface CheckoutIndexProps {
     tiposDocumento: TipoDocumento[];
     tipoEntregas: TipoEntregaOpcion[];
     direcciones: DireccionGuardada[];
-    departamentos: Departamento[];
-    provincias: Provincia[];
-    distritos: CheckoutDistrito[];
+    zonasEnvio: ZonaEnvioDepartamento[];
     empresa: EmpresaCheckout | null;
     igvIncluido: boolean;
     culqiPublicKey: string | null;
@@ -96,6 +108,7 @@ export interface CotizacionEnvio {
     costo_envio: number;
     gratis: boolean;
     motivo: string;
+    disponible: boolean;
 }
 
 export interface CheckoutConfirmacionProps {
@@ -118,7 +131,7 @@ export interface CheckoutConfirmacionProps {
             subtotal: number;
         }>;
     };
-    comprobante: { tipo: string | null; serie: string; numero: string } | null;
+    comprobante: { id: number; tipo: string | null; serie: string; numero: string } | null;
     pago: { transaccion: string | null; monto: number };
     direccion: {
         direccion: string;

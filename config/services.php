@@ -46,4 +46,15 @@ return [
         'api_url' => env('CULQI_API_URL', 'https://api.culqi.com/v2'),
     ],
 
+    /*
+     * Comprobante electrónico (SUNAT UBL 2.1) — SOLO preparación de datos:
+     * el XML se firma con este certificado de DESARROLLO autofirmado (nunca
+     * se envía a SUNAT). Generar el certificado con `php artisan
+     * comprobante:cert-dev`. Ver App\Services\ComprobanteService.
+     */
+    'sunat' => [
+        'modo' => env('SUNAT_MODO', 'demo'),
+        'cert_path' => env('SUNAT_CERT_PATH', storage_path('app/certs/dev.pem')),
+    ],
+
 ];

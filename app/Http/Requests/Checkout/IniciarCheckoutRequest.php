@@ -43,6 +43,34 @@ class IniciarCheckoutRequest extends FormRequest
     }
 
     /**
+     * Segunda mitad del primer candado: una dirección GUARDADA solo sirve
+     * para domicilio si el distrito al que pertenece sigue activo. El `Rule::
+     * exists` de `id_direccion` ya valida que sea del cliente, pero no ve el
+     * estado del distrito — hace falta este join manual.
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $esGuardada = $this->requiereDireccion && $this->input('direccion_modo') === 'guardada';
+
+            if (! $esGuardada || ! $this->filled('id_direccion') || ! $this->cliente) {
+                return;
+            }
+
+            $activo = DB::table('cliente_direcciones as cd')
+                ->join('direcciones as d', 'd.id_direccion', '=', 'cd.fk_direccion')
+                ->join('distritos as dist', 'dist.id_distrito', '=', 'd.fk_distrito')
+                ->where('cd.fk_cliente', $this->cliente->id_cliente)
+                ->where('cd.fk_direccion', $this->input('id_direccion'))
+                ->value('dist.activo');
+
+            if (! $activo) {
+                $validator->errors()->add('id_direccion', 'Esta dirección no tiene envío disponible. Elige otra o agrega una nueva.');
+            }
+        });
+    }
+
+    /**
      * Los <select> del frontend envían strings; se normalizan a enteros y los
      * campos vacíos a null antes de validar, para que las reglas `integer` /
      * `exists` no fallen por el tipo y para no guardar cadenas vacías.
@@ -106,7 +134,15 @@ class IniciarCheckoutRequest extends FormRequest
                     ->where('fk_cliente', $clienteId),
             ],
 
-            'fk_distrito' => [Rule::requiredIf($dirNueva), 'nullable', 'integer', Rule::exists('distritos', 'id_distrito')],
+            'fk_distrito' => [
+                Rule::requiredIf($dirNueva),
+                'nullable',
+                'integer',
+                // Primer candado: una dirección NUEVA solo puede caer en un distrito
+                // con envío activo (el segundo candado vive en CheckoutService, por
+                // si esto llega a saltarse — nunca confiar solo en el frontend).
+                Rule::exists('distritos', 'id_distrito')->where('activo', 1),
+            ],
             'direccion' => [Rule::requiredIf($dirNueva), 'nullable', 'string', 'max:150'],
             'referencia' => ['nullable', 'string', 'max:150'],
             'alias' => ['nullable', 'string', 'max:50'],

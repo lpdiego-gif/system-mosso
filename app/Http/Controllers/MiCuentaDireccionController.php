@@ -41,9 +41,12 @@ class MiCuentaDireccionController extends Controller
 
         return Inertia::render('mi-cuenta-direcciones', [
             'direcciones' => $direcciones,
+            // Catálogo NACIONAL completo: el cliente puede registrar una dirección
+            // en cualquier distrito exista o no envío. Departamentos (25) y
+            // provincias (196) van de una — los distritos (~1891) se piden por
+            // provincia vía GET /ubigeo/distritos para no mandar todo el catálogo.
             'departamentos' => DB::table('departamentos')->select('id_departamento', 'nombre')->orderBy('nombre')->get(),
             'provincias' => DB::table('provincias')->select('id_provincia', 'nombre', 'fk_departamento')->orderBy('nombre')->get(),
-            'distritos' => DB::table('distritos')->select('id_distrito', 'nombre', 'fk_provincia')->orderBy('nombre')->get(),
         ]);
     }
 
