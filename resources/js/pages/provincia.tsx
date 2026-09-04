@@ -321,7 +321,7 @@ export default function Provincia() {
         <>
             <Head title="Provincias" />
 
-            <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 p-4 sm:p-6">
+            <div className="mx-auto flex w-full flex-1 flex-col gap-6 p-4 sm:p-6">
                 {/* ---------------------------------------------- Encabezado */}
                 <header className="flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
                     <div className="flex items-center gap-3.5">
@@ -498,8 +498,7 @@ export default function Provincia() {
                                     <TableHead className="text-right font-medium text-muted-foreground">
                                         Distritos
                                     </TableHead>
-                                    <TableHead className="w-24 pr-4 text-right font-medium text-muted-foreground">
-                                        <span className="sr-only">Acciones</span>
+                                    <TableHead className="w-24 pr-4 text-right font-medium text-muted-foreground">Acciones
                                     </TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -532,7 +531,7 @@ export default function Provincia() {
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                                    className="h-5 w-5 text-muted-foreground hover:text-foreground"
                                                     disabled={!puedeEditar}
                                                     onClick={() => abrirEditar(p)}
                                                     aria-label={`Editar ${p.nombre}`}
@@ -542,7 +541,7 @@ export default function Provincia() {
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                                    className="h-5 w-5 text-muted-foreground hover:text-destructive"
                                                     disabled={!puedeEliminar}
                                                     onClick={() => setEliminar(p)}
                                                     aria-label={`Eliminar ${p.nombre}`}

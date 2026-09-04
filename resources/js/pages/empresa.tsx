@@ -380,7 +380,7 @@ formData.append('eliminar_logo', '1');
         <>
             <Head title="Datos de la empresa" />
 
-            <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 p-4 pb-28 sm:p-6">
+            <div className="mx-auto flex w-full flex-1 flex-col gap-6 p-4 pb-28 sm:p-6">
                 {/* --------------------------------------------- Encabezado */}
                 <header className="flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
                     <div className="flex items-center gap-3.5">

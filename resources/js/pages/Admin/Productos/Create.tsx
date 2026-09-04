@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Package } from 'lucide-react';
+import { ArrowLeft, Package, ScanBarcode } from 'lucide-react';
 import { route } from 'ziggy-js';
 import ProductoForm from '@/components/productos/producto-form';
 import type { ProductoFormLookups } from '@/types/producto';
@@ -9,10 +9,10 @@ export default function Create(props: ProductoFormLookups) {
         <>
             <Head title="Nuevo producto" />
 
-            <div className="mx-auto w-full max-w-6xl space-y-6 p-4 sm:p-6 lg:p-8">
+            <div className="mx-auto w-full space-y-6 p-4 sm:p-6 lg:p-8">
                 <div className="flex flex-col gap-4 rounded-xl border bg-card p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-start gap-3.5">
-                        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-mosso-yellow/15 text-mosso-dark ring-1 ring-inset ring-mosso-yellow/30 dark:text-mosso-yellow">
+                        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-mosso-yellow/15 text-mosso-dark ring-1 ring-mosso-yellow/30 ring-inset dark:text-mosso-yellow">
                             <Package className="size-5" />
                         </span>
                         <div className="space-y-1">
@@ -25,12 +25,20 @@ export default function Create(props: ProductoFormLookups) {
                             </p>
                         </div>
                     </div>
-                    <Link
-                        href={route('admin.productos.index')}
-                        className="inline-flex shrink-0 items-center justify-center gap-1.5 self-start rounded-md border bg-background px-3 py-2 text-sm font-medium shadow-xs transition-colors hover:bg-accent sm:self-auto"
-                    >
-                        <ArrowLeft className="size-4" /> Volver
-                    </Link>
+                    <div className="flex shrink-0 flex-wrap gap-2 self-start sm:self-auto">
+                        <Link
+                            href={route('admin.productos.entrada-rapida')}
+                            className="inline-flex items-center justify-center gap-1.5 rounded-md border bg-background px-3 py-2 text-sm font-medium shadow-xs transition-colors hover:bg-accent"
+                        >
+                            <ScanBarcode className="size-4" /> Entrada rápida
+                        </Link>
+                        <Link
+                            href={route('admin.productos.index')}
+                            className="inline-flex items-center justify-center gap-1.5 rounded-md border bg-background px-3 py-2 text-sm font-medium shadow-xs transition-colors hover:bg-accent"
+                        >
+                            <ArrowLeft className="size-4" /> Volver
+                        </Link>
+                    </div>
                 </div>
 
                 <ProductoForm lookups={props} />

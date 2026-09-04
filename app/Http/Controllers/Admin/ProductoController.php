@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -120,63 +121,68 @@ class ProductoController extends Controller
     {
         $data = $this->validar($request);
 
-        $animal = DB::table('animales')->where('id_animal', $data['fk_id_animal'])->first();
+        [, $sumado] = $this->persistir($data, $request);
 
-        if (! $animal) {
-            return back()->withErrors(['fk_id_animal' => 'El animal seleccionado no existe.'])->withInput();
-        }
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => $sumado
+                ? 'El producto ya existía: se sumó el stock ingresado.'
+                : 'Producto registrado correctamente.',
+        ]);
 
-        $subcategoriaId = $this->resolverSubcategoria($animal, $data, $request);
+        return redirect()->route('admin.productos.index');
+    }
 
-        if ($subcategoriaId instanceof RedirectResponse) {
-            return $subcategoriaId;
-        }
+    /*
+    |--------------------------------------------------------------------------
+    | Entrada rápida (alta encadenada escaneando)
+    |--------------------------------------------------------------------------
+    */
 
-        $etapaId = $this->resolverEtapa($request, (int) $data['fk_id_animal']);
+    public function entradaRapida(): Response
+    {
+        return Inertia::render('Admin/Productos/EntradaRapida', $this->lookupsFormulario());
+    }
 
-        $sku = $this->generarSku($animal->nombre, (int) $data['fk_marca'], $data['nombre']);
+    public function entradaRapidaStore(Request $request): JsonResponse
+    {
+        // Reescaneo de un código ya registrado ⇒ solo se pide la cantidad y se
+        // suma al stock del producto existente (no hace falta reclasificarlo).
+        $codigo = trim((string) $request->input('codigo_barras'));
+        $porCodigo = $codigo !== ''
+            ? DB::table('productos')->where('codigo_barras', $codigo)->first()
+            : null;
 
-        // Mismo SKU exacto ⇒ no se duplica el producto, solo se suma stock.
-        $existente = DB::table('productos')->where('sku', $sku)->first();
+        if ($porCodigo) {
+            $solo = $request->validate([
+                'stock' => ['required', 'integer', 'min:1', 'max:1000000'],
+            ]);
 
-        if ($existente) {
-            DB::table('productos')->where('id_producto', $existente->id_producto)->update([
-                'stock' => $existente->stock + $data['stock'],
-                'codigo_barras' => $existente->codigo_barras ?: ($data['codigo_barras'] ?: null),
+            DB::table('productos')->where('id_producto', $porCodigo->id_producto)->update([
+                'stock' => $porCodigo->stock + $solo['stock'],
                 'updated_at' => now(),
             ]);
 
             CatalogoCache::flush();
-            Inertia::flash('toast', ['type' => 'success', 'message' => 'El producto ya existía: se sumó el stock ingresado.']);
 
-            return redirect()->route('admin.productos.index');
+            $fila = $this->baseQuery()->where('p.id_producto', $porCodigo->id_producto)->first();
+
+            return response()->json([
+                'sumado' => true,
+                'producto' => $fila ? $this->transformarFila($fila, null) : null,
+            ], 201);
         }
 
-        $imagen = $request->hasFile('imagen_principal')
-            ? $request->file('imagen_principal')->store('productos', 'public')
-            : null;
+        $data = $this->validar($request, codigoDuplicadoOk: true);
 
-        DB::table('productos')->insert([
-            'sku' => $sku,
-            'codigo_barras' => $data['codigo_barras'] ?: null,
-            'nombre' => $data['nombre'],
-            'descripcion' => $data['descripcion'] ?: null,
-            'fk_marca' => $data['fk_marca'],
-            'fk_unidad_medida' => $data['fk_unidad_medida'],
-            'fk_id_subcategorias' => $subcategoriaId,
-            'fk_etapa_vida' => $etapaId,
-            'precio' => $data['precio'],
-            'stock' => $data['stock'],
-            'imagen_principal' => $imagen,
-            'fk_estado' => $data['fk_estado'],
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        [$id, $sumado] = $this->persistir($data, $request);
 
-        CatalogoCache::flush();
-        Inertia::flash('toast', ['type' => 'success', 'message' => 'Producto registrado correctamente.']);
+        $fila = $this->baseQuery()->where('p.id_producto', $id)->first();
 
-        return redirect()->route('admin.productos.index');
+        return response()->json([
+            'sumado' => $sumado,
+            'producto' => $fila ? $this->transformarFila($fila, null) : null,
+        ], 201);
     }
 
     /*
@@ -239,15 +245,10 @@ class ProductoController extends Controller
         $animal = DB::table('animales')->where('id_animal', $data['fk_id_animal'])->first();
 
         if (! $animal) {
-            return back()->withErrors(['fk_id_animal' => 'El animal seleccionado no existe.'])->withInput();
+            throw ValidationException::withMessages(['fk_id_animal' => 'El animal seleccionado no existe.']);
         }
 
-        $subcategoriaId = $this->resolverSubcategoria($animal, $data, $request);
-
-        if ($subcategoriaId instanceof RedirectResponse) {
-            return $subcategoriaId;
-        }
-
+        $subcategoriaId = $this->resolverSubcategoria($animal, $data);
         $etapaId = $this->resolverEtapa($request, (int) $data['fk_id_animal']);
 
         $imagen = $actual->imagen_principal;
@@ -402,16 +403,21 @@ class ProductoController extends Controller
         );
     }
 
-    /** Busca un producto por su código de barras exacto (para el escaneo del listado). */
+    /** Busca un producto por su código de barras exacto (escaneo del listado y del formulario). */
     public function buscarCodigo(Request $request): JsonResponse
     {
         $codigo = trim((string) $request->string('codigo'));
 
-        $id = $codigo === ''
+        $fila = $codigo === ''
             ? null
-            : DB::table('productos')->where('codigo_barras', $codigo)->value('id_producto');
+            : $this->baseQuery()->where('p.codigo_barras', $codigo)->first();
 
-        return response()->json(['id_producto' => $id]);
+        return response()->json([
+            'id_producto' => $fila->id_producto ?? null,
+            'nombre' => $fila->nombre ?? null,
+            'sku' => $fila->sku ?? null,
+            'imagen_url' => $fila ? Producto::urlImagen($fila->imagen_principal) : null,
+        ]);
     }
 
     /*
@@ -587,8 +593,16 @@ class ProductoController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function validar(Request $request, ?int $ignorarId = null): array
+    private function validar(Request $request, ?int $ignorarId = null, bool $codigoDuplicadoOk = false): array
     {
+        $codigoRules = ['nullable', 'string', 'min:6', 'max:20', 'regex:/^[0-9]+$/'];
+
+        // La entrada rápida permite reescanear un código ya registrado: en ese
+        // caso el controlador suma stock en lugar de rechazar.
+        if (! $codigoDuplicadoOk) {
+            $codigoRules[] = Rule::unique('productos', 'codigo_barras')->ignore($ignorarId, 'id_producto');
+        }
+
         return $request->validate([
             'fk_id_animal' => ['required', 'integer', Rule::exists('animales', 'id_animal')],
             'fk_marca' => ['required', 'integer', Rule::exists('marcas', 'id_marca')],
@@ -596,10 +610,7 @@ class ProductoController extends Controller
             'fk_estado' => ['required', 'integer', Rule::exists('estados_producto', 'id_estado_producto')],
             'fk_id_subcategorias' => ['nullable', 'integer', Rule::exists('sub_categorias', 'id_subcategorias')],
             'fk_etapa_vida' => ['nullable', 'integer', Rule::exists('etapas_vida', 'id_etapa_vida')],
-            'codigo_barras' => [
-                'nullable', 'string', 'min:6', 'max:20', 'regex:/^[0-9]+$/',
-                Rule::unique('productos', 'codigo_barras')->ignore($ignorarId, 'id_producto'),
-            ],
+            'codigo_barras' => $codigoRules,
             'nombre' => ['required', 'string', 'max:150'],
             'descripcion' => ['nullable', 'string', 'max:2000'],
             'precio' => ['required', 'numeric', 'min:0', 'max:999999.99'],
@@ -613,18 +624,77 @@ class ProductoController extends Controller
     }
 
     /**
+     * Crea el producto —o suma stock si el SKU ya existe— y limpia la caché.
+     * Lanza ValidationException en los fallos de negocio.
+     *
+     * @param  array<string, mixed>  $data  ya pasado por validar()
+     * @return array{0: int, 1: bool} [id_producto, seSumoStock]
+     */
+    private function persistir(array $data, Request $request): array
+    {
+        $animal = DB::table('animales')->where('id_animal', $data['fk_id_animal'])->first();
+
+        if (! $animal) {
+            throw ValidationException::withMessages(['fk_id_animal' => 'El animal seleccionado no existe.']);
+        }
+
+        $subcategoriaId = $this->resolverSubcategoria($animal, $data);
+        $etapaId = $this->resolverEtapa($request, (int) $data['fk_id_animal']);
+        $sku = $this->generarSku($animal->nombre, (int) $data['fk_marca'], $data['nombre']);
+
+        // Mismo SKU exacto ⇒ no se duplica el producto, solo se suma stock.
+        $existente = DB::table('productos')->where('sku', $sku)->first();
+
+        if ($existente) {
+            DB::table('productos')->where('id_producto', $existente->id_producto)->update([
+                'stock' => $existente->stock + $data['stock'],
+                'codigo_barras' => $existente->codigo_barras ?: (($data['codigo_barras'] ?? null) ?: null),
+                'updated_at' => now(),
+            ]);
+
+            CatalogoCache::flush();
+
+            return [(int) $existente->id_producto, true];
+        }
+
+        $imagen = $request->hasFile('imagen_principal')
+            ? $request->file('imagen_principal')->store('productos', 'public')
+            : null;
+
+        $id = DB::table('productos')->insertGetId([
+            'sku' => $sku,
+            'codigo_barras' => ($data['codigo_barras'] ?? null) ?: null,
+            'nombre' => $data['nombre'],
+            'descripcion' => ($data['descripcion'] ?? null) ?: null,
+            'fk_marca' => $data['fk_marca'],
+            'fk_unidad_medida' => $data['fk_unidad_medida'],
+            'fk_id_subcategorias' => $subcategoriaId,
+            'fk_etapa_vida' => $etapaId,
+            'precio' => $data['precio'],
+            'stock' => $data['stock'],
+            'imagen_principal' => $imagen,
+            'fk_estado' => $data['fk_estado'],
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        CatalogoCache::flush();
+
+        return [(int) $id, false];
+    }
+
+    /**
      * Perro/Gato: valida la subcategoría enviada. Exóticos: rama «General → General».
      *
      * @param  array<string, mixed>  $data
-     * @return int|RedirectResponse
      */
-    private function resolverSubcategoria(object $animal, array $data, Request $request)
+    private function resolverSubcategoria(object $animal, array $data): int
     {
         $esPerroOGato = in_array(Str::lower(Str::ascii($animal->nombre)), ['perro', 'gato'], true);
 
         if ($esPerroOGato) {
             if (empty($data['fk_id_subcategorias'])) {
-                return back()->withErrors(['fk_id_subcategorias' => 'Debes seleccionar una subcategoría.'])->withInput();
+                throw ValidationException::withMessages(['fk_id_subcategorias' => 'Debes seleccionar una subcategoría.']);
             }
 
             $ok = DB::table('sub_categorias as sc')
@@ -634,7 +704,7 @@ class ProductoController extends Controller
                 ->exists();
 
             if (! $ok) {
-                return back()->withErrors(['fk_id_subcategorias' => 'La subcategoría no pertenece al animal seleccionado.'])->withInput();
+                throw ValidationException::withMessages(['fk_id_subcategorias' => 'La subcategoría no pertenece al animal seleccionado.']);
             }
 
             return (int) $data['fk_id_subcategorias'];
@@ -650,14 +720,14 @@ class ProductoController extends Controller
                 'fk_id_animal' => $data['fk_id_animal'],
             ]);
 
-        return DB::table('sub_categorias')
+        return (int) (DB::table('sub_categorias')
             ->where('fk_id_categoria', $categoriaId)
             ->whereRaw('LOWER(nom_sub_categoria) = ?', ['general'])
             ->value('id_subcategorias')
             ?? DB::table('sub_categorias')->insertGetId([
                 'nom_sub_categoria' => 'General',
                 'fk_id_categoria' => $categoriaId,
-            ]);
+            ]));
     }
 
     private function resolverEtapa(Request $request, int $animalId): ?int

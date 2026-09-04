@@ -17,12 +17,14 @@ import {
     PencilLine,
     Plus,
     Power,
+    ScanBarcode,
     Search,
     Trash2,
     TriangleAlert,
     X,
+    Zap,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { route } from 'ziggy-js';
 import { StatCard } from '@/components/dashboard/stat-card';
@@ -46,8 +48,11 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useBarcodeWedge } from '@/hooks/use-barcode-wedge';
+import { normalizarCodigo } from '@/lib/barcode';
 import { cn } from '@/lib/utils';
 import type {
+    BuscarCodigoResponse,
     Paginated,
     ProductoFiltros,
     ProductoOpciones,
@@ -96,6 +101,7 @@ export default function Index({
     const [borrando, setBorrando] = useState(false);
 
     const [buscandoCodigo, setBuscandoCodigo] = useState(false);
+    const [ultimoScan, setUltimoScan] = useState<string | null>(null);
     const primeraCarga = useRef(true);
 
     useEffect(() => {
@@ -185,15 +191,23 @@ export default function Index({
         setDetalleAbierto(true);
     }
 
-    async function buscarPorCodigo(codigo: string) {
+    const buscarPorCodigo = useCallback(async (codigoCrudo: string) => {
+        const codigo = normalizarCodigo(codigoCrudo);
+
+        if (codigo.length < 6) {
+            return;
+        }
+
+        setUltimoScan(codigo);
         setBuscandoCodigo(true);
 
         try {
-            const { data } = await axios.post<{ id_producto: number | null }>(
+            const { data } = await axios.post<BuscarCodigoResponse>(
                 route('admin.productos.buscar-codigo'),
                 { codigo },
                 {
                     headers: {
+                        Accept: 'application/json',
                         'X-CSRF-TOKEN':
                             document
                                 .querySelector('meta[name="csrf-token"]')
@@ -203,13 +217,19 @@ export default function Index({
             );
 
             if (data.id_producto) {
+                navigator.vibrate?.(40);
                 abrirDetalle(data.id_producto);
+                toast.success(`Abriendo «${data.nombre}»`);
             } else {
-                toast.warning('Ningún producto tiene ese código de barras.', {
+                toast.warning('Ningún producto tiene ese código.', {
+                    description: codigo,
                     action: {
                         label: 'Registrar',
                         onClick: () =>
-                            router.visit(route('admin.productos.create')),
+                            router.visit(
+                                route('admin.productos.create') +
+                                    `?codigo=${encodeURIComponent(codigo)}`,
+                            ),
                     },
                 });
             }
@@ -218,7 +238,13 @@ export default function Index({
         } finally {
             setBuscandoCodigo(false);
         }
-    }
+    }, []);
+
+    // Lector USB global: funciona en toda la pantalla sin enfocar el campo.
+    useBarcodeWedge({
+        onScan: buscarPorCodigo,
+        enabled: !detalleAbierto && ajustar === null && eliminar === null,
+    });
 
     function toggleEstado(p: ProductoRow) {
         router.patch(
@@ -257,29 +283,40 @@ export default function Index({
         <>
             <Head title="Productos" />
 
-            <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 p-4 sm:p-6 lg:p-8">
+            <div className="mx-auto flex w-full flex-col gap-5 p-4 sm:p-6 lg:p-8">
                 {/* Encabezado */}
-                <div className="flex flex-col gap-4 rounded-xl border bg-card p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-4 rounded-xl border bg-card p-5 shadow-sm sm:flex-row sm:items-start sm:justify-between">
                     <div className="flex items-start gap-3.5">
-                        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-mosso-yellow/15 text-mosso-dark ring-1 ring-inset ring-mosso-yellow/30 dark:text-mosso-yellow">
+                        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-mosso-yellow/15 text-mosso-dark ring-1 ring-mosso-yellow/30 ring-inset dark:text-mosso-yellow">
                             <Package className="size-5" />
                         </span>
                         <div className="space-y-1">
                             <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
                                 Productos
                             </h1>
-                            <p className="max-w-prose text-sm text-pretty text-muted-foreground">
-                                Catálogo e inventario. Escanea un código para
-                                abrir un producto al instante.
+                            <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400">
+                                    <Zap className="size-3" /> Lector activo
+                                </span>
+                                Escanea un código en cualquier momento para
+                                abrir el producto.
                             </p>
                         </div>
                     </div>
-                    <Link
-                        href={route('admin.productos.create')}
-                        className="inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-colors hover:bg-primary/90 sm:self-auto"
-                    >
-                        <Plus className="size-4" /> Nuevo producto
-                    </Link>
+                    <div className="flex shrink-0 flex-wrap gap-2">
+                        <Link
+                            href={route('admin.productos.entrada-rapida')}
+                            className="inline-flex items-center justify-center gap-2 rounded-md border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-colors hover:bg-accent"
+                        >
+                            <ScanBarcode className="size-4" /> Entrada rápida
+                        </Link>
+                        <Link
+                            href={route('admin.productos.create')}
+                            className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-xs transition-colors hover:bg-primary/90"
+                        >
+                            <Plus className="size-4" /> Nuevo producto
+                        </Link>
+                    </div>
                 </div>
 
                 {/* Escaneo rápido */}
@@ -300,6 +337,11 @@ export default function Index({
                             <Loader2 className="size-4 shrink-0 animate-spin text-muted-foreground" />
                         ) : null}
                     </div>
+                    {ultimoScan && !buscandoCodigo ? (
+                        <p className="mt-2 font-mono text-xs text-muted-foreground">
+                            Último: {ultimoScan}
+                        </p>
+                    ) : null}
                 </div>
 
                 {/* Métricas */}
@@ -321,9 +363,13 @@ export default function Index({
                     <StatCard
                         title="Sin stock"
                         value={String(stats.sin_stock)}
-                        subtitle="Necesitan reposición"
+                        subtitle={
+                            filtros.stock === 'sin'
+                                ? 'Filtro activo'
+                                : 'Necesitan reposición'
+                        }
                         icon={PackageX}
-                        gradient="from-slate-500 to-slate-600"
+                        gradient="from-rose-500 to-red-600"
                         onClick={() =>
                             recargar({
                                 stock:
@@ -351,7 +397,11 @@ export default function Index({
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Buscar por nombre, SKU, código o marca…"
                                 aria-label="Buscar productos"
-                                className={cn(inputBase, 'pl-9', search && 'pr-9')}
+                                className={cn(
+                                    inputBase,
+                                    'pl-9',
+                                    search && 'pr-9',
+                                )}
                             />
                             {search ? (
                                 <button
@@ -518,7 +568,7 @@ export default function Index({
                         <>
                             {/* Tabla (lg+) */}
                             <div className="hidden overflow-hidden rounded-xl border bg-card shadow-sm lg:block">
-                                <div className="overflow-x-auto [scrollbar-width:thin]">
+                                <div className="[scrollbar-width:thin] overflow-x-auto">
                                     <table className="w-full min-w-[880px] border-collapse text-sm">
                                         <thead>
                                             <tr className="border-b bg-muted/50 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
@@ -564,7 +614,13 @@ export default function Index({
                                             {productos.data.map((p) => (
                                                 <tr
                                                     key={p.id_producto}
-                                                    className="group transition-colors hover:bg-muted/40"
+                                                    className={cn(
+                                                        'group transition-colors hover:bg-muted/40',
+                                                        ultimoScan &&
+                                                            p.codigo_barras ===
+                                                                ultimoScan &&
+                                                            'bg-mosso-yellow/10',
+                                                    )}
                                                 >
                                                     <td className="px-4 py-3">
                                                         <button
@@ -615,9 +671,7 @@ export default function Index({
                                                                 p.categoria_nombre,
                                                                 p.subcategoria_nombre,
                                                             ]
-                                                                .filter(
-                                                                    Boolean,
-                                                                )
+                                                                .filter(Boolean)
                                                                 .join(' · ') ||
                                                                 '—'}
                                                         </p>
@@ -690,7 +744,13 @@ export default function Index({
                                 {productos.data.map((p) => (
                                     <div
                                         key={p.id_producto}
-                                        className="flex gap-3 rounded-xl border bg-card p-3 shadow-sm"
+                                        className={cn(
+                                            'flex gap-3 rounded-xl border bg-card p-3 shadow-sm',
+                                            ultimoScan &&
+                                                p.codigo_barras ===
+                                                    ultimoScan &&
+                                                'ring-2 ring-mosso-yellow',
+                                        )}
                                     >
                                         <button
                                             type="button"
@@ -1051,7 +1111,7 @@ function Pagination({
 function EmptyState({ hayFiltros }: { hayFiltros: boolean }) {
     return (
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed bg-card px-6 py-16 text-center">
-            <span className="flex size-12 items-center justify-center rounded-2xl bg-mosso-yellow/15 text-mosso-dark ring-1 ring-inset ring-mosso-yellow/30 dark:text-mosso-yellow">
+            <span className="flex size-12 items-center justify-center rounded-2xl bg-mosso-yellow/15 text-mosso-dark ring-1 ring-mosso-yellow/30 ring-inset dark:text-mosso-yellow">
                 {hayFiltros ? (
                     <Search className="size-6" />
                 ) : (
@@ -1059,9 +1119,7 @@ function EmptyState({ hayFiltros }: { hayFiltros: boolean }) {
                 )}
             </span>
             <h3 className="mt-4 text-sm font-semibold text-foreground">
-                {hayFiltros
-                    ? 'Sin coincidencias'
-                    : 'Aún no hay productos'}
+                {hayFiltros ? 'Sin coincidencias' : 'Aún no hay productos'}
             </h3>
             <p className="mt-1 max-w-sm text-sm text-muted-foreground">
                 {hayFiltros

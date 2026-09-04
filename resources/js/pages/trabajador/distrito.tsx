@@ -544,7 +544,7 @@ export default function Distrito() {
         <>
             <Head title="Distritos" />
 
-            <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 p-4 pb-24 sm:p-6">
+            <div className="mx-auto flex w-full flex-1 flex-col gap-6 p-4 pb-24 sm:p-6">
                 {/* --------------------------------------------- Encabezado */}
                 <header className="flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
                     <div className="flex items-center gap-3.5">
@@ -734,11 +734,11 @@ export default function Distrito() {
                                         </TableHead>
                                     )}
                                     <TableHead className="font-medium text-muted-foreground">Distrito</TableHead>
+                                    <TableHead className="font-medium text-muted-foreground">Ubigeo</TableHead>
                                     <TableHead className="font-medium text-muted-foreground">Ubicación</TableHead>
                                     <TableHead className="text-right font-medium text-muted-foreground">Tarifa</TableHead>
                                     <TableHead className="font-medium text-muted-foreground">Estado</TableHead>
-                                    <TableHead className="w-12 pr-4 text-right font-medium text-muted-foreground">
-                                        <span className="sr-only">Editar</span>
+                                    <TableHead className="font-medium text-muted-foreground">Acción
                                     </TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -765,6 +765,8 @@ export default function Distrito() {
                                             )}
                                             <TableCell className="font-medium text-foreground">
                                                 {d.nombre}
+                                            </TableCell>
+                                            <TableCell className="font-medium text-foreground">
                                                 {d.ubigeo && (
                                                     <span className="ml-2 font-mono text-[11px] text-muted-foreground/70 tabular-nums">
                                                         {d.ubigeo}
@@ -802,7 +804,7 @@ export default function Distrito() {
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-8 w-8 text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100 group-focus-within:opacity-100 motion-reduce:opacity-100"
+                                                    className="h-8 w-8 text-muted-foreground"
                                                     disabled={!puedeEditar}
                                                     onClick={() => abrirEditar(d)}
                                                     aria-label={`Editar ${d.nombre}`}

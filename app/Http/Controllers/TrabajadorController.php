@@ -7,9 +7,9 @@ use App\Http\Requests\Trabajador\UpdateTrabajadorRequest;
 use App\Services\ReniecService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -23,7 +23,28 @@ class TrabajadorController extends Controller
      */
     public function index(): Response
     {
+        $activos = (int) DB::table('trabajadores')->where('activo', 1)->count();
+        $inactivos = (int) DB::table('trabajadores')->where('activo', 0)->count();
+
         return Inertia::render('trabajador/trabajadores', [
+            ...$this->formLookups(),
+            'resumen' => [
+                'total' => $activos + $inactivos,
+                'activos' => $activos,
+                'inactivos' => $inactivos,
+                'roles' => (int) DB::table('roles')->count(),
+            ],
+        ]);
+    }
+
+    /**
+     * Catálogos compartidos por el formulario de alta y edición.
+     *
+     * @return array{roles: Collection, tiposDocumento: Collection, departamentos: Collection}
+     */
+    private function formLookups(): array
+    {
+        return [
             'roles' => DB::table('roles')
                 ->select('id_rol', 'nombre')
                 ->orderBy('nombre')
@@ -36,6 +57,72 @@ class TrabajadorController extends Controller
                 ->select('id_departamento', 'nombre')
                 ->orderBy('nombre')
                 ->get(),
+        ];
+    }
+
+    /**
+     * Formulario de alta a pantalla completa (Inertia).
+     */
+    public function create(): Response
+    {
+        return Inertia::render('trabajador/trabajador-form', [
+            ...$this->formLookups(),
+            'trabajador' => null,
+            'provinciasIniciales' => [],
+            'distritosIniciales' => [],
+        ]);
+    }
+
+    /**
+     * Formulario de edición a pantalla completa (Inertia). Precarga la persona,
+     * su dirección y la cascada de ubicación ya resuelta.
+     */
+    public function edit(int $id): Response
+    {
+        $trabajador = DB::table('trabajadores as t')
+            ->join('personas as p', 'p.id_persona', '=', 't.fk_persona')
+            ->join('users as u', 'u.id', '=', 't.fk_user')
+            ->leftJoin('direcciones as d', 'd.id_direccion', '=', 't.fk_direccion')
+            ->leftJoin('distritos as dist', 'dist.id_distrito', '=', 'd.fk_distrito')
+            ->leftJoin('provincias as prov', 'prov.id_provincia', '=', 'dist.fk_provincia')
+            ->where('t.id_trabajador', $id)
+            ->select([
+                't.id_trabajador', 't.fk_rol', 't.fecha_ingreso', 't.activo',
+                'p.fk_tipo_documento', 'p.num_documento', 'p.nombres', 'p.apellido_paterno',
+                'p.apellido_materno', 'p.telefono', 'p.fecha_nacimiento',
+                'u.email',
+                'd.direccion', 'd.referencia',
+                'dist.id_distrito as fk_distrito',
+                'prov.id_provincia as fk_provincia',
+                'prov.fk_departamento',
+            ])
+            ->first();
+
+        if (! $trabajador) {
+            abort(404, 'Trabajador no encontrado.');
+        }
+
+        $provincias = $trabajador->fk_departamento
+            ? DB::table('provincias')
+                ->where('fk_departamento', $trabajador->fk_departamento)
+                ->select('id_provincia', 'nombre')
+                ->orderBy('nombre')
+                ->get()
+            : collect();
+
+        $distritos = $trabajador->fk_provincia
+            ? DB::table('distritos')
+                ->where('fk_provincia', $trabajador->fk_provincia)
+                ->select('id_distrito', 'nombre')
+                ->orderBy('nombre')
+                ->get()
+            : collect();
+
+        return Inertia::render('trabajador/trabajador-form', [
+            ...$this->formLookups(),
+            'trabajador' => $trabajador,
+            'provinciasIniciales' => $provincias,
+            'distritosIniciales' => $distritos,
         ]);
     }
 
@@ -88,7 +175,7 @@ class TrabajadorController extends Controller
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
-                $like = '%' . str_replace(['%', '_'], ['\\%', '\\_'], $search) . '%';
+                $like = '%'.str_replace(['%', '_'], ['\\%', '\\_'], $search).'%';
                 $q->where('p.num_documento', 'like', $like)
                     ->orWhere('p.nombres', 'like', $like)
                     ->orWhere('p.apellido_paterno', 'like', $like)
@@ -112,7 +199,7 @@ class TrabajadorController extends Controller
             'nombres' => 'p.nombres',
             'num_documento' => 'p.num_documento',
             'rol' => 'r.nombre',
-            default => 't.' . $sort,
+            default => 't.'.$sort,
         };
 
         $total = (clone $query)->count(DB::raw('DISTINCT t.id_trabajador'));
@@ -131,37 +218,6 @@ class TrabajadorController extends Controller
                 'last_page' => (int) max(1, ceil($total / $perPage)),
             ],
         ]);
-    }
-
-    /**
-     * Datos completos de un trabajador (incluye ids de ubicación) para precargar el formulario de edición.
-     */
-    public function edit(int $id): JsonResponse
-    {
-        $trabajador = DB::table('trabajadores as t')
-            ->join('personas as p', 'p.id_persona', '=', 't.fk_persona')
-            ->join('users as u', 'u.id', '=', 't.fk_user')
-            ->leftJoin('direcciones as d', 'd.id_direccion', '=', 't.fk_direccion')
-            ->leftJoin('distritos as dist', 'dist.id_distrito', '=', 'd.fk_distrito')
-            ->leftJoin('provincias as prov', 'prov.id_provincia', '=', 'dist.fk_provincia')
-            ->where('t.id_trabajador', $id)
-            ->select([
-                't.id_trabajador', 't.fk_rol', 't.fecha_ingreso',
-                'p.fk_tipo_documento', 'p.num_documento', 'p.nombres', 'p.apellido_paterno',
-                'p.apellido_materno', 'p.telefono', 'p.fecha_nacimiento',
-                'u.email',
-                'd.direccion', 'd.referencia',
-                'dist.id_distrito as fk_distrito',
-                'prov.id_provincia as fk_provincia',
-                'prov.fk_departamento',
-            ])
-            ->first();
-
-        if (! $trabajador) {
-            abort(404, 'Trabajador no encontrado.');
-        }
-
-        return response()->json($trabajador);
     }
 
     public function provincias(int $departamento): JsonResponse
@@ -304,7 +360,7 @@ class TrabajadorController extends Controller
 
                 // 3) Usuario del sistema.
                 $idUser = DB::table('users')->insertGetId([
-                    'name' => trim($data['nombres'] . ' ' . $data['apellido_paterno'] . ' ' . ($data['apellido_materno'] ?? '')),
+                    'name' => trim($data['nombres'].' '.$data['apellido_paterno'].' '.($data['apellido_materno'] ?? '')),
                     'email' => $data['email'],
                     'password' => Hash::make($data['password']),
                     'email_verified_at' => now(),
@@ -388,7 +444,7 @@ class TrabajadorController extends Controller
 
                 // Email único (excluyendo al propio usuario) ya validado en el FormRequest.
                 $userUpdate = [
-                    'name' => trim($data['nombres'] . ' ' . $data['apellido_paterno'] . ' ' . ($data['apellido_materno'] ?? '')),
+                    'name' => trim($data['nombres'].' '.$data['apellido_paterno'].' '.($data['apellido_materno'] ?? '')),
                     'email' => $data['email'],
                     'updated_at' => now(),
                 ];

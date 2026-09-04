@@ -243,14 +243,16 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
             ->whereNumber('categoria')->name('productos.subcategorias');
         Route::get('/productos/etapas/{animal}', [ProductoController::class, 'etapas'])
             ->whereNumber('animal')->name('productos.etapas');
+        Route::post('/productos/buscar-codigo', [ProductoController::class, 'buscarCodigo'])->name('productos.buscar-codigo');
         Route::get('/productos/{producto}', [ProductoController::class, 'show'])
             ->whereNumber('producto')->name('productos.show');
     });
 
     Route::middleware('permiso:productos.crear')->group(function () {
         Route::get('/productos/create', [ProductoController::class, 'create'])->name('productos.create');
+        Route::get('/productos/entrada-rapida', [ProductoController::class, 'entradaRapida'])->name('productos.entrada-rapida');
+        Route::post('/productos/entrada-rapida', [ProductoController::class, 'entradaRapidaStore'])->name('productos.entrada-rapida.store');
         Route::post('/productos', [ProductoController::class, 'store'])->name('productos.store');
-        Route::post('/productos/buscar-codigo', [ProductoController::class, 'buscarCodigo'])->name('productos.buscar-codigo');
 
         // Catálogos rápidos usados desde el formulario de creación de productos.
         Route::post('/animales', [AnimalController::class, 'store'])->name('animales.store');
@@ -485,12 +487,13 @@ Route::middleware(['auth'])->prefix('trabajador')->name('trabajador.')->group(fu
     });
 
     Route::middleware('permiso:trabajadores.crear')->group(function () {
+        Route::get('/crear', [TrabajadorController::class, 'create'])->name('create');
         Route::post('/buscar-documento', [TrabajadorController::class, 'buscarDocumento'])->name('buscar-documento');
         Route::post('/', [TrabajadorController::class, 'store'])->name('store');
     });
 
     Route::middleware('permiso:trabajadores.editar')->group(function () {
-        Route::get('/{trabajador}/edit', [TrabajadorController::class, 'edit'])->whereNumber('trabajador')->name('edit');
+        Route::get('/{trabajador}/editar', [TrabajadorController::class, 'edit'])->whereNumber('trabajador')->name('editar');
         Route::put('/{trabajador}', [TrabajadorController::class, 'update'])->whereNumber('trabajador')->name('update');
         Route::patch('/{trabajador}/estado', [TrabajadorController::class, 'toggleEstado'])->whereNumber('trabajador')->name('estado');
     });

@@ -56,6 +56,34 @@ export interface TrabajadoresResponse {
     meta: PaginatedMeta;
 }
 
+export interface TrabajadorResumen {
+    total: number;
+    activos: number;
+    inactivos: number;
+    roles: number;
+}
+
+/** Registro completo devuelto por el endpoint de edición (incluye ids de ubicación). */
+export interface TrabajadorRecord {
+    id_trabajador: number;
+    fk_rol: number;
+    fecha_ingreso: string;
+    activo: 0 | 1;
+    fk_tipo_documento: number;
+    num_documento: string;
+    nombres: string;
+    apellido_paterno: string;
+    apellido_materno: string | null;
+    telefono: string;
+    fecha_nacimiento: string | null;
+    email: string;
+    direccion: string | null;
+    referencia: string | null;
+    fk_distrito: number | null;
+    fk_provincia: number | null;
+    fk_departamento: number | null;
+}
+
 export interface PersonaEncontrada {
     fk_tipo_documento?: number;
     num_documento: string;

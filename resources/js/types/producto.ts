@@ -143,6 +143,20 @@ export interface ProductoFormLookups {
     estados: EstadoOption[];
 }
 
+/** Respuesta de admin.productos.buscar-codigo. */
+export interface BuscarCodigoResponse {
+    id_producto: number | null;
+    nombre: string | null;
+    sku: string | null;
+    imagen_url: string | null;
+}
+
+/** Respuesta de admin.productos.entrada-rapida.store. */
+export interface EntradaRapidaResponse {
+    sumado: boolean;
+    producto: ProductoRow | null;
+}
+
 export interface ProductoEditData {
     id_producto: number;
     sku: string;

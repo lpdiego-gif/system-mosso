@@ -38,10 +38,10 @@ export default function Edit({
         <>
             <Head title={`Editar · ${producto.nombre}`} />
 
-            <div className="mx-auto w-full max-w-6xl space-y-6 p-4 sm:p-6 lg:p-8">
+            <div className="mx-auto w-full space-y-6 p-4 sm:p-6 lg:p-8">
                 <div className="flex flex-col gap-4 rounded-xl border bg-card p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-start gap-3.5">
-                        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-mosso-yellow/15 text-mosso-dark ring-1 ring-inset ring-mosso-yellow/30 dark:text-mosso-yellow">
+                        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-mosso-yellow/15 text-mosso-dark ring-1 ring-mosso-yellow/30 ring-inset dark:text-mosso-yellow">
                             <Package className="size-5" />
                         </span>
                         <div className="space-y-1">

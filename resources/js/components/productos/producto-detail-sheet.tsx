@@ -145,7 +145,7 @@ export function ProductoDetailSheet({
                                         {detalle.estado_nombre}
                                     </span>
                                     {detalle.descuento_label ? (
-                                        <span className="inline-flex items-center rounded-full bg-mosso-yellow/20 px-2 py-0.5 text-xs font-semibold text-mosso-dark ring-1 ring-inset ring-mosso-yellow/40 dark:text-mosso-yellow">
+                                        <span className="inline-flex items-center rounded-full bg-mosso-yellow/20 px-2 py-0.5 text-xs font-semibold text-mosso-dark ring-1 ring-mosso-yellow/40 ring-inset dark:text-mosso-yellow">
                                             {detalle.descuento_label}
                                         </span>
                                     ) : null}
@@ -215,13 +215,15 @@ export function ProductoDetailSheet({
                             <DetalleFila
                                 icon={Layers}
                                 etiqueta="Clasificación"
-                                valor={[
-                                    detalle.animal_nombre,
-                                    detalle.categoria_nombre,
-                                    detalle.subcategoria_nombre,
-                                ]
-                                    .filter(Boolean)
-                                    .join(' · ') || '—'}
+                                valor={
+                                    [
+                                        detalle.animal_nombre,
+                                        detalle.categoria_nombre,
+                                        detalle.subcategoria_nombre,
+                                    ]
+                                        .filter(Boolean)
+                                        .join(' · ') || '—'
+                                }
                             />
                             {detalle.etapa_nombre ? (
                                 <DetalleFila
