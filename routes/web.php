@@ -518,6 +518,30 @@ Route::middleware(['auth'])->prefix('distrito')->name('distrito.')->group(functi
     });
 });
 
+use App\Http\Controllers\ProvinciaController;
+
+// CRUD del catálogo geográfico de provincias. Reutiliza el grupo de
+// permisos `distritos.*` ("Ver departamentos, provincias y distritos"),
+// igual que el sidebar admin agrupa las tres pantallas bajo `distritos.ver`.
+Route::middleware(['auth'])->prefix('provincia')->name('provincia.')->group(function () {
+    Route::middleware('permiso:distritos.ver')->group(function () {
+        Route::get('/', [ProvinciaController::class, 'index'])->name('index');
+        Route::get('/data', [ProvinciaController::class, 'data'])->name('data');
+    });
+
+    Route::middleware('permiso:distritos.crear')->group(function () {
+        Route::post('/', [ProvinciaController::class, 'store'])->name('store');
+    });
+
+    Route::middleware('permiso:distritos.editar')->group(function () {
+        Route::put('/{provincia}', [ProvinciaController::class, 'update'])->whereNumber('provincia')->name('update');
+    });
+
+    Route::middleware('permiso:distritos.eliminar')->group(function () {
+        Route::delete('/{provincia}', [ProvinciaController::class, 'destroy'])->whereNumber('provincia')->name('destroy');
+    });
+});
+
 use App\Http\Controllers\UbigeoController;
 
 // Catálogo geográfico de referencia (cascadas de selects). Sin permiso

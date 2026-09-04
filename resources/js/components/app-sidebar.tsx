@@ -103,7 +103,11 @@ const OPERATIVE_NAV_ITEMS: NavItemConPermiso[] = [
         permiso: 'distritos.ver',
         items: [
             {
-                title: 'Provincia',
+                title: 'Provincias',
+                href: '/provincia',
+            },
+            {
+                title: 'Distritos',
                 href: '/distrito',
             },
         ],
