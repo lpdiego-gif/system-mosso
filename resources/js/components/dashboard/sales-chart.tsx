@@ -69,7 +69,7 @@ export function SalesChart({ data, formatoMoneda }: SalesChartProps) {
     }
 
     return (
-        <div className="text-indigo-500 dark:text-indigo-400">
+        <div className="text-mosso-dark dark:text-mosso-yellow">
             <div className="mb-3 flex items-center justify-between text-xs text-muted-foreground">
                 <span>Ingresos diarios</span>
                 <span className="tabular-nums">Máx. {formatoMonedaCompacta.format(max)}</span>

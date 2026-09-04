@@ -24,6 +24,15 @@ class DistritoController extends Controller
 {
     public function index(): Response
     {
+        $activos = DB::table('distritos')->where('activo', true)->count();
+        $configurados = DB::table('distritos')
+            ->where('activo', false)
+            ->whereNotNull('costo_envio')
+            ->count();
+        $tarifaPromedio = (float) DB::table('distritos')
+            ->where('activo', true)
+            ->avg('costo_envio');
+
         return Inertia::render('trabajador/distrito', [
             'departamentos' => DB::table('departamentos')
                 ->select('id_departamento', 'nombre')
@@ -33,6 +42,12 @@ class DistritoController extends Controller
                 ->select('id_provincia', 'nombre', 'fk_departamento')
                 ->orderBy('nombre')
                 ->get(),
+            'resumen' => [
+                'activos' => $activos,
+                'configurados' => $configurados,
+                'catalogo' => DB::table('distritos')->count(),
+                'tarifa_promedio' => round($tarifaPromedio, 2),
+            ],
         ]);
     }
 
@@ -41,7 +56,8 @@ class DistritoController extends Controller
         $search = trim((string) $request->query('search', ''));
         $departamento = $request->query('departamento');
         $provincia = $request->query('provincia');
-        $estado = $request->query('estado', 'todos'); // activos|inactivos|todos
+        // activos | inactivos | configurados (inactivo con tarifa) | sin_tarifa | todos
+        $estado = $request->query('estado', 'todos');
         $perPage = (int) $request->query('per_page', 10);
         $perPage = $perPage > 0 && $perPage <= 100 ? $perPage : 10;
         $page = max(1, (int) $request->query('page', 1));
@@ -87,6 +103,10 @@ class DistritoController extends Controller
             $query->where('d.activo', true);
         } elseif ($estado === 'inactivos') {
             $query->where('d.activo', false);
+        } elseif ($estado === 'configurados') {
+            $query->where('d.activo', false)->whereNotNull('d.costo_envio');
+        } elseif ($estado === 'sin_tarifa') {
+            $query->whereNull('d.costo_envio');
         }
 
         $sortColumn = match ($sort) {
@@ -125,6 +145,9 @@ class DistritoController extends Controller
             'costo_envio' => ['required', 'numeric', 'min:0', 'max:999999.99'],
         ]);
 
+        $previo = DB::table('distritos')->where('id_distrito', $data['id_distrito'])->first();
+        $yaEraZona = $previo && (bool) $previo->activo;
+
         DB::table('distritos')->where('id_distrito', $data['id_distrito'])->update([
             'costo_envio' => $data['costo_envio'],
             'activo' => true,
@@ -133,9 +156,80 @@ class DistritoController extends Controller
         ZonasEnvioService::flush();
 
         return response()->json([
-            'message' => 'Distrito activado correctamente.',
+            'message' => $yaEraZona
+                ? 'El distrito ya era una zona activa; se actualizó su tarifa.'
+                : 'Distrito activado como zona de reparto.',
+            'nuevo' => ! $yaEraZona,
             'distrito' => DB::table('distritos')->where('id_distrito', $data['id_distrito'])->first(),
-        ], 201);
+        ], $yaEraZona ? 200 : 201);
+    }
+
+    /**
+     * Activación masiva: fija la MISMA tarifa a varios distritos del catálogo y
+     * los enciende como zona de reparto en una sola operación. Pensado para
+     * cubrir una provincia entera de golpe. Mismo permiso que `store`
+     * (`distritos.crear`) porque, igual que aquél, enciende cobertura nueva.
+     */
+    public function bulkActivar(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array', 'min:1', 'max:500'],
+            'ids.*' => ['integer', 'distinct'],
+            'costo_envio' => ['required', 'numeric', 'min:0', 'max:999999.99'],
+        ]);
+
+        $ids = array_values(array_unique(array_map('intval', $data['ids'])));
+
+        $existen = DB::table('distritos')->whereIn('id_distrito', $ids)->count();
+
+        if ($existen !== count($ids)) {
+            throw ValidationException::withMessages([
+                'ids' => 'Uno o más distritos seleccionados no existen en el catálogo.',
+            ]);
+        }
+
+        $afectados = DB::table('distritos')->whereIn('id_distrito', $ids)->update([
+            'costo_envio' => $data['costo_envio'],
+            'activo' => true,
+        ]);
+
+        ZonasEnvioService::flush();
+
+        return response()->json([
+            'message' => $afectados === 1
+                ? '1 distrito activado como zona de reparto.'
+                : "{$afectados} distritos activados como zona de reparto.",
+            'afectados' => $afectados,
+        ]);
+    }
+
+    /**
+     * Baja masiva de cobertura: apaga `activo` en varios distritos SIN tocar la
+     * tarifa cargada (se puede volver a encender luego con un clic). Mismo
+     * permiso que el switch por fila (`distritos.editar`).
+     */
+    public function bulkDesactivar(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array', 'min:1', 'max:500'],
+            'ids.*' => ['integer', 'distinct'],
+        ]);
+
+        $ids = array_values(array_unique(array_map('intval', $data['ids'])));
+
+        $afectados = DB::table('distritos')
+            ->whereIn('id_distrito', $ids)
+            ->where('activo', true)
+            ->update(['activo' => false]);
+
+        ZonasEnvioService::flush();
+
+        return response()->json([
+            'message' => $afectados === 1
+                ? '1 distrito dado de baja como zona de reparto.'
+                : "{$afectados} distritos dados de baja como zona de reparto.",
+            'afectados' => $afectados,
+        ]);
     }
 
     /**

@@ -77,9 +77,31 @@ export type ProductoPorAnimal = {
     total: number;
 };
 
-export type TrabajadorPorRol = {
-    rol: string;
+export type SaludCatalogo = {
     total: number;
+    activos: number;
+    inactivos: number;
+    sinPrecio: number;
+    sinImagen: number;
+    agotados: number;
+    stockBajo: number;
+    unidades: number;
+    marcas: number;
+    categorias: number;
+};
+
+export type CarritosActivos = {
+    carritos: number;
+    items: number;
+    valorPotencial: number;
+    deClientes: number;
+};
+
+export type ProgramaFidelidad = {
+    cuponesVigentes: number;
+    cuponesPorVencer: number;
+    descuentosVigentes: number;
+    descuentosPorVencer: number;
 };
 
 export type DescuentoActivo = {
@@ -102,6 +124,8 @@ export type DashboardPageProps = {
     productosStockBajo: ProductoStockBajo[];
     pedidosRecientes: PedidoReciente[];
     productosPorAnimal: ProductoPorAnimal[];
-    trabajadoresPorRol: TrabajadorPorRol[];
     descuentosActivos: DescuentoActivo[];
+    saludCatalogo: SaludCatalogo;
+    carritosActivos: CarritosActivos;
+    programaFidelidad: ProgramaFidelidad;
 };

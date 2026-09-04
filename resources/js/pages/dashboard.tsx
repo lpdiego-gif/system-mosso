@@ -1,19 +1,25 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
-    Activity,
     AlertTriangle,
     ArrowUpRight,
+    BadgePercent,
     CheckCircle2,
     FileWarning,
+    Gauge,
+    ImageOff,
+    PackageX,
     Receipt,
     RotateCcw,
+    ShoppingBag,
     ShoppingCart,
     Tag,
+    TicketPercent,
     TrendingUp,
     UserPlus,
 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { route } from 'ziggy-js';
+
 import { AttentionTiles } from '@/components/dashboard/attention-tiles';
 import type { AttentionTile } from '@/components/dashboard/attention-tiles';
 import { BarList } from '@/components/dashboard/bar-list';
@@ -37,19 +43,18 @@ import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
 import type { DashboardPageProps } from '@/types/dashboard';
 
-const formatoMoneda = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' });
-
-const formatoMoneda0 = new Intl.NumberFormat('es-PE', {
-    style: 'currency',
-    currency: 'PEN',
-    maximumFractionDigits: 0,
+const money = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' });
+const money0 = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN', maximumFractionDigits: 0 });
+const nf = new Intl.NumberFormat('es-PE');
+const fFechaHora = new Intl.DateTimeFormat('es-PE', { dateStyle: 'medium', timeStyle: 'short' });
+const fFechaCorta = new Intl.DateTimeFormat('es-PE', { dateStyle: 'medium' });
+const fRango = new Intl.DateTimeFormat('es-PE', { day: 'numeric', month: 'short' });
+const fFechaLarga = new Intl.DateTimeFormat('es-PE', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
 });
-
-const formatoNumero = new Intl.NumberFormat('es-PE');
-
-const formatoFecha = new Intl.DateTimeFormat('es-PE', { dateStyle: 'medium', timeStyle: 'short' });
-const formatoFechaCorta = new Intl.DateTimeFormat('es-PE', { dateStyle: 'medium' });
-const formatoRango = new Intl.DateTimeFormat('es-PE', { day: 'numeric', month: 'short' });
 
 /** Props que dependen del periodo — las únicas que se recargan al cambiar el rango. */
 const PROPS_DEL_PERIODO = [
@@ -61,8 +66,23 @@ const PROPS_DEL_PERIODO = [
     'productosMasVendidos',
 ];
 
-/** Chrome de panel: borde tenue en claro, superficie translúcida elevada en oscuro. */
-const PANEL = 'border-border/70 dark:border-white/[0.07] dark:bg-white/[0.02]';
+const PANEL = 'border-border bg-card';
+
+function saludoPorHora(h: number): string {
+    if (h < 12) {
+        return 'Buenos días';
+    }
+
+    if (h < 19) {
+        return 'Buenas tardes';
+    }
+
+    return 'Buenas noches';
+}
+
+function capitalizar(texto: string): string {
+    return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
 
 export default function Dashboard({
     periodo,
@@ -76,10 +96,18 @@ export default function Dashboard({
     productosStockBajo,
     pedidosRecientes,
     productosPorAnimal,
-    trabajadoresPorRol,
     descuentosActivos,
+    saludCatalogo,
+    carritosActivos,
+    programaFidelidad,
 }: DashboardPageProps) {
+    const { auth } = usePage().props;
     const [cargando, setCargando] = useState(false);
+
+    const ahora = new Date();
+    const primerNombre = (auth?.user?.name ?? '').trim().split(/\s+/)[0] || 'equipo';
+    const saludo = `${saludoPorHora(ahora.getHours())}, ${primerNombre}`;
+    const fechaHoy = capitalizar(fFechaLarga.format(ahora));
 
     const cambiarPeriodo = useCallback(
         (dias: number) => {
@@ -102,45 +130,35 @@ export default function Dashboard({
         [periodo, cargando],
     );
 
-    const hoy = new Date();
     const inicioRango = new Date();
-    inicioRango.setDate(hoy.getDate() - (periodo - 1));
-    const rangoLabel = `${formatoRango.format(inicioRango)} – ${formatoRango.format(hoy)}`;
+    inicioRango.setDate(ahora.getDate() - (periodo - 1));
+    const rangoLabel = `${fRango.format(inicioRango)} – ${fRango.format(ahora)}`;
     const contextoDelta = `vs. ${periodo} días previos`;
 
+    // ------------------------------------------------------ derivados de gráficas
     const totalCategorias = ventasPorCategoria.reduce((acc, c) => acc + c.total, 0);
     const filasCategoria: BarRow[] = ventasPorCategoria.map((c) => ({
         id: c.categoria,
         label: c.categoria,
         value: c.total,
-        valueLabel: formatoMoneda0.format(c.total),
-        meta:
-            totalCategorias > 0
-                ? `${Math.round((c.total / totalCategorias) * 100)}%`
-                : undefined,
+        valueLabel: money0.format(c.total),
+        meta: totalCategorias > 0 ? `${Math.round((c.total / totalCategorias) * 100)}%` : undefined,
     }));
 
     const filasMasVendidos: BarRow[] = productosMasVendidos.map((p, i) => ({
         id: p.nombre,
         label: p.nombre,
         value: p.cantidadVendida,
-        valueLabel: formatoMoneda0.format(p.totalVendido),
-        meta: `${formatoNumero.format(p.cantidadVendida)} und.`,
+        valueLabel: money0.format(p.totalVendido),
+        meta: `${nf.format(p.cantidadVendida)} und.`,
         rank: i + 1,
     }));
 
-    const filasEquipo: BarRow[] = trabajadoresPorRol.map((t) => ({
-        id: t.rol,
-        label: t.rol,
-        value: t.total,
-        valueLabel: formatoNumero.format(t.total),
-    }));
-
-    // Ticket promedio por día = ingresos / pedidos de ese día (0 si no hubo pedidos).
     const serieTicket = ventasPorDia.map((d) => (d.pedidos > 0 ? d.total / d.pedidos : 0));
     const serieVentas = ventasPorDia.map((d) => d.total);
     const seriePedidos = ventasPorDia.map((d) => d.pedidos);
 
+    // ------------------------------------------------------------------ atención
     const tilesAtencion: AttentionTile[] = [
         {
             label: 'Pedidos pendientes',
@@ -167,9 +185,9 @@ export default function Dashboard({
             tone: 'alert',
         },
         {
-            label: 'Productos stock bajo',
-            hint: 'Menos de 10 unidades',
-            count: alertas.productosStockBajo,
+            label: 'Productos sin precio',
+            hint: 'Activos en S/ 0.00',
+            count: saludCatalogo.sinPrecio,
             icon: AlertTriangle,
             href: route('admin.productos.index'),
             tone: 'alert',
@@ -177,26 +195,60 @@ export default function Dashboard({
     ];
 
     const todoEnOrden = tilesAtencion.every((t) => t.count === 0);
-    const resumen = [
+    const sinVentas = stats.pedidosTotal === 0;
+
+    const instantanea = [
         {
             label: 'Ingresos históricos',
-            value: formatoMoneda0.format(stats.ventasTotal),
-            hint: `${formatoNumero.format(stats.pedidosTotal)} pedidos pagados`,
+            value: money0.format(stats.ventasTotal),
+            hint: `${nf.format(stats.pedidosTotal)} pedidos pagados`,
         },
         {
             label: 'Valor de inventario',
-            value: formatoMoneda0.format(stats.valorInventario),
+            value: money0.format(stats.valorInventario),
             hint: 'Precio × stock del catálogo',
         },
         {
             label: 'Catálogo activo',
-            value: `${formatoNumero.format(stats.productosActivos)} / ${formatoNumero.format(stats.productosTotal)}`,
+            value: `${nf.format(saludCatalogo.activos)} / ${nf.format(saludCatalogo.total)}`,
             hint: 'Productos publicados',
         },
         {
-            label: 'Equipo activo',
-            value: `${formatoNumero.format(stats.trabajadoresActivos)} / ${formatoNumero.format(stats.trabajadoresTotal)}`,
-            hint: 'Trabajadores habilitados',
+            label: 'Unidades en stock',
+            value: nf.format(saludCatalogo.unidades),
+            hint: `${nf.format(saludCatalogo.marcas)} marcas · ${nf.format(saludCatalogo.categorias)} categorías`,
+        },
+    ];
+
+    // Salud del catálogo: cada fila es "problema → cuántos → dónde arreglarlo".
+    const filasSalud = [
+        {
+            label: 'Sin precio',
+            detalle: 'Activos en S/ 0.00 — no deberían venderse así',
+            valor: saludCatalogo.sinPrecio,
+            icon: BadgePercent,
+            grave: saludCatalogo.sinPrecio > 0,
+        },
+        {
+            label: 'Sin imagen',
+            detalle: 'Se muestran con un marcador en la tienda',
+            valor: saludCatalogo.sinImagen,
+            icon: ImageOff,
+            grave: false,
+        },
+        {
+            label: 'Agotados',
+            detalle: 'Activos con stock en 0',
+            valor: saludCatalogo.agotados,
+            icon: PackageX,
+            grave: saludCatalogo.agotados > 0,
+        },
+        {
+            label: 'Stock bajo',
+            detalle: `Entre 1 y 10 unidades`,
+            valor: saludCatalogo.stockBajo,
+            icon: AlertTriangle,
+            grave: false,
         },
     ];
 
@@ -204,18 +256,17 @@ export default function Dashboard({
         <>
             <Head title="Panel de Control" />
 
-            <div className="flex flex-1 flex-col gap-6 rounded-xl bg-muted/50 p-4 sm:p-6 dark:bg-[#0b0f17]">
-                <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-center gap-3">
-                        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
-                            <Activity className="size-5" aria-hidden />
-                        </span>
+            <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 p-4 sm:p-6">
+                {/* --------------------------------------------- Encabezado */}
+                <header className="flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
+                    <div className="flex items-center gap-3.5">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-mosso-yellow text-mosso-dark shadow-sm">
+                            <Gauge className="h-5 w-5" strokeWidth={2.25} />
+                        </div>
                         <div>
-                            <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
-                                Panel de Control
-                            </h1>
-                            <p className="mt-0.5 text-sm text-muted-foreground">
-                                Ventas, inventario y equipo de Mosso · {rangoLabel}
+                            <h1 className="text-xl font-semibold tracking-tight text-foreground">{saludo}</h1>
+                            <p className="text-sm text-muted-foreground">
+                                {fechaHoy} · datos de los últimos {periodo} días ({rangoLabel})
                             </p>
                         </div>
                     </div>
@@ -227,14 +278,12 @@ export default function Dashboard({
                     />
                 </header>
 
+                {/* --------------------------------------------- Requiere atención */}
                 <section aria-label="Requiere atención" className="flex flex-col gap-2">
                     <div className="flex items-center justify-between">
                         <h2 className="text-sm font-medium text-foreground">Requiere atención</h2>
                         {todoEnOrden && (
-                            <Badge
-                                variant="secondary"
-                                className="gap-1 text-emerald-700 dark:text-emerald-400"
-                            >
+                            <Badge variant="secondary" className="gap-1 text-emerald-700 dark:text-emerald-400">
                                 <CheckCircle2 className="size-3" />
                                 Todo al día
                             </Badge>
@@ -243,6 +292,21 @@ export default function Dashboard({
                     <AttentionTiles tiles={tilesAtencion} />
                 </section>
 
+                {sinVentas && (
+                    <div className="flex items-start gap-3 rounded-xl border border-mosso-yellow/40 bg-mosso-yellow/[0.07] p-4">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-mosso-yellow text-mosso-dark">
+                            <ShoppingBag className="h-4 w-4" />
+                        </div>
+                        <div>
+                            <p className="text-sm font-medium text-foreground">Todavía no hay ventas registradas</p>
+                            <p className="text-sm text-muted-foreground">
+                                Cuando llegue el primer pedido pagado verás aquí ingresos, ticket promedio, productos
+                                estrella y la tendencia diaria. Mientras tanto, la sección de catálogo ya está activa.
+                            </p>
+                        </div>
+                    </div>
+                )}
+
                 <div
                     className={cn(
                         'flex flex-col gap-6 transition-opacity duration-200',
@@ -250,80 +314,69 @@ export default function Dashboard({
                     )}
                     aria-busy={cargando}
                 >
+                    {/* --------------------------------------------- KPIs del periodo */}
                     <section
                         aria-label="Indicadores del periodo"
                         className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
                     >
                         <KpiCard
                             label="Ventas del periodo"
-                            value={formatoMoneda0.format(stats.ventasPeriodo)}
+                            value={money0.format(stats.ventasPeriodo)}
                             context={contextoDelta}
                             delta={stats.ventasDelta}
                             icon={TrendingUp}
-                            accent="indigo"
                             serie={serieVentas}
                         />
                         <KpiCard
                             label="Pedidos pagados"
-                            value={formatoNumero.format(stats.pedidosPeriodo)}
+                            value={nf.format(stats.pedidosPeriodo)}
                             context={contextoDelta}
                             delta={stats.pedidosDelta}
                             icon={ShoppingCart}
-                            accent="emerald"
                             serie={seriePedidos}
                             href={route('admin.pedidos.index')}
                         />
                         <KpiCard
                             label="Ticket promedio"
-                            value={formatoMoneda0.format(stats.ticketPromedio)}
-                            context="Promedio por pedido pagado"
+                            value={money0.format(stats.ticketPromedio)}
+                            context="Por pedido pagado"
                             delta={stats.ticketDelta}
                             icon={Receipt}
-                            accent="amber"
                             serie={serieTicket}
                         />
                         <KpiCard
                             label="Clientes nuevos"
-                            value={formatoNumero.format(stats.clientesNuevos)}
-                            context={`${formatoNumero.format(stats.clientesTotal)} en total`}
+                            value={nf.format(stats.clientesNuevos)}
+                            context={`${nf.format(stats.clientesTotal)} en total`}
                             delta={stats.clientesDelta}
                             icon={UserPlus}
-                            accent="violet"
                             serie={clientesPorDia}
                             href={route('admin.clientes.index')}
                         />
                     </section>
 
-                    <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                        {resumen.map((r) => (
-                            <div
-                                key={r.label}
-                                className={cn(
-                                    'flex flex-col gap-1 rounded-xl border bg-card p-4 shadow-sm',
-                                    PANEL,
-                                )}
-                            >
-                                <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                                    {r.label}
-                                </span>
-                                <span className="mt-1 text-lg font-semibold tabular-nums text-foreground">
-                                    {r.value}
-                                </span>
-                                <span className="text-xs text-muted-foreground">{r.hint}</span>
+                    {/* --------------------------------------------- Instantánea */}
+                    <section className="grid grid-cols-2 divide-x divide-y divide-border overflow-hidden rounded-xl border border-border bg-card sm:grid-cols-4 sm:divide-y-0">
+                        {instantanea.map((r) => (
+                            <div key={r.label} className="flex flex-col gap-0.5 p-4">
+                                <span className="text-[11px] font-medium text-muted-foreground">{r.label}</span>
+                                <span className="text-lg font-semibold text-foreground tabular-nums">{r.value}</span>
+                                <span className="text-[11px] text-muted-foreground">{r.hint}</span>
                             </div>
                         ))}
                     </section>
 
+                    {/* --------------------------------------------- Ventas + categoría */}
                     <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
                         <Card className={cn('lg:col-span-2', PANEL)}>
                             <CardHeader className="flex-row items-center justify-between gap-2">
                                 <CardTitle className="text-base">Ventas por día</CardTitle>
-                                <span className="text-sm font-semibold tabular-nums text-foreground">
-                                    {formatoMoneda.format(stats.ventasPeriodo)}
+                                <span className="text-sm font-semibold text-foreground tabular-nums">
+                                    {money.format(stats.ventasPeriodo)}
                                 </span>
                             </CardHeader>
                             <CardContent>
-                                <SalesChart data={ventasPorDia} formatoMoneda={formatoMoneda} />
+                                <SalesChart data={ventasPorDia} formatoMoneda={money} />
                             </CardContent>
                         </Card>
 
@@ -332,14 +385,62 @@ export default function Dashboard({
                                 <CardTitle className="text-base">Ingresos por categoría</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <BarList
-                                    rows={filasCategoria}
-                                    emptyMessage="Sin ventas por categoría en este periodo."
-                                />
+                                <BarList rows={filasCategoria} emptyMessage="Sin ventas por categoría en este periodo." />
                             </CardContent>
                         </Card>
                     </section>
 
+                    {/* --------------------------------------------- Salud del catálogo */}
+                    <Card className={PANEL}>
+                        <CardHeader className="flex-row items-center justify-between gap-2">
+                            <CardTitle className="text-base">Salud del catálogo</CardTitle>
+                            <Link
+                                href={route('admin.productos.index')}
+                                className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                            >
+                                Ver productos
+                                <ArrowUpRight className="size-3.5" />
+                            </Link>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                                {filasSalud.map((f) => (
+                                    <div
+                                        key={f.label}
+                                        className={cn(
+                                            'flex items-center gap-3 rounded-lg border p-3',
+                                            f.grave ? 'border-destructive/30 bg-destructive/5' : 'border-border',
+                                        )}
+                                    >
+                                        <span
+                                            className={cn(
+                                                'flex size-8 shrink-0 items-center justify-center rounded-lg',
+                                                f.grave
+                                                    ? 'bg-destructive/10 text-destructive'
+                                                    : 'bg-muted text-muted-foreground',
+                                            )}
+                                        >
+                                            <f.icon className="size-4" aria-hidden />
+                                        </span>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-sm font-medium text-foreground">{f.label}</p>
+                                            <p className="truncate text-xs text-muted-foreground">{f.detalle}</p>
+                                        </div>
+                                        <span
+                                            className={cn(
+                                                'text-lg font-semibold tabular-nums',
+                                                f.grave ? 'text-destructive' : 'text-foreground',
+                                            )}
+                                        >
+                                            {nf.format(f.valor)}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* --------------------------------------------- Más vendidos + mascota */}
                     <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                         <Card className={PANEL}>
                             <CardHeader>
@@ -359,10 +460,7 @@ export default function Dashboard({
                             </CardHeader>
                             <CardContent>
                                 <DonutChart
-                                    data={productosPorAnimal.map((p) => ({
-                                        label: p.animal,
-                                        total: p.total,
-                                    }))}
+                                    data={productosPorAnimal.map((p) => ({ label: p.animal, total: p.total }))}
                                     centerLabel="productos"
                                     emptyMessage="Sin productos activos clasificados."
                                 />
@@ -371,6 +469,7 @@ export default function Dashboard({
                     </section>
                 </div>
 
+                {/* --------------------------------------------- Pedidos recientes */}
                 <Card className={PANEL}>
                     <CardHeader className="flex-row items-center justify-between gap-2">
                         <CardTitle className="text-base">Pedidos recientes</CardTitle>
@@ -383,62 +482,57 @@ export default function Dashboard({
                         </Link>
                     </CardHeader>
                     <CardContent className="px-0">
-                        <Table>
-                            <TableHeader>
-                                <TableRow className="hover:bg-transparent">
-                                    <TableHead className="pl-6">Pedido</TableHead>
-                                    <TableHead>Cliente</TableHead>
-                                    <TableHead>Estado</TableHead>
-                                    <TableHead>Fecha</TableHead>
-                                    <TableHead className="pr-6 text-right">Total</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {pedidosRecientes.length === 0 ? (
+                        <div className="overflow-x-auto">
+                            <Table>
+                                <TableHeader>
                                     <TableRow className="hover:bg-transparent">
-                                        <TableCell
-                                            colSpan={5}
-                                            className="py-10 text-center text-sm text-muted-foreground"
-                                        >
-                                            Aún no se han registrado pedidos.
-                                        </TableCell>
+                                        <TableHead className="pl-6">Pedido</TableHead>
+                                        <TableHead>Cliente</TableHead>
+                                        <TableHead>Estado</TableHead>
+                                        <TableHead>Fecha</TableHead>
+                                        <TableHead className="pr-6 text-right">Total</TableHead>
                                     </TableRow>
-                                ) : (
-                                    pedidosRecientes.map((pedido) => (
-                                        <TableRow key={pedido.id}>
-                                            <TableCell className="pl-6 font-medium tabular-nums">
-                                                <Link
-                                                    href={route('admin.pedidos.show', pedido.id)}
-                                                    className="text-foreground hover:underline focus-visible:underline focus-visible:outline-none"
-                                                >
-                                                    #{pedido.id}
-                                                </Link>
-                                            </TableCell>
-                                            <TableCell>
-                                                <span className="block max-w-40 truncate">
-                                                    {pedido.cliente}
-                                                </span>
-                                            </TableCell>
-                                            <TableCell>
-                                                <EstadoPedidoBadge
-                                                    estado={pedido.estado}
-                                                    estadoId={pedido.estadoId}
-                                                />
-                                            </TableCell>
-                                            <TableCell className="text-muted-foreground">
-                                                {formatoFecha.format(new Date(pedido.fecha))}
-                                            </TableCell>
-                                            <TableCell className="pr-6 text-right font-medium tabular-nums">
-                                                {formatoMoneda.format(pedido.total)}
+                                </TableHeader>
+                                <TableBody>
+                                    {pedidosRecientes.length === 0 ? (
+                                        <TableRow className="hover:bg-transparent">
+                                            <TableCell colSpan={5} className="py-12 text-center text-sm text-muted-foreground">
+                                                Aún no se han registrado pedidos.
                                             </TableCell>
                                         </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
+                                    ) : (
+                                        pedidosRecientes.map((pedido) => (
+                                            <TableRow key={pedido.id}>
+                                                <TableCell className="pl-6 font-medium tabular-nums">
+                                                    <Link
+                                                        href={route('admin.pedidos.show', pedido.id)}
+                                                        className="text-foreground outline-none hover:underline focus-visible:underline"
+                                                    >
+                                                        #{pedido.id}
+                                                    </Link>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <span className="block max-w-40 truncate">{pedido.cliente}</span>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <EstadoPedidoBadge estado={pedido.estado} estadoId={pedido.estadoId} />
+                                                </TableCell>
+                                                <TableCell className="text-muted-foreground">
+                                                    {fFechaHora.format(new Date(pedido.fecha))}
+                                                </TableCell>
+                                                <TableCell className="pr-6 text-right font-medium tabular-nums">
+                                                    {money.format(pedido.total)}
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </div>
                     </CardContent>
                 </Card>
 
+                {/* --------------------------------------------- Stock bajo + descuentos */}
                 <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                     <Card className={PANEL}>
                         <CardHeader>
@@ -461,19 +555,13 @@ export default function Dashboard({
                                                 <AlertTriangle
                                                     className={cn(
                                                         'size-4 shrink-0',
-                                                        p.stock <= 5
-                                                            ? 'text-red-500'
-                                                            : 'text-amber-500',
+                                                        p.stock <= 5 ? 'text-destructive' : 'text-amber-500',
                                                     )}
                                                     aria-hidden
                                                 />
                                                 <div className="min-w-0">
-                                                    <p className="truncate text-sm font-medium text-foreground">
-                                                        {p.nombre}
-                                                    </p>
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {p.sku}
-                                                    </p>
+                                                    <p className="truncate text-sm font-medium text-foreground">{p.nombre}</p>
+                                                    <p className="font-mono text-xs text-muted-foreground">{p.sku}</p>
                                                 </div>
                                             </div>
                                             <Badge
@@ -506,26 +594,18 @@ export default function Dashboard({
                                             className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
                                         >
                                             <div className="flex min-w-0 items-center gap-2.5">
-                                                <Tag
-                                                    className="size-4 shrink-0 text-muted-foreground"
-                                                    aria-hidden
-                                                />
+                                                <Tag className="size-4 shrink-0 text-muted-foreground" aria-hidden />
                                                 <div className="min-w-0">
-                                                    <p className="truncate text-sm font-medium text-foreground">
-                                                        {d.nombre}
-                                                    </p>
+                                                    <p className="truncate text-sm font-medium text-foreground">{d.nombre}</p>
                                                     <p className="text-xs text-muted-foreground">
-                                                        Vence{' '}
-                                                        {formatoFechaCorta.format(
-                                                            new Date(d.fechaFin),
-                                                        )}
+                                                        Vence {fFechaCorta.format(new Date(d.fechaFin))}
                                                     </p>
                                                 </div>
                                             </div>
                                             <Badge variant="secondary" className="tabular-nums">
                                                 {d.tipo === 'porcentaje'
-                                                    ? `−${formatoNumero.format(d.valor)}%`
-                                                    : `−${formatoMoneda0.format(d.valor)}`}
+                                                    ? `−${nf.format(d.valor)}%`
+                                                    : `−${money0.format(d.valor)}`}
                                             </Badge>
                                         </li>
                                     ))}
@@ -535,19 +615,101 @@ export default function Dashboard({
                     </Card>
                 </section>
 
-                <Card className={PANEL}>
-                    <CardHeader>
-                        <CardTitle className="text-base">Equipo por rol</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <BarList
-                            rows={filasEquipo}
-                            emptyMessage="No hay trabajadores activos registrados."
-                        />
-                    </CardContent>
-                </Card>
+                {/* --------------------------------------------- Carritos + promociones */}
+                <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                    <Card className={PANEL}>
+                        <CardHeader>
+                            <CardTitle className="text-base">Carritos con productos</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            {carritosActivos.carritos === 0 ? (
+                                <p className="py-8 text-center text-sm text-muted-foreground">
+                                    Ningún carrito con productos en los últimos 30 días.
+                                </p>
+                            ) : (
+                                <div className="flex flex-wrap items-end gap-x-8 gap-y-4">
+                                    <Metric valor={nf.format(carritosActivos.carritos)} label="carritos abiertos" />
+                                    <Metric valor={nf.format(carritosActivos.items)} label="productos dentro" />
+                                    <Metric
+                                        valor={money0.format(carritosActivos.valorPotencial)}
+                                        label="valor potencial"
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        {carritosActivos.deClientes > 0
+                                            ? `${nf.format(carritosActivos.deClientes)} de clientes con cuenta`
+                                            : 'todos de visitantes sin cuenta'}
+                                    </p>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    <Card className={PANEL}>
+                        <CardHeader>
+                            <CardTitle className="text-base">Promociones vigentes</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <ul className="flex flex-col divide-y divide-border">
+                                <PromoRow
+                                    icon={Tag}
+                                    label="Descuentos de producto"
+                                    total={programaFidelidad.descuentosVigentes}
+                                    porVencer={programaFidelidad.descuentosPorVencer}
+                                />
+                                <PromoRow
+                                    icon={TicketPercent}
+                                    label="Cupones sin usar"
+                                    total={programaFidelidad.cuponesVigentes}
+                                    porVencer={programaFidelidad.cuponesPorVencer}
+                                />
+                            </ul>
+                        </CardContent>
+                    </Card>
+                </section>
             </div>
         </>
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Piezas auxiliares
+// ---------------------------------------------------------------------------
+
+function Metric({ valor, label }: { valor: string; label: string }) {
+    return (
+        <div>
+            <p className="text-2xl font-semibold tracking-tight text-foreground tabular-nums">{valor}</p>
+            <p className="text-xs text-muted-foreground">{label}</p>
+        </div>
+    );
+}
+
+function PromoRow({
+    icon: Icon,
+    label,
+    total,
+    porVencer,
+}: {
+    icon: typeof Tag;
+    label: string;
+    total: number;
+    porVencer: number;
+}) {
+    return (
+        <li className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
+            <div className="flex items-center gap-2.5">
+                <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                <span className="text-sm font-medium text-foreground">{label}</span>
+            </div>
+            <div className="flex items-center gap-2">
+                {porVencer > 0 && (
+                    <Badge variant="outline" className="border-amber-500/30 text-amber-600 dark:text-amber-400">
+                        {porVencer} vence pronto
+                    </Badge>
+                )}
+                <span className="text-lg font-semibold text-foreground tabular-nums">{nf.format(total)}</span>
+            </div>
+        </li>
     );
 }
 

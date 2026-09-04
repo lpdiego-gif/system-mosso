@@ -71,8 +71,10 @@ class DashboardController extends Controller
             'productosStockBajo' => fn () => $this->productosStockBajo(),
             'pedidosRecientes' => fn () => $this->pedidosRecientes(),
             'productosPorAnimal' => fn () => $this->productosPorAnimal(),
-            'trabajadoresPorRol' => fn () => $this->trabajadoresPorRol(),
             'descuentosActivos' => fn () => $this->descuentosActivos(),
+            'saludCatalogo' => fn () => $this->saludCatalogo(),
+            'carritosActivos' => fn () => $this->carritosActivos(),
+            'programaFidelidad' => fn () => $this->programaFidelidad(),
         ]);
     }
 
@@ -374,20 +376,97 @@ class DashboardController extends Controller
             ->all();
     }
 
-    private function trabajadoresPorRol(): array
+    /**
+     * Salud del catálogo: fotografía de calidad de datos que el equipo puede
+     * accionar hoy mismo, independientemente de si ya hay ventas. `sin_precio`
+     * es la más crítica: un producto activo en S/ 0.00 se puede comprar gratis.
+     *
+     * @return array<string, int|float>
+     */
+    private function saludCatalogo(): array
     {
-        return DB::table('trabajadores as t')
-            ->join('roles as r', 'r.id_rol', '=', 't.fk_rol')
-            ->where('t.activo', 1)
-            ->select('r.nombre as rol', DB::raw('COUNT(*) as total'))
-            ->groupBy('r.nombre')
-            ->orderByDesc('total')
-            ->get()
-            ->map(fn ($row) => [
-                'rol' => $row->rol,
-                'total' => (int) $row->total,
-            ])
-            ->all();
+        $p = DB::table('productos')
+            ->selectRaw('COUNT(*) as total')
+            ->selectRaw('SUM(CASE WHEN fk_estado = 1 THEN 1 ELSE 0 END) as activos')
+            ->selectRaw('SUM(CASE WHEN fk_estado <> 1 THEN 1 ELSE 0 END) as inactivos')
+            ->selectRaw('SUM(CASE WHEN fk_estado = 1 AND (precio IS NULL OR precio <= 0) THEN 1 ELSE 0 END) as sin_precio')
+            ->selectRaw("SUM(CASE WHEN fk_estado = 1 AND (imagen_principal IS NULL OR imagen_principal = '') THEN 1 ELSE 0 END) as sin_imagen")
+            ->selectRaw('SUM(CASE WHEN fk_estado = 1 AND stock = 0 THEN 1 ELSE 0 END) as agotados')
+            ->selectRaw('SUM(CASE WHEN fk_estado = 1 AND stock > 0 AND stock <= ? THEN 1 ELSE 0 END) as stock_bajo', [self::UMBRAL_STOCK_BAJO])
+            ->selectRaw('COALESCE(SUM(CASE WHEN fk_estado = 1 THEN stock ELSE 0 END), 0) as unidades')
+            ->first();
+
+        return [
+            'total' => (int) $p->total,
+            'activos' => (int) $p->activos,
+            'inactivos' => (int) $p->inactivos,
+            'sinPrecio' => (int) $p->sin_precio,
+            'sinImagen' => (int) $p->sin_imagen,
+            'agotados' => (int) $p->agotados,
+            'stockBajo' => (int) $p->stock_bajo,
+            'unidades' => (int) $p->unidades,
+            'marcas' => (int) DB::table('marcas')->count(),
+            'categorias' => (int) DB::table('categorias')->count(),
+        ];
+    }
+
+    /**
+     * Carritos con al menos un producto en los últimos 30 días — demanda
+     * latente que aún no es pedido. El valor potencial es la suma de
+     * `cantidad * precio_unitario` congelado al momento de agregar.
+     *
+     * @return array<string, int|float>
+     */
+    private function carritosActivos(): array
+    {
+        $desde = Carbon::now()->subDays(30)->startOfDay();
+
+        $agg = DB::table('carritos as c')
+            ->join('carrito_detalle as cd', 'cd.fk_carrito', '=', 'c.id_carrito')
+            ->where('c.updated_at', '>=', $desde)
+            ->selectRaw('COUNT(DISTINCT c.id_carrito) as carritos')
+            ->selectRaw('COALESCE(SUM(cd.cantidad), 0) as items')
+            ->selectRaw('COALESCE(SUM(cd.cantidad * cd.precio_unitario), 0) as valor')
+            ->selectRaw('SUM(CASE WHEN c.fk_cliente IS NOT NULL THEN 1 ELSE 0 END) as de_clientes')
+            ->first();
+
+        return [
+            'carritos' => (int) $agg->carritos,
+            'items' => (int) $agg->items,
+            'valorPotencial' => (float) $agg->valor,
+            'deClientes' => (int) $agg->de_clientes,
+        ];
+    }
+
+    /**
+     * Promociones vigentes y las que caducan en 7 días — para no dejar que un
+     * descuento o cupón se venza sin avisar.
+     *
+     * @return array<string, int>
+     */
+    private function programaFidelidad(): array
+    {
+        $ahora = Carbon::now();
+        $en7dias = (clone $ahora)->addDays(7);
+
+        return [
+            'cuponesVigentes' => (int) DB::table('cupones')
+                ->where('usado', 0)
+                ->whereDate('fecha_vencimiento', '>=', $ahora)
+                ->count(),
+            'cuponesPorVencer' => (int) DB::table('cupones')
+                ->where('usado', 0)
+                ->whereBetween('fecha_vencimiento', [$ahora->toDateString(), $en7dias->toDateString()])
+                ->count(),
+            'descuentosVigentes' => (int) DB::table('descuentos')
+                ->where('activo', 1)
+                ->where('fecha_fin', '>=', $ahora)
+                ->count(),
+            'descuentosPorVencer' => (int) DB::table('descuentos')
+                ->where('activo', 1)
+                ->whereBetween('fecha_fin', [$ahora, $en7dias])
+                ->count(),
+        ];
     }
 
     private function descuentosActivos(): array

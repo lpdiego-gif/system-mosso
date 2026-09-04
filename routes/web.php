@@ -510,11 +510,13 @@ Route::middleware(['auth'])->prefix('distrito')->name('distrito.')->group(functi
 
     Route::middleware('permiso:distritos.crear')->group(function () {
         Route::post('/', [DistritoController::class, 'store'])->name('store');
+        Route::post('/bulk/activar', [DistritoController::class, 'bulkActivar'])->name('bulk.activar');
     });
 
     Route::middleware('permiso:distritos.editar')->group(function () {
         Route::put('/{distrito}', [DistritoController::class, 'update'])->whereNumber('distrito')->name('update');
         Route::patch('/{distrito}/activo', [DistritoController::class, 'toggleActivo'])->whereNumber('distrito')->name('activo');
+        Route::post('/bulk/desactivar', [DistritoController::class, 'bulkDesactivar'])->name('bulk.desactivar');
     });
 });
 

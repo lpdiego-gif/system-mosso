@@ -772,12 +772,12 @@ export default function Provincia() {
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
                         <AlertDialogAction
+                            variant="destructive"
                             disabled={eliminando || (eliminar?.distritos ?? 0) > 0}
                             onClick={(e) => {
                                 e.preventDefault();
                                 confirmarEliminar();
                             }}
-                            className="bg-destructive text-white hover:bg-destructive/90"
                         >
                             {eliminando && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
                             Eliminar

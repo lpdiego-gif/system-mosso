@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 /**
@@ -19,11 +20,13 @@ class CuentaBancariaController extends Controller
 {
     public function store(Request $request): JsonResponse
     {
-        $data = $this->validado($request);
-        $data['fk_empresa'] = $this->fkEmpresaOFallar();
-        $data['orden'] = (int) DB::table('cuentas_bancarias')->where('fk_empresa', $data['fk_empresa'])->max('orden') + 1;
+        $fkEmpresa = $this->fkEmpresaOFallar();
+        $data = $this->validado($request, $fkEmpresa);
+        $data['fk_empresa'] = $fkEmpresa;
+        $data['activo'] = true;
+        $data['orden'] = (int) DB::table('cuentas_bancarias')->where('fk_empresa', $fkEmpresa)->max('orden') + 1;
 
-        $cuenta = CuentaBancaria::create($data);
+        $cuenta = CuentaBancaria::create($data)->fresh();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Cuenta bancaria agregada.']);
 
@@ -32,7 +35,7 @@ class CuentaBancariaController extends Controller
 
     public function update(Request $request, CuentaBancaria $cuentaBancaria): JsonResponse
     {
-        $cuentaBancaria->update($this->validado($request));
+        $cuentaBancaria->update($this->validado($request, $cuentaBancaria->fk_empresa, $cuentaBancaria->id_cuenta_bancaria));
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Cuenta bancaria actualizada.']);
 
@@ -81,16 +84,45 @@ class CuentaBancariaController extends Controller
         return response()->json(['message' => 'Cuenta bancaria eliminada.']);
     }
 
-    private function validado(Request $request): array
+    /**
+     * Reglas de una cuenta bancaria. `$ignorar` excluye la propia fila del
+     * chequeo de duplicados (número de cuenta repetido en la misma empresa).
+     */
+    private function validado(Request $request, int $fkEmpresa, ?int $ignorar = null): array
     {
-        return $request->validate([
-            'banco' => ['required', 'string', 'max:60'],
-            'moneda' => ['required', 'string', 'in:PEN,USD'],
-            'tipo_cuenta' => ['required', 'string', 'max:30'],
-            'numero_cuenta' => ['required', 'string', 'max:30'],
-            'cci' => ['nullable', 'string', 'max:30'],
-            'titular' => ['nullable', 'string', 'max:150'],
+        $request->merge([
+            'banco' => trim(strip_tags((string) $request->input('banco'))),
+            'numero_cuenta' => preg_replace('/[^\dxX-]/', '', (string) $request->input('numero_cuenta')),
+            'cci' => $request->filled('cci') ? preg_replace('/\D/', '', (string) $request->input('cci')) : null,
+            'titular' => $request->filled('titular') ? trim(strip_tags((string) $request->input('titular'))) : null,
         ]);
+
+        $data = $request->validate([
+            'banco' => ['required', 'string', 'min:2', 'max:60'],
+            'moneda' => ['required', 'string', Rule::in(['PEN', 'USD'])],
+            'tipo_cuenta' => ['required', 'string', Rule::in(['Corriente', 'Ahorros', 'Maestra', 'Sueldo', 'Detracciones'])],
+            'numero_cuenta' => ['required', 'string', 'regex:/^[\dxX-]{8,30}$/'],
+            'cci' => ['nullable', 'string', 'regex:/^\d{20}$/'],
+            'titular' => ['nullable', 'string', 'max:150'],
+        ], [
+            'numero_cuenta.regex' => 'El número de cuenta solo admite dígitos y guiones (entre 8 y 30 caracteres).',
+            'cci.regex' => 'El CCI (código de cuenta interbancario) debe tener exactamente 20 dígitos.',
+            'tipo_cuenta.in' => 'Tipo de cuenta no válido.',
+        ]);
+
+        $duplicada = DB::table('cuentas_bancarias')
+            ->where('fk_empresa', $fkEmpresa)
+            ->where('numero_cuenta', $data['numero_cuenta'])
+            ->when($ignorar, fn ($q) => $q->where('id_cuenta_bancaria', '!=', $ignorar))
+            ->exists();
+
+        if ($duplicada) {
+            throw ValidationException::withMessages([
+                'numero_cuenta' => 'Ya registraste una cuenta con ese número.',
+            ]);
+        }
+
+        return $data;
     }
 
     private function fkEmpresaOFallar(): int
